@@ -30,13 +30,13 @@ namespace OscCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe float ReadFloatUnsafe(byte[] bytes, int offset)
         {
-            fixed (byte* ptr = &bytes[offset]) return *(float*)ptr;
+            fixed (byte* ptr = &bytes[offset]) return *ptr;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe int ReadIntUnsafe(byte[] bytes, int offset)
         {
-            fixed (byte* ptr = &bytes[offset]) return *(int*)ptr;
+            fixed (byte* ptr = &bytes[offset]) return *ptr;
         }
     }
 }

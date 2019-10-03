@@ -111,9 +111,9 @@ namespace OscCore.Tests
 
 
         [Test]
-        public void ReadFloatMethods()
+        public unsafe void ReadFloatMethods()
         {
-            var bytes = RandomFloatBytes();
+            var bytes = RandomFloatBytes(4096);
             
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
@@ -131,11 +131,24 @@ namespace OscCore.Tests
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
             
-            Debug.Log($"float read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks}");
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                float f;
+                fixed (byte* ptr = &bytes[i])
+                {
+                    f = *ptr;
+                }
+            }
+            Stopwatch.Stop();
+            var unsafeConvertInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Debug.Log($"float read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks} " +
+                      $"inline unsafe {unsafeConvertInlineTicks}");
         }
         
         [Test]
-        public void ReadIntMethods()
+        public unsafe void ReadIntMethods()
         {
             const int count = 4096;
             var bytes = RandomIntBytes(count);
@@ -156,7 +169,20 @@ namespace OscCore.Tests
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
             
-            Debug.Log($"int read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks}");
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                int f;
+                fixed (byte* ptr = &bytes[i])
+                {
+                    f = *ptr;
+                }
+            }
+            Stopwatch.Stop();
+            var unsafeConvertInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Debug.Log($"int read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks}, " +
+                      $"inline unsafe {unsafeConvertInlineTicks}");
         }
     }
 }
