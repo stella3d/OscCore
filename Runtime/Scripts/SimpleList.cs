@@ -57,7 +57,9 @@ namespace OscCore
             m_Enumerator = new Enumerator(this);
             Buffer = new T[initialCapacity];
         }
-        
+
+        public T this[int index] => Buffer[index];
+
         public void Add(T value)
         {
             if (Count >= Buffer.Length)

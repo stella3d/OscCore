@@ -1,4 +1,6 @@
-﻿namespace OscCore
+﻿using System.Runtime.CompilerServices;
+
+namespace OscCore
 {
     // type tags from http://opensoundcontrol.org/spec-1_0 
     public enum TypeTag : byte
@@ -19,6 +21,22 @@
         MIDI = 109,                     // m, non-standard
         Color32 = 114,                  // r, non-standard
         String = 115                    // s, STANDARD
+    }
+
+    public static class TypeTagMethods
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsSupported(this TypeTag tag)
+        {
+            switch (tag)
+            {
+                case TypeTag.Blob: return true;
+                case TypeTag.Float32: return true;
+                case TypeTag.Int32: return true;
+                case TypeTag.String: return true;
+                default: return false;
+            }
+        }
     }
 }
 

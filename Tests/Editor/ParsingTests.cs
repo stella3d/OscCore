@@ -1,0 +1,62 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace OscCore.Tests
+{
+    public class ParsingTests
+    {
+        //OscParser m_Parser = new OscParser();
+
+        readonly SimpleList<TypeTag> m_Tags = new SimpleList<TypeTag>();
+
+        [OneTimeSetUp]
+        public void BeforeAll() { }
+
+        [TestCaseSource(typeof(TagsTestData), nameof(TagsTestData.TagParseCases))]
+        public void ParsingTestsSimplePasses(TypeTagParseTestCase test)
+        {
+            OscParser.ParseTags(test.Bytes, test.Start, m_Tags);
+            
+            for (var i = 0; i < m_Tags.Count; i++)
+            {
+                var tag = m_Tags[i];
+                Debug.Log(tag);
+                Assert.AreEqual(test.Expected[i], tag);
+            }
+        }
+    }
+
+
+    public class TypeTagParseTestCase
+    {
+        public readonly byte[] Bytes;
+        public readonly int Start;
+        public readonly TypeTag[] Expected;
+
+        public TypeTagParseTestCase(byte[] bytes, int start, TypeTag[] expected)
+        {
+            Bytes = bytes;
+            Start = start;
+            Expected = expected;
+        }
+    }
+
+    internal static class TagsTestData
+    {
+        public static IEnumerable TagParseCases 
+        {
+            get
+            {
+                var expected1 = new[] { TypeTag.Float32, TypeTag.Float32, TypeTag.Int32, TypeTag.String };
+                var bytes1 = new[]
+                {
+                    (byte) ',', (byte) TypeTag.Float32, (byte) TypeTag.Float32, (byte) TypeTag.Int32,
+                    (byte) TypeTag.String, (byte) 0, (byte) 0, (byte) 0
+                };
+                yield return new TypeTagParseTestCase(bytes1, 0, expected1);
+            }
+        }
+    }
+}
