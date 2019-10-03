@@ -1,4 +1,6 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace OscCore
@@ -62,6 +64,15 @@ namespace OscCore
             var b = bytes[offset + 2];
             var a = bytes[offset + 3];
             return new Color32(r, g, b, a);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe Color32 ReadColor32Unsafe(byte[] bytes, int offset)
+        {
+            fixed (byte* ptr = &bytes[offset])
+            {
+                return Marshal.PtrToStructure<Color32>((IntPtr) ptr);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

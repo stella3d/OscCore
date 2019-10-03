@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
@@ -98,6 +100,20 @@ namespace OscCore.Tests
 
             return bytes;
         }
+        
+        byte[] RandomColor32Bytes(int count = 2048)
+        {
+            var bytes = new byte[count];
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                var iValue = Random.Range(0, 255);
+                var iBytes = BitConverter.GetBytes(iValue);
+                for (int j = 0; j < iBytes.Length; j++)
+                    bytes[i + j] = iBytes[j];
+            }
+
+            return bytes;
+        }
 
 
         [Test]
@@ -173,6 +189,55 @@ namespace OscCore.Tests
             
             Debug.Log($"int read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks}, " +
                       $"inline unsafe {unsafeConvertInlineTicks}");
+        }
+
+        [Test]
+        public unsafe void Color32Parsing()
+        {
+            const int count = 4096;
+            var bytes = RandomColor32Bytes(count);
+
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                var f = OscParser.ReadColor32(bytes, i);
+            }
+            Stopwatch.Stop();
+            var sTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                var r = bytes[i];
+                var g = bytes[i + 1];
+                var b = bytes[i + 2];
+                var a = bytes[i + 3];
+                var f = new Color32(r, g, b, a);
+            }
+            Stopwatch.Stop();
+            var sInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                var f = OscParser.ReadColor32Unsafe(bytes, i);
+            }
+            Stopwatch.Stop();
+            var uTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                fixed (byte* ptr = &bytes[i])
+                {
+                    var f = Marshal.PtrToStructure<Color32>((IntPtr) ptr);
+                }
+            }
+            Stopwatch.Stop();
+            var uInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Debug.Log($"ticks elapsed - safe {sTicks}, safe inline {sInlineTicks}\n" + 
+                      $"unsafe {uTicks}, unsafe inline {uInlineTicks}");
         }
     }
 }

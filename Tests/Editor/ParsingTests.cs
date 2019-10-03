@@ -38,6 +38,18 @@ namespace OscCore.Tests
             Assert.AreEqual(expected[2], midi.Data1);
             Assert.AreEqual(expected[3], midi.Data2);
         }
+
+        [Test]
+        public void Color32Unsafe()
+        {
+            var cBytes = new byte[] { 50, 100, 200, 255 };
+
+            var safeRead = OscParser.ReadColor32(cBytes, 0);
+            var unSafeRead = OscParser.ReadColor32Unsafe(cBytes, 0);
+            
+            Debug.Log($"safe: {safeRead} , unsafe: {unSafeRead}");
+            Assert.AreEqual(safeRead, unSafeRead);
+        }
     }
 
     public class TypeTagParseTestCase
