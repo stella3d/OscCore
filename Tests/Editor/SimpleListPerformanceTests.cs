@@ -17,7 +17,6 @@ namespace OscCore.Tests
 
         int[] m_Array;
         readonly List<int> m_List = new List<int>(k_Count);
-        readonly SimpleBuffer<int> m_SimpleBuffer = new SimpleBuffer<int>(k_Count);
         readonly Buffer<int> m_Buffer = new Buffer<int>(k_Count);
 
         long m_ArraySetTicks;
@@ -36,7 +35,7 @@ namespace OscCore.Tests
         }
 
         [Test]
-        public void Add()
+        public unsafe void Add()
         {
             Stopwatch.Restart();
             for (int i = 0; i < m_TestData.Length; i++)
@@ -53,15 +52,6 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
             m_ListAddTicks = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < m_TestData.Length; i++)
-            {
-                m_SimpleBuffer.Add(m_TestData[i]);
-            }
-            Stopwatch.Stop();
-            m_SimpleListAddTicks = Stopwatch.ElapsedTicks;
-            
             Stopwatch.Restart();
             
             var arr = m_Buffer.Array;
@@ -73,9 +63,20 @@ namespace OscCore.Tests
             
             Stopwatch.Stop();
             m_SimpleListIndexSetTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            
+            var ui = 0;
+            for (; bi < m_TestData.Length; bi++)
+                arr[bi] = m_TestData[bi];
+
+            m_Buffer.Count = bi;
+            
+            Stopwatch.Stop();
+            var unsafeTicks = Stopwatch.ElapsedTicks;
 
             Debug.Log($"Add times - array: {m_ArraySetTicks}\nlist: {m_ListAddTicks}, " +
-                      $"simpleList Add:{m_SimpleListAddTicks}, buffer manual array with count {m_SimpleListIndexSetTicks}");
+                      $"buffer manual array with count {m_SimpleListIndexSetTicks}");
         }
 
 

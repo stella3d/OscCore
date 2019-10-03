@@ -21,7 +21,7 @@ namespace OscCore
                 if (!tag.IsSupported()) break;
                 outArray[outIndex] = tag;
                 tagIndex++;
-                outIndex++;
+                outIndex++; 
             }
 
             tags.Count = outIndex;

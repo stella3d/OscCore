@@ -27,6 +27,17 @@ namespace OscCore.Tests
                 Assert.AreEqual(test.Expected[i], tag);
             }
         }
+
+        [TestCaseSource(typeof(MidiTestData), nameof(MidiTestData.Basic))]
+        public void BasicMidiParsing(byte[] bytes, int offset, byte[] expected)
+        {
+            var midi = new MidiMessage(bytes, offset);
+            Debug.Log(midi);
+            Assert.AreEqual(expected[0], midi.PortId);
+            Assert.AreEqual(expected[1], midi.Status);
+            Assert.AreEqual(expected[2], midi.Data1);
+            Assert.AreEqual(expected[3], midi.Data2);
+        }
     }
 
     public class TypeTagParseTestCase
@@ -56,6 +67,30 @@ namespace OscCore.Tests
                     (byte) TypeTag.String, (byte) 0, (byte) 0, (byte) 0
                 };
                 yield return new TypeTagParseTestCase(bytes1, 0, expected1);
+            }
+        }
+    }
+    
+    internal static class MidiTestData
+    {
+        public static IEnumerable Basic 
+        {
+            get
+            {
+                var expected1 = new[]
+                {
+                    (byte)1,                     // port id
+                    (byte)144,                   // status - ch1 note on
+                    (byte) 60,                   // note # - 60 = middle c
+                    (byte)100                    // note velocity
+                };
+                var bytes1 = new[]
+                {
+                    (byte) 0, (byte) 0, (byte) 1, (byte) 144, 
+                    (byte) 60, (byte) 100, (byte) 0, (byte) 0, 
+                };
+                
+                yield return new TestCaseData(bytes1, 2, expected1);
             }
         }
     }
