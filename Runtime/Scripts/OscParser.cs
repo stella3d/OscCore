@@ -88,6 +88,20 @@ namespace OscCore
 
             return index - offset;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int FindAddressLength(byte[] bytes, int offset)
+        {
+            if (bytes[offset] != Constant.ForwardSlash)
+                return -1;
+            
+            var index = offset + 1;
+            // we don't support lacking a type tag string
+            while (bytes[index] != Constant.Comma)
+                index++;
+
+            return index - offset;
+        }
 
         // the methods below are here to keep the pattern with all other types, despite returning constant values.
         // We want a method associated with reading each type tag.
