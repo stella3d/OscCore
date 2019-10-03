@@ -35,7 +35,7 @@ namespace OscCore.Tests
         }
 
         [Test]
-        public unsafe void Add()
+        public void Add()
         {
             Stopwatch.Restart();
             for (int i = 0; i < m_TestData.Length; i++)
@@ -63,17 +63,6 @@ namespace OscCore.Tests
             
             Stopwatch.Stop();
             m_SimpleListIndexSetTicks = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            
-            var ui = 0;
-            for (; bi < m_TestData.Length; bi++)
-                arr[bi] = m_TestData[bi];
-
-            m_Buffer.Count = bi;
-            
-            Stopwatch.Stop();
-            var unsafeTicks = Stopwatch.ElapsedTicks;
 
             Debug.Log($"Add times - array: {m_ArraySetTicks}\nlist: {m_ListAddTicks}, " +
                       $"buffer manual array with count {m_SimpleListIndexSetTicks}");
