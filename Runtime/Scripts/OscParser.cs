@@ -64,14 +64,29 @@ namespace OscCore
             return new Color32(r, g, b, a);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static OscBlob ReadBlob(byte[] bytes, int offset)
         {
             return new OscBlob(bytes, offset);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static char ReadAsciiChar32(byte[] bytes, int offset)
         {
             return (char) bytes[offset];
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int FindArrayLength(byte[] bytes, int offset)
+        {
+            if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
+                return -1;
+            
+            var index = offset + 1;
+            while (bytes[index] != (byte) TypeTag.ArrayEnd)
+                index++;
+
+            return index - offset;
         }
 
         // the methods below are here to keep the pattern with all other types, despite returning constant values.
