@@ -91,6 +91,20 @@ namespace OscCore.Tests
                 };
                 
                 yield return new TestCaseData(bytes1, 2, expected1);
+                
+                var expected2 = new[]
+                {
+                    (byte) 16,                   // port id
+                    (byte) 128,                  // status - ch1 note off
+                    (byte) 72,                   // note C4
+                    (byte) 42,                   // note velocity
+                };
+                var bytes2 = new[]
+                {
+                    (byte) 16, (byte) 128, (byte) 72, (byte) 42, (byte) 0, (byte) 0
+                };
+                
+                yield return new TestCaseData(bytes2, 0, expected2);
             }
         }
     }
