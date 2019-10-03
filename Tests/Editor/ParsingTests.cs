@@ -9,7 +9,7 @@ namespace OscCore.Tests
     {
         //OscParser m_Parser = new OscParser();
 
-        readonly SimpleList<TypeTag> m_Tags = new SimpleList<TypeTag>();
+        readonly Buffer<TypeTag> m_Tags = new Buffer<TypeTag>();
 
         [OneTimeSetUp]
         public void BeforeAll() { }
@@ -18,16 +18,16 @@ namespace OscCore.Tests
         public void ParsingTestsSimplePasses(TypeTagParseTestCase test)
         {
             OscParser.ParseTags(test.Bytes, test.Start, m_Tags);
-            
+
+            var arr = m_Tags.Array;
             for (var i = 0; i < m_Tags.Count; i++)
             {
-                var tag = m_Tags[i];
+                var tag = arr[i];
                 Debug.Log(tag);
                 Assert.AreEqual(test.Expected[i], tag);
             }
         }
     }
-
 
     public class TypeTagParseTestCase
     {

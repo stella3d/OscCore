@@ -4,17 +4,34 @@ using System.Collections.Generic;
 
 namespace OscCore
 {
-    public sealed class SimpleList<T> : IEnumerable<T>
+    /// <summary>
+    /// This class does no abstraction - It only keeps a counter associated with the array.
+    /// All inserting should be done with the array reference and a for loop, then assign the count after the loop.
+    /// </summary>
+    /// <typeparam name="T">The type of data to store</typeparam>
+    public sealed class Buffer<T>
+    {
+        public T[] Array;
+        public int Count;
+        
+        public Buffer(int initialCapacity = 8)
+        {
+            Count = 0;
+            Array = new T[initialCapacity];
+        }
+    }
+
+    public sealed class SimpleBuffer<T> : IEnumerable<T>
     {
         public class Enumerator : IEnumerator<T>
         {
-            SimpleList<T> m_Source;
+            SimpleBuffer<T> m_Source;
 
             int m_Index;
 
-            public Enumerator(SimpleList<T> list)
+            public Enumerator(SimpleBuffer<T> buffer)
             {
-                m_Source = list;
+                m_Source = buffer;
                 m_Index = -1;
             }
 
@@ -49,16 +66,20 @@ namespace OscCore
         
         public T[] Buffer;
 
-        public int Count { get; private set; }
+        public int Count { get; set; }
         public int Capacity => Buffer.Length;
                 
-        public SimpleList(int initialCapacity = 8)
+        public SimpleBuffer(int initialCapacity = 8)
         {
             m_Enumerator = new Enumerator(this);
             Buffer = new T[initialCapacity];
         }
 
-        public T this[int index] => Buffer[index];
+        public T this[int index] 
+        {
+            get => Buffer[index];
+            set => Buffer[index] = value;
+        }
 
         public void Add(T value)
         {
