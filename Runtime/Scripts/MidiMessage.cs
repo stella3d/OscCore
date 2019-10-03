@@ -1,5 +1,8 @@
-﻿namespace OscCore
+﻿using System.Runtime.InteropServices;
+
+namespace OscCore
 {
+    [StructLayout(LayoutKind.Sequential)]
     public struct MidiMessage
     {
         public byte PortId { get; private set; }
@@ -17,6 +20,7 @@
 
         public void SetBytes(byte[] bytes, int offset)
         {
+            // TODO - ptr initializer ?
             PortId = bytes[offset];
             Status = bytes[offset + 1];
             Data1 = bytes[offset + 2];

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 using UnityEngine;
 
 namespace OscCore
@@ -26,18 +27,71 @@ namespace OscCore
 
             tags.Count = outIndex;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe double ReadFloat64Unsafe(byte[] bytes, int offset)
+        {
+            fixed (byte* ptr = &bytes[offset]) return *ptr;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe float ReadFloatUnsafe(byte[] bytes, int offset)
+        public static unsafe float ReadFloat32Unsafe(byte[] bytes, int offset)
         {
             fixed (byte* ptr = &bytes[offset]) return *ptr;
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe int ReadIntUnsafe(byte[] bytes, int offset)
+        public static unsafe long ReadInt64Unsafe(byte[] bytes, int offset)
         {
             fixed (byte* ptr = &bytes[offset]) return *ptr;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe int ReadInt32Unsafe(byte[] bytes, int offset)
+        {
+            fixed (byte* ptr = &bytes[offset]) return *ptr;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MidiMessage ReadMidi(byte[] bytes, int offset)
+        {
+            return new MidiMessage(bytes, offset);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Color32 ReadColor32(byte[] bytes, int offset)
+        {
+            var r = bytes[offset];
+            var g = bytes[offset + 1];
+            var b = bytes[offset + 2];
+            var a = bytes[offset + 3];
+            return new Color32(r, g, b, a);
+        }
+
+        public static OscBlob ReadBlob(byte[] bytes, int offset)
+        {
+            return new OscBlob(bytes, offset);
+        }
+
+        public static char ReadAsciiChar32(byte[] bytes, int offset)
+        {
+            return (char) bytes[offset];
+        }
+
+        // the methods below are here to keep the pattern with all other types, despite returning constant values.
+        // We want a method associated with reading each type tag.
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ReadTrueTag(byte[] bytes, int offset) { return true; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ReadFalseTag(byte[] bytes, int offset) { return false; }
+        
+        // these two could be void but that would change Func signature compared to the rest
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ReadNilTag(byte[] bytes, int offset) { return false; }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool ReadInfinitumTag(byte[] bytes, int offset) { return false; }
     }
 }
 

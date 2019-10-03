@@ -127,7 +127,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadFloatUnsafe(bytes, i);
+                var f = OscParser.ReadFloat32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
@@ -165,7 +165,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadIntUnsafe(bytes, i);
+                var f = OscParser.ReadInt32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
