@@ -71,7 +71,8 @@ namespace OscCore
         {
             fixed (byte* ptr = &bytes[offset])
             {
-                return Marshal.PtrToStructure<Color32>((IntPtr) ptr);
+                return *(Color32*) ptr;
+                //return Marshal.PtrToStructure<Color32>((IntPtr) ptr);
             }
         }
 

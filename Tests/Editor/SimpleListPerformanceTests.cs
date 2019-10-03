@@ -230,7 +230,7 @@ namespace OscCore.Tests
             {
                 fixed (byte* ptr = &bytes[i])
                 {
-                    var f = Marshal.PtrToStructure<Color32>((IntPtr) ptr);
+                    var f = *(Color32*) ptr;
                 }
             }
             Stopwatch.Stop();
