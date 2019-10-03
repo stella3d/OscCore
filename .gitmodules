@@ -1,0 +1,3 @@
+[submodule "ByteStrings"]
+	path = ByteStrings
+	url = git@github.com:stella3d/ByteStrings.git
