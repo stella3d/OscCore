@@ -1,4 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
+using ByteStrings;
+using Unity.Collections;
 using UnityEngine;
 
 namespace OscCore
@@ -94,6 +96,13 @@ namespace OscCore
             return (char) bytes[offset];
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ByteString ReadNewByteStringAddress(byte[] bytes, int offset)
+        {
+            var length = FindAddressLength(bytes, offset);
+            return length == -1 ? default : new ByteString(bytes, length, offset);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FindArrayLength(byte[] bytes, int offset)
         {

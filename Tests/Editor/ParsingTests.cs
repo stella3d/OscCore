@@ -14,7 +14,7 @@ namespace OscCore.Tests
         [OneTimeSetUp]
         public void BeforeAll() { }
 
-        [TestCaseSource(typeof(TagsTestData), nameof(TagsTestData.TagParseCases))]
+        [TestCaseSource(typeof(TagsTestData), nameof(TagsTestData.StandardTagParseCases))]
         public void ParsingTestsSimplePasses(TypeTagParseTestCase test)
         {
             OscParser.ParseTags(test.Bytes, test.Start, m_Tags);
@@ -84,7 +84,7 @@ namespace OscCore.Tests
 
     internal static class TagsTestData
     {
-        public static IEnumerable TagParseCases 
+        public static IEnumerable StandardTagParseCases 
         {
             get
             {
@@ -94,7 +94,23 @@ namespace OscCore.Tests
                     (byte) ',', (byte) TypeTag.Float32, (byte) TypeTag.Float32, (byte) TypeTag.Int32,
                     (byte) TypeTag.String, (byte) 0, (byte) 0, (byte) 0
                 };
+                
                 yield return new TypeTagParseTestCase(bytes1, 0, expected1);
+                
+                var expected2 = new[]
+                {
+                    TypeTag.Int32, TypeTag.Float32, TypeTag.String, TypeTag.String, TypeTag.Blob, TypeTag.Int32
+                };
+                var bytes2 = new[]
+                {
+                    (byte) 0, (byte) 0, // offset of 2 bytes
+                    (byte) ',', 
+                    (byte) TypeTag.Int32, (byte) TypeTag.Float32, (byte) TypeTag.String,
+                    (byte) TypeTag.String, (byte) TypeTag.Blob, (byte) TypeTag.Int32,
+                    (byte) 0, (byte) 0 // trailing bytes
+                };
+                
+                yield return new TypeTagParseTestCase(bytes2, 2, expected2);
             }
         }
     }

@@ -7,6 +7,8 @@ namespace OscCore
         internal byte[] SharedBuffer;
         
         public Buffer<TypeTag, int> TagsToOffset;
+        
+        
 
         public void ReadAll()
         {

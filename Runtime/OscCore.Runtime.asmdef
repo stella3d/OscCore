@@ -1,6 +1,8 @@
 {
     "name": "OscCore.Runtime",
-    "references": [],
+    "references": [
+        "GUID:d18f762e77bdab2469e1953b620be625"
+    ],
     "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],

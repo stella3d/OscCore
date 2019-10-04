@@ -41,7 +41,7 @@ namespace OscCore
                 case TypeTag.Float32: return true;
                 case TypeTag.Int64: return true;
                 case TypeTag.Int32: return true;
-                case TypeTag.String: return false;        // soon !
+                case TypeTag.String: return true;        // soon !
                 case TypeTag.MIDI: return true;
                 case TypeTag.Color32: return true;
                 default: return false;
