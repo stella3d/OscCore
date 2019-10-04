@@ -192,6 +192,7 @@ namespace OscCore.Tests
         }
 
         [Test]
+        // this should apply the same to MIDI messages - unsafe inline seems fastest
         public unsafe void Color32Parsing()
         {
             const int count = 4096;

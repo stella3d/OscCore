@@ -55,6 +55,15 @@ namespace OscCore
         {
             return new MidiMessage(bytes, offset);
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe MidiMessage ReadMidiUnsafe(byte[] bytes, int offset)
+        {
+            fixed (byte* ptr = &bytes[offset])
+            {
+                return *(MidiMessage*) ptr;
+            }
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color32 ReadColor32(byte[] bytes, int offset)
@@ -72,7 +81,6 @@ namespace OscCore
             fixed (byte* ptr = &bytes[offset])
             {
                 return *(Color32*) ptr;
-                //return Marshal.PtrToStructure<Color32>((IntPtr) ptr);
             }
         }
 
