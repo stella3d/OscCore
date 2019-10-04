@@ -236,9 +236,9 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
             var uInlineTicks = Stopwatch.ElapsedTicks;
-            
-            Debug.Log($"ticks elapsed - safe {sTicks}, safe inline {sInlineTicks}\n" + 
-                      $"unsafe {uTicks}, unsafe inline {uInlineTicks}");
+
+            Debug.Log($"element count {count / 4}, ticks - safe {sTicks}, inline {sInlineTicks}\n" + 
+                      $"unsafe {uTicks}, inline {uInlineTicks}");
         }
     }
 }

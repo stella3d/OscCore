@@ -46,8 +46,7 @@ namespace OscCore
         {
             unchecked
             {
-                var hashCode = PortId.GetHashCode();
-                hashCode = (hashCode * 397) ^ Status.GetHashCode();
+                var hashCode = Status.GetHashCode();
                 hashCode = (hashCode * 397) ^ Data1.GetHashCode();
                 hashCode = (hashCode * 397) ^ Data2.GetHashCode();
                 return hashCode;

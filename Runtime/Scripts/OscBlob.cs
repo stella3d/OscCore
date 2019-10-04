@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace OscCore
 {
@@ -12,6 +13,19 @@ namespace OscCore
         public OscBlob(byte[] bytes, int offset)
         {
             Read(bytes, offset);
+        }
+        
+        public unsafe OscBlob(byte[] bytes, int offset, int destOffset)
+        {
+            fixed (byte* ptr = &bytes[offset])
+            {
+                int size = *ptr;
+                CopiedBuffer = new byte[Size + destOffset];
+                fixed (byte* destPtr = &CopiedBuffer[0])
+                {
+                    Buffer.MemoryCopy(ptr + 4, destPtr + destOffset, size, size);
+                }
+            }
         }
 
         public void Read(byte[] bytes, int offset)
