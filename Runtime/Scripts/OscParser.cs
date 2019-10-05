@@ -119,6 +119,22 @@ namespace OscCore
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static unsafe T ReadUnsafe<T>(byte[] bytes, int offset)
+            where T: unmanaged
+        {
+            fixed (byte* ptr = &bytes[offset]) return *(T*) ptr;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe NtpTimestamp ReadTimestampUnsafe(byte[] bytes, int offset)
+        {
+            fixed (byte* ptr = &bytes[offset])
+            {
+                return *(NtpTimestamp*) ptr;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color32 ReadColor32(byte[] bytes, int offset)
         {
             var r = bytes[offset];
