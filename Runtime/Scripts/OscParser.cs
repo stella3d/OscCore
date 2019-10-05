@@ -7,6 +7,59 @@ namespace OscCore
 {
     public class OscParser
     {
+        /// <summary>
+        /// Validate an OSC Address' name.
+        /// This will reject valid Address Patterns, use 
+        /// </summary>
+        /// <param name="address">The address of an OSC method</param>
+        /// <returns>true if the address is valid, false otherwise</returns>
+        public bool AddressIsValid(string address)
+        {
+            if (address[0] != '/') return false;
+            
+            foreach (var chr in address)
+            {
+                switch (chr)
+                {
+                    case ' ':
+                    case '#':
+                    case '*':
+                    case ',':
+                    case '?':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        return false;
+                }
+            }
+
+            return true;
+        }
+        
+        /// <summary>
+        /// Validate an OSC Address Pattern.
+        /// </summary>
+        /// <param name="address">An address pattern for an OSC method</param>
+        /// <returns>true if the address pattern is valid, false otherwise</returns>
+        public bool AddressPatternIsValid(string address)
+        {
+            if (address[0] != '/') return false;
+            
+            foreach (var chr in address)
+            {
+                switch (chr)
+                {
+                    case ' ':
+                    case '#':
+                    case ',':
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         public static void ParseTags(byte[] bytes, int start, Buffer<TypeTag> tags)
         {
             tags.Count = 0;
@@ -137,13 +190,6 @@ namespace OscCore
         public static bool ReadTrueTag(byte[] bytes, int offset) { return true; }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool ReadFalseTag(byte[] bytes, int offset) { return false; }
-        
-        // these two could be void but that would change Func signature compared to the rest
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadNilTag(byte[] bytes, int offset) { return false; }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadInfinitumTag(byte[] bytes, int offset) { return false; }
     }
 }
 
