@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -114,6 +115,27 @@ namespace OscCore.Tests
 
             return bytes;
         }
+        
+        byte[] RandomTimestampBytes(int count = 2048)
+        {
+            var bytes = new byte[count];
+            for (int i = 0; i < bytes.Length; i += 8)
+            {
+                var seconds = Random.Range(0, 255);
+                var sBytes = BitConverter.GetBytes(seconds);
+                for (int j = 0; j < sBytes.Length; j++)
+                    bytes[i + j] = sBytes[j];
+                
+                var fractions = Random.Range(0, 10000000);
+                var fBytes = BitConverter.GetBytes(fractions);
+
+                var end = 4 + fBytes.Length;
+                for (int j = 4; j < end; j++)
+                    bytes[i + j] = fBytes[j - 4];
+            }
+
+            return bytes;
+        }
 
 
         [Test]
@@ -149,8 +171,35 @@ namespace OscCore.Tests
             Stopwatch.Stop();
             var unsafeConvertInlineTicks = Stopwatch.ElapsedTicks;
             
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                for (int i = 0; i < bytes.Length; i += 4)
+                {
+                    float f = * (ptr + i);
+                }
+            }
+
+            Stopwatch.Stop();
+            var uInlineTicks1 = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                
+                var fPtr = (float*) ptr;
+                var end = bytes.Length / 4;
+                for (int i = 0; i < end; i++)
+                {
+                     float f =  *(fPtr + i);
+                }
+            }
+
+            Stopwatch.Stop();
+            var uInlineTicks2 = Stopwatch.ElapsedTicks;
+            
             Debug.Log($"float read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks} " +
-                      $"inline unsafe {unsafeConvertInlineTicks}");
+                      $"inline unsafe {unsafeConvertInlineTicks}, single-fix {uInlineTicks1}, with fptr conversion {uInlineTicks2}");
         }
         
         [Test]
@@ -187,8 +236,20 @@ namespace OscCore.Tests
             Stopwatch.Stop();
             var unsafeConvertInlineTicks = Stopwatch.ElapsedTicks;
             
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                for (int i = 0; i < bytes.Length; i += 4)
+                {
+                    int f = *(ptr + i);
+                }
+            }
+
+            Stopwatch.Stop();
+            var uInlineTicks2 = Stopwatch.ElapsedTicks;
+            
             Debug.Log($"int read times - bit converter: {bitConverterTicks}, unsafe: {unsafeConvertTicks}, " +
-                      $"inline unsafe {unsafeConvertInlineTicks}");
+                      $"inline unsafe {unsafeConvertInlineTicks}, with ptr math {uInlineTicks2}");
         }
 
         [Test]
@@ -236,9 +297,84 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
             var uInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                for (int i = 0; i < bytes.Length; i += 4)
+                {
+                    var f = *(Color32*) (ptr + i);
+                }
+            }
 
-            Debug.Log($"element count {count / 4}, ticks - safe {sTicks}, inline {sInlineTicks}\n" + 
-                      $"unsafe {uTicks}, inline {uInlineTicks}");
+            Stopwatch.Stop();
+            var uInline2Ticks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                for (int i = 0; i < bytes.Length; i += 4)
+                {
+                    var f = OscParser.ReadPointer<Color32>(ptr, i);
+                }
+            }
+
+            Stopwatch.Stop();
+            var ptrReadTicks = Stopwatch.ElapsedTicks;
+
+            Debug.Log($"element count {count / 4} - safe {sTicks}, inline {sInlineTicks}, ptr read method {ptrReadTicks}\n" + 
+                      $"unsafe {uTicks}, inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
+        }
+        
+        [Test]
+        public unsafe void TimestampParsing()
+        {
+            const int count = 4096;
+            var bytes = RandomTimestampBytes(count);
+
+            var size = sizeof(NtpTimestamp);
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += size)
+            {
+                var f = OscParser.ReadTimestamp(bytes, i);
+            }
+            Stopwatch.Stop();
+            var sTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += size)
+            {
+                var f = OscParser.ReadTimestampUnsafe(bytes, i);
+            }
+            Stopwatch.Stop();
+            var uTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < bytes.Length; i += size)
+            {
+                fixed (byte* ptr = &bytes[i])
+                {
+                    var f = *(NtpTimestamp*) ptr;
+                }
+            }
+            Stopwatch.Stop();
+            var uInlineTicks = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            fixed (byte* ptr = bytes)
+            {
+                for (int i = 0; i < bytes.Length; i += size)
+                {
+                    var f = *(NtpTimestamp*) (ptr + i);
+                }
+            }
+
+            Stopwatch.Stop();
+            var uInline2Ticks = Stopwatch.ElapsedTicks;
+
+            Debug.Log($"timestamp parsing - element count {count / 4}, ticks - safe {sTicks}, unsafe {uTicks},\n" + 
+                      $"inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
         }
     }
 }

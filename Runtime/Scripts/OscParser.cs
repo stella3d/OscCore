@@ -1,12 +1,51 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ByteStrings;
-using Unity.Collections;
 using UnityEngine;
 
 namespace OscCore
 {
-    public class OscParser
+    unsafe struct ParserBuffer
     {
+        fixed byte Bytes[OscParser.BufferSize];
+
+        public ref byte GetPinnableReference()
+        {
+            return ref Bytes[0];
+        }
+    }
+
+    public unsafe class OscParser
+    {
+        public const int BufferSize = 1024 * 8;
+
+        ParserBuffer Buffer = new ParserBuffer();
+
+        static GCHandle BufferHandle;
+        
+        readonly byte[] SelfBuffer = new byte[BufferSize];
+
+        byte* BufferPtr;
+
+        public OscParser()
+        {
+            BufferHandle = GCHandle.Alloc(SelfBuffer, GCHandleType.Pinned);
+            BufferPtr = (byte*) BufferHandle.AddrOfPinnedObject();
+        }
+
+        ~OscParser()
+        {
+            BufferHandle.Free();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T ReadPointer<T>(byte* bufferStartPtr, int offset)
+            where T: unmanaged
+        {
+            return *(T*) (bufferStartPtr + offset);
+        }
+
         /// <summary>
         /// Validate an OSC Address' name.
         /// This will reject valid Address Patterns, use 
@@ -133,6 +172,14 @@ namespace OscCore
                 return *(NtpTimestamp*) ptr;
             }
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static NtpTimestamp ReadTimestamp(byte[] bytes, int offset)
+        {
+            var seconds = BitConverter.ToUInt32(bytes, offset);
+            var fractions = BitConverter.ToUInt32(bytes, offset + 4);
+            return new NtpTimestamp(seconds, fractions);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Color32 ReadColor32(byte[] bytes, int offset)
@@ -171,7 +218,7 @@ namespace OscCore
             var length = FindAddressLength(bytes, offset);
             return length == -1 ? default : new ByteString(bytes, length, offset);
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FindArrayLength(byte[] bytes, int offset)
         {

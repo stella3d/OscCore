@@ -20,6 +20,7 @@ namespace OscCore
             fixed (byte* ptr = &bytes[offset]) { return *(NtpTimestamp*) ptr; }
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static NtpTimestamp FromBytes(byte[] bytes, int offset)
         {
             var seconds = BitConverter.ToUInt32(bytes, offset);
