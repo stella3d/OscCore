@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -15,7 +17,7 @@ namespace OscCore.Tests
         public void BeforeAll() { }
 
         [TestCaseSource(typeof(TagsTestData), nameof(TagsTestData.StandardTagParseCases))]
-        public void ParsingTestsSimplePasses(TypeTagParseTestCase test)
+        public void SimpleTagParsing(TypeTagParseTestCase test)
         {
             OscParser.ParseTags(test.Bytes, test.Start, m_Tags);
 
@@ -26,6 +28,12 @@ namespace OscCore.Tests
                 Debug.Log(tag);
                 Assert.AreEqual(test.Expected[i], tag);
             }
+        }
+
+        [TestCaseSource(typeof(MessageTestData), nameof(MessageTestData.Basic))]
+        public void SimpleFloatMessageParsing(byte[] bytes, int length)
+        {
+            OscParser.Parse(bytes, length);
         }
 
         [TestCaseSource(typeof(MidiTestData), nameof(MidiTestData.Basic))]
@@ -39,14 +47,49 @@ namespace OscCore.Tests
             Assert.AreEqual(expected[3], midi.Data2);
         }
 
+
+        [TestCase(0.01f)]
+        [TestCase(1f)]
+        [TestCase(14.4f)]
+        public unsafe void EndiannessSwapFloat(float littleEndianValue)
+        {
+            var bBytes = ReversedCopy(BitConverter.GetBytes(littleEndianValue));
+            fixed (byte* bfPtr = bBytes)
+                OscParser.SwapX4(bfPtr);
+
+            var read = BitConverter.ToSingle(bBytes, 0);
+            Assert.AreEqual(littleEndianValue, read);
+        }
+        
+        [TestCase(1)]
+        [TestCase(69)]
+        [TestCase(42000)]
+        public unsafe void EndiannessSwapInt(int littleEndianValue)
+        {
+            var bBytes = TestUtil.ReversedCopy(BitConverter.GetBytes(littleEndianValue));
+            fixed (byte* bfPtr = bBytes)
+                OscParser.SwapX4(bfPtr);
+            
+            var read = BitConverter.ToInt32(bBytes, 0);
+            Assert.AreEqual(littleEndianValue, read);
+        }
+
+        byte[] ReversedCopy(byte[] source)
+        {
+            var copy = new byte[source.Length];
+            Array.Copy(source, copy, source.Length);
+            Array.Reverse(copy);
+            return copy;
+        }
+
         [Test]
         public void ReadColor32_UnsafeMatchesSafe()
         {
             var cBytes = new byte[] { 50, 100, 200, 255 };
             var color32 = new Color32(cBytes[0], cBytes[1], cBytes[2], cBytes[3]);
 
-            var safeRead = OscParser.ReadColor32(cBytes, 0);
-            var unSafeRead = OscParser.ReadColor32Unsafe(cBytes, 0);
+            var safeRead = OscValueHandle.ReadColor32(cBytes, 0);
+            var unSafeRead = OscValueHandle.ReadColor32Unsafe(cBytes, 0);
             
             Debug.Log($"constructor {color32}, safe: {safeRead} , unsafe: {unSafeRead}");
             Assert.AreEqual(color32, safeRead);
@@ -59,97 +102,12 @@ namespace OscCore.Tests
             var bytes = new byte[] { 1, 144, 60, 42 };
             var midiMessage = new MidiMessage(bytes[0], bytes[1], bytes[2], bytes[3]);
 
-            var safeRead = OscParser.ReadMidi(bytes, 0);
-            var unSafeRead = OscParser.ReadMidiUnsafe(bytes, 0);
+            var safeRead = OscValueHandle.ReadMidi(bytes, 0);
+            var unSafeRead = OscValueHandle.ReadMidiUnsafe(bytes, 0);
             
             Debug.Log($"constructor {midiMessage}, safe: {safeRead} , unsafe: {unSafeRead}");
             Assert.AreEqual(midiMessage, safeRead);
             Assert.AreEqual(midiMessage, unSafeRead);
-        }
-    }
-
-    public class TypeTagParseTestCase
-    {
-        public readonly byte[] Bytes;
-        public readonly int Start;
-        public readonly TypeTag[] Expected;
-
-        public TypeTagParseTestCase(byte[] bytes, int start, TypeTag[] expected)
-        {
-            Bytes = bytes;
-            Start = start;
-            Expected = expected;
-        }
-    }
-
-    internal static class TagsTestData
-    {
-        public static IEnumerable StandardTagParseCases 
-        {
-            get
-            {
-                var expected1 = new[] { TypeTag.Float32, TypeTag.Float32, TypeTag.Int32, TypeTag.String };
-                var bytes1 = new[]
-                {
-                    (byte) ',', (byte) TypeTag.Float32, (byte) TypeTag.Float32, (byte) TypeTag.Int32,
-                    (byte) TypeTag.String, (byte) 0, (byte) 0, (byte) 0
-                };
-                
-                yield return new TypeTagParseTestCase(bytes1, 0, expected1);
-                
-                var expected2 = new[]
-                {
-                    TypeTag.Int32, TypeTag.Float32, TypeTag.String, TypeTag.String, TypeTag.Blob, TypeTag.Int32
-                };
-                var bytes2 = new[]
-                {
-                    (byte) 0, (byte) 0, // offset of 2 bytes
-                    (byte) ',', 
-                    (byte) TypeTag.Int32, (byte) TypeTag.Float32, (byte) TypeTag.String,
-                    (byte) TypeTag.String, (byte) TypeTag.Blob, (byte) TypeTag.Int32,
-                    (byte) 0, (byte) 0 // trailing bytes
-                };
-                
-                yield return new TypeTagParseTestCase(bytes2, 2, expected2);
-            }
-        }
-    }
-    
-    internal static class MidiTestData
-    {
-        public static IEnumerable Basic 
-        {
-            get
-            {
-                var expected1 = new[]
-                {
-                    (byte)1,                     // port id
-                    (byte)144,                   // status - ch1 note on
-                    (byte) 60,                   // note # - 60 = middle c
-                    (byte)100                    // note velocity
-                };
-                var bytes1 = new[]
-                {
-                    (byte) 0, (byte) 0, (byte) 1, (byte) 144, 
-                    (byte) 60, (byte) 100, (byte) 0, (byte) 0, 
-                };
-                
-                yield return new TestCaseData(bytes1, 2, expected1);
-                
-                var expected2 = new[]
-                {
-                    (byte) 16,                   // port id
-                    (byte) 128,                  // status - ch1 note off
-                    (byte) 72,                   // note C4
-                    (byte) 42,                   // note velocity
-                };
-                var bytes2 = new[]
-                {
-                    (byte) 16, (byte) 128, (byte) 72, (byte) 42, (byte) 0, (byte) 0
-                };
-                
-                yield return new TestCaseData(bytes2, 0, expected2);
-            }
         }
     }
 }

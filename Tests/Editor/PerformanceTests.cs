@@ -72,76 +72,11 @@ namespace OscCore.Tests
         }
 
 
-        byte[] RandomFloatBytes(int count = 2048)
-        {
-            var bytes = new byte[count];
-            for (int i = 0; i < bytes.Length; i += 4)
-            {
-                var f = Random.Range(-1f, 1f);
-                var fBytes = BitConverter.GetBytes(f);
-                for (int j = 0; j < fBytes.Length; j++)
-                {
-                    bytes[i + j] = fBytes[j];
-                }
-            }
-
-            return bytes;
-        }
-        
-        byte[] RandomIntBytes(int count = 2048)
-        {
-            var bytes = new byte[count];
-            for (int i = 0; i < bytes.Length; i += 4)
-            {
-                var iValue = Random.Range(-1000, 1000);
-                var iBytes = BitConverter.GetBytes(iValue);
-                for (int j = 0; j < iBytes.Length; j++)
-                    bytes[i + j] = iBytes[j];
-            }
-
-            return bytes;
-        }
-        
-        byte[] RandomColor32Bytes(int count = 2048)
-        {
-            var bytes = new byte[count];
-            for (int i = 0; i < bytes.Length; i += 4)
-            {
-                var iValue = Random.Range(0, 255);
-                var iBytes = BitConverter.GetBytes(iValue);
-                for (int j = 0; j < iBytes.Length; j++)
-                    bytes[i + j] = iBytes[j];
-            }
-
-            return bytes;
-        }
-        
-        byte[] RandomTimestampBytes(int count = 2048)
-        {
-            var bytes = new byte[count];
-            for (int i = 0; i < bytes.Length; i += 8)
-            {
-                var seconds = Random.Range(0, 255);
-                var sBytes = BitConverter.GetBytes(seconds);
-                for (int j = 0; j < sBytes.Length; j++)
-                    bytes[i + j] = sBytes[j];
-                
-                var fractions = Random.Range(0, 10000000);
-                var fBytes = BitConverter.GetBytes(fractions);
-
-                var end = 4 + fBytes.Length;
-                for (int j = 4; j < end; j++)
-                    bytes[i + j] = fBytes[j - 4];
-            }
-
-            return bytes;
-        }
-
 
         [Test]
         public unsafe void ReadFloatMethods()
         {
-            var bytes = RandomFloatBytes(4096);
+            var bytes = TestUtil.RandomFloatBytes(4096);
             
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
@@ -154,7 +89,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadFloat32Unsafe(bytes, i);
+                var f = OscValueHandle.ReadFloat32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
@@ -206,7 +141,7 @@ namespace OscCore.Tests
         public unsafe void ReadIntMethods()
         {
             const int count = 4096;
-            var bytes = RandomIntBytes(count);
+            var bytes = TestUtil.RandomIntBytes(count);
 
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
@@ -219,7 +154,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadInt32Unsafe(bytes, i);
+                var f = OscValueHandle.ReadInt32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
@@ -257,12 +192,12 @@ namespace OscCore.Tests
         public unsafe void Color32Parsing()
         {
             const int count = 4096;
-            var bytes = RandomColor32Bytes(count);
+            var bytes = TestUtil.RandomColor32Bytes(count);
 
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadColor32(bytes, i);
+                var f = OscValueHandle.ReadColor32(bytes, i);
             }
             Stopwatch.Stop();
             var sTicks = Stopwatch.ElapsedTicks;
@@ -282,7 +217,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscParser.ReadColor32Unsafe(bytes, i);
+                var f = OscValueHandle.ReadColor32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var uTicks = Stopwatch.ElapsedTicks;
@@ -330,14 +265,14 @@ namespace OscCore.Tests
         public unsafe void TimestampParsing()
         {
             const int count = 4096;
-            var bytes = RandomTimestampBytes(count);
+            var bytes = TestUtil.RandomTimestampBytes(count);
 
             var size = sizeof(NtpTimestamp);
             
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += size)
             {
-                var f = OscParser.ReadTimestamp(bytes, i);
+                var f = OscValueHandle.ReadTimestamp(bytes, i);
             }
             Stopwatch.Stop();
             var sTicks = Stopwatch.ElapsedTicks;
@@ -345,7 +280,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += size)
             {
-                var f = OscParser.ReadTimestampUnsafe(bytes, i);
+                var f = OscValueHandle.ReadTimestampUnsafe(bytes, i);
             }
             Stopwatch.Stop();
             var uTicks = Stopwatch.ElapsedTicks;

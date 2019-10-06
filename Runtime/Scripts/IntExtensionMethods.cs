@@ -1,6 +1,6 @@
 namespace OscCore
 {
-    internal static class IntExtensionMethods
+    public static class IntExtensionMethods
     {
         public static int Align4(this int self)
         {

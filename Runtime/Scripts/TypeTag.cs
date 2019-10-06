@@ -47,6 +47,12 @@ namespace OscCore
                 default: return false;
             }
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe void WriteToPointer(this TypeTag tag, byte* bufferPtr, int offset)
+        {
+            *(bufferPtr + offset) = (byte) tag;
+        }
     }
 }
 

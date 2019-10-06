@@ -1,32 +1,23 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using ByteStrings;
 using UnityEngine;
 
 namespace OscCore
 {
-    unsafe struct ParserBuffer
-    {
-        fixed byte Bytes[OscParser.BufferSize];
-
-        public ref byte GetPinnableReference()
-        {
-            return ref Bytes[0];
-        }
-    }
-
     public unsafe class OscParser
     {
         public const int BufferSize = 1024 * 8;
-
-        ParserBuffer Buffer = new ParserBuffer();
 
         static GCHandle BufferHandle;
         
         readonly byte[] SelfBuffer = new byte[BufferSize];
 
         byte* BufferPtr;
+
+        static readonly Buffer<TypeTag> k_TagBuffer = new Buffer<TypeTag>(16);
 
         public OscParser()
         {
@@ -38,7 +29,39 @@ namespace OscCore
         {
             BufferHandle.Free();
         }
+
+        public static void Parse(byte[] buffer, int length)
+        {
+            var addressLength = FindAddressLength(buffer, 0);
+            var alignedAddressLength = addressLength.Align4();
+
+            var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
+            Debug.Log($"parsed address: {debugStr}");
+
+            k_TagBuffer.Count = 0;
+            ParseTags(buffer, alignedAddressLength, k_TagBuffer);
+
+            Debug.Log("tag count: " + k_TagBuffer.Count);
+            
+            
+        }
         
+        public static void ParseToByteString(byte[] buffer, int length)
+        {
+            var addressLength = FindAddressLength(buffer, 0);
+            var alignedAddressLength = addressLength.Align4();
+
+            var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
+            Debug.Log($"parsed address: {debugStr}");
+
+            k_TagBuffer.Count = 0;
+            ParseTags(buffer, alignedAddressLength, k_TagBuffer);
+
+            Debug.Log("tag count: " + k_TagBuffer.Count);
+            var bs = new ByteString();
+        }
+        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T ReadPointer<T>(byte* bufferStartPtr, int offset)
             where T: unmanaged
@@ -48,7 +71,6 @@ namespace OscCore
 
         /// <summary>
         /// Validate an OSC Address' name.
-        /// This will reject valid Address Patterns, use 
         /// </summary>
         /// <param name="address">The address of an OSC method</param>
         /// <returns>true if the address is valid, false otherwise</returns>
@@ -118,99 +140,7 @@ namespace OscCore
             tags.Count = outIndex;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe double ReadFloat64Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe float ReadFloat32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
-        }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe long ReadInt64Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe int ReadInt32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static MidiMessage ReadMidi(byte[] bytes, int offset)
-        {
-            return new MidiMessage(bytes, offset);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe MidiMessage ReadMidiUnsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset])
-            {
-                return *(MidiMessage*) ptr;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static unsafe T ReadUnsafe<T>(byte[] bytes, int offset)
-            where T: unmanaged
-        {
-            fixed (byte* ptr = &bytes[offset]) return *(T*) ptr;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe NtpTimestamp ReadTimestampUnsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset])
-            {
-                return *(NtpTimestamp*) ptr;
-            }
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static NtpTimestamp ReadTimestamp(byte[] bytes, int offset)
-        {
-            var seconds = BitConverter.ToUInt32(bytes, offset);
-            var fractions = BitConverter.ToUInt32(bytes, offset + 4);
-            return new NtpTimestamp(seconds, fractions);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Color32 ReadColor32(byte[] bytes, int offset)
-        {
-            var r = bytes[offset];
-            var g = bytes[offset + 1];
-            var b = bytes[offset + 2];
-            var a = bytes[offset + 3];
-            return new Color32(r, g, b, a);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe Color32 ReadColor32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset])
-            {
-                return *(Color32*) ptr;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static OscBlob ReadBlob(byte[] bytes, int offset)
-        {
-            return new OscBlob(bytes, offset);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static char ReadAsciiChar32(byte[] bytes, int offset)
-        {
-            return (char) bytes[offset];
-        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ByteString ReadNewByteStringAddress(byte[] bytes, int offset)
@@ -239,20 +169,35 @@ namespace OscCore
                 return -1;
             
             var index = offset + 1;
+
+            byte b = bytes[index];
             // we don't support lacking a type tag string
-            while (bytes[index] != Constant.Comma)
+            while (b != byte.MinValue && b != Constant.Comma)
+            {
+                b = bytes[index];
                 index++;
+            }
 
             return index - offset;
         }
-
-        // the methods below are here to keep the pattern with all other types, despite returning constant values.
-        // We want a method associated with reading each type tag.
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadTrueTag(byte[] bytes, int offset) { return true; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool ReadFalseTag(byte[] bytes, int offset) { return false; }
+        // modified from the best answer at
+        // https://stackoverflow.com/questions/11660127/faster-way-to-swap-endianness-in-c-sharp-with-32-bit-words
+        public static unsafe void SwapX4(byte* Source, int offset = 0)
+        {
+            var bp = Source + offset;
+            byte* bp_stop = bp + 4;  
+
+            while (bp < bp_stop)  
+            {
+                *(uint*)bp = (uint)(
+                    (*bp       << 24) |
+                    (*(bp + 1) << 16) |
+                    (*(bp + 2) <<  8) |
+                    (*(bp + 3)      ));
+                bp += 4;  
+            }  
+        }
     }
 }
 

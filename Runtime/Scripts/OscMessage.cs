@@ -8,8 +8,6 @@ namespace OscCore
         
         public Buffer<TypeTag, int> TagsToOffset;
         
-        
-
         public void ReadAll()
         {
             var tags = TagsToOffset.Keys;
@@ -21,29 +19,29 @@ namespace OscCore
                 switch (tag)
                 {
                     case TypeTag.False:
-                        OscParser.ReadFalseTag(SharedBuffer, offset); break;
+                        OscValueHandle.ReadFalseTag(SharedBuffer, offset); break;
                     case TypeTag.True:
-                        OscParser.ReadTrueTag(SharedBuffer, offset); break;
+                        OscValueHandle.ReadTrueTag(SharedBuffer, offset); break;
                     // no bytes or return values for these 2
                     case TypeTag.Infinitum:        
                     case TypeTag.Nil:
                         break;
                     case TypeTag.Blob:
-                        OscParser.ReadBlob(SharedBuffer, offset); break;
+                        OscValueHandle.ReadBlob(SharedBuffer, offset); break;
                     case TypeTag.AsciiChar32:
-                        OscParser.ReadAsciiChar32(SharedBuffer, offset); break;
+                        OscValueHandle.ReadAsciiChar32(SharedBuffer, offset); break;
                     case TypeTag.Float64:
-                        OscParser.ReadFloat64Unsafe(SharedBuffer, offset); break;
+                        OscValueHandle.ReadFloat64Unsafe(SharedBuffer, offset); break;
                     case TypeTag.Float32:
-                        OscParser.ReadFloat32Unsafe(SharedBuffer, offset); break;
+                        OscValueHandle.ReadFloat32Unsafe(SharedBuffer, offset); break;
                     case TypeTag.Int64:
-                       OscParser.ReadInt64Unsafe(SharedBuffer, offset); break;
+                       OscValueHandle.ReadInt64Unsafe(SharedBuffer, offset); break;
                     case TypeTag.Int32:
-                        OscParser.ReadInt32Unsafe(SharedBuffer, offset); break;
+                        OscValueHandle.ReadInt32Unsafe(SharedBuffer, offset); break;
                     case TypeTag.MIDI:
-                        OscParser.ReadMidiUnsafe(SharedBuffer, offset); break;
+                        OscValueHandle.ReadMidiUnsafe(SharedBuffer, offset); break;
                     case TypeTag.Color32:
-                        OscParser.ReadColor32Unsafe(SharedBuffer, offset); break;
+                        OscValueHandle.ReadColor32Unsafe(SharedBuffer, offset); break;
                 }
             }
         }
