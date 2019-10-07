@@ -41,7 +41,7 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Read a single 32-bit int message element, with NO TYPE SAFETY CHECK!
+        /// Read a single 32-bit int message element, without checking the type tag of the element.
         /// Only call this if you are really sure that the element at the given index is a valid integer,
         /// as the performance difference is small.
         /// </summary>

@@ -9,7 +9,7 @@ namespace OscCore
         Infinitum = 73,                 // I, non-standard
         Nil = 78,                       // N, non-standard
         AltTypeString = 84,             // S, non-standard
-        True = 84,                      // T, non-standard
+        True = 85,                      // T, non-standard
         ArrayStart = 91,                // [, non-standard
         ArrayEnd = 93,                  // ], non-standard
         Blob = 98,                      // b, STANDARD

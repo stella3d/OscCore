@@ -39,7 +39,7 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Read a single 32-bit float message element, with NO TYPE SAFETY CHECK!
+        /// Read a single 32-bit float message element, without checking the type tag of the element.
         /// Only call this if you are really sure that the element at the given index is a valid float,
         /// as the performance difference is small.
         /// </summary>

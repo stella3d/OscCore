@@ -102,12 +102,12 @@ namespace OscCore.Tests
         [Test]
         public void ReadFloatElement_CheckedVsUnchecked()
         {
-            const int count = 1024;
+            const int count = 2048;
             var values = FromBytes(m_BigEndianFloatSourceBytes, count, TypeTag.Float32);
 
             float value = 0f;
             Stopwatch.Restart();
-            for (int i = 0; i < count; i += 4)
+            for (int i = 0; i < count; i++)
             {
                 value = values.ReadFloatElement(i);
             }
@@ -116,7 +116,7 @@ namespace OscCore.Tests
             Debug.Log($"{count} elements, checked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
 
             Stopwatch.Restart();
-            for (int i = 0; i < count; i += 4)
+            for (int i = 0; i < count; i++)
             {
                 value = values.ReadFloatElementUnchecked(i);
             }
@@ -128,27 +128,27 @@ namespace OscCore.Tests
         [Test]
         public void ReadIntElement_CheckedVsUnchecked()
         {
-            const int count = 1024;
+            const int count = 2048;
             var values = FromBytes(m_BigEndianIntSourceBytes, count, TypeTag.Int32);
 
             float value = 0f;
             Stopwatch.Restart();
-            for (int i = 0; i < count; i += 4)
+            for (int i = 0; i < count; i++)
             {
                 value = values.ReadIntElement(i);
             }
             Stopwatch.Stop();
 
-            Debug.Log($"{count} elements, checked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count} elements, checked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
 
             Stopwatch.Restart();
-            for (int i = 0; i < count; i += 4)
+            for (int i = 0; i < count; i++)
             {
                 value = values.ReadIntElementUnchecked(i);
             }
             Stopwatch.Stop();
             
-            Debug.Log($"{count} elements, unchecked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count} elements, unchecked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
         }
     }
 }

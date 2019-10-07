@@ -5,7 +5,7 @@ namespace OscCore
 {
     public sealed unsafe partial class OscMessageValues
     {
-        const int k_ResizeByteHeadroom = 256;
+        const int k_ResizeByteHeadroom = 1024;    
         
         /// <summary>
         /// Read a blob element.
@@ -35,15 +35,10 @@ namespace OscCore
                     // var size = BitConverter.ToInt32(m_SharedBuffer, offset);
                     int size = *(SharedBufferPtr + offset);
                     var dataStart = offset + 4;    // skip the size int
-                    if (copyTo.Length <= size)
-                        Array.Resize(ref copyTo, size + k_ResizeByteHeadroom);
+                    if (copyTo.Length - copyOffset <= size)
+                        Array.Resize(ref copyTo, size + copyOffset + k_ResizeByteHeadroom);
 
                     Buffer.BlockCopy(m_SharedBuffer, dataStart, copyTo, copyOffset, size);
-
-                    fixed (byte* copyPtr = &copyTo[copyOffset])
-                    {
-                        Buffer.MemoryCopy(SharedBufferPtr + dataStart, copyPtr, size, size);
-                    }
                     return size;
                 default: 
                     return default;

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
+using UnityEngine;
 
 namespace OscCore
 {
@@ -25,7 +26,7 @@ namespace OscCore
             var offset = Offsets[index];
             switch (Tags[index])
             {
-                case TypeTag.AltTypeString:
+                case TypeTag.AltTypeString: 
                 case TypeTag.String:
                     var length = 0;
                     while (m_SharedBuffer[offset + length] != byte.MinValue) length++;
@@ -57,34 +58,30 @@ namespace OscCore
                               m_SharedBuffer[offset + 2] <<  8 |
                               m_SharedBuffer[offset + 3];
                     return i32.ToString(CultureInfo.CurrentCulture);
+                case TypeTag.False: 
+                    return "False";
+                case TypeTag.True: 
+                    return "True";
+                case TypeTag.Nil: 
+                    return "Nil";
+                case TypeTag.Infinitum: 
+                    return "Infinitum";
+                case TypeTag.Color32:
+                    var color32Ptr = SharedBufferPtr + offset;
+                    var color32 = *(Color32*) color32Ptr;
+                    return color32.ToString();
+                case TypeTag.MIDI:
+                    var midiPtr = SharedBufferPtr + offset;
+                    var midi = *(MidiMessage*) midiPtr;
+                    return midi.ToString();
+                case TypeTag.AsciiChar32:
+                    // ascii chars are encoded in the last byte of the 4-byte block
+                    return ((char) m_SharedBuffer[offset + 3]).ToString();
                 default:
                     return string.Empty;
             }
         }
         
-        /// <summary>
-        /// Read a single string message element, with NO TYPE SAFETY CHECK!
-        /// Only call this if you are really sure that the element at the given index is a valid OSC string,
-        /// as the performance difference is small.
-        /// </summary>
-        /// <param name="index">The element index</param>
-        /// <returns>The value of the element</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ReadStringElementUnchecked(int index)
-        {
-#if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
-#endif
-            var offset = Offsets[index];
-            var length = 0;
-            while (m_SharedBuffer[offset + length] != byte.MinValue) length++;
-            return Encoding.ASCII.GetString(m_SharedBuffer, offset, length);
-        }
-
         /// <summary>
         /// Read a single string message element as bytes.
         /// </summary>
@@ -101,17 +98,22 @@ namespace OscCore
                 return default;
             }
 #endif
-            var offset = Offsets[index];
-            
-            int i;
-            for (i = offset; i < m_SharedBuffer.Length; i++)
+            switch (Tags[index])
             {
-                byte b = m_SharedBuffer[i];
-                if (b == byte.MinValue) break;
-                copyTo[i - offset] = b;
+                case TypeTag.AltTypeString:
+                case TypeTag.String:
+                    int i;
+                    var offset = Offsets[index];
+                    for (i = offset; i < m_SharedBuffer.Length; i++)
+                    {
+                        byte b = m_SharedBuffer[i];
+                        if (b == byte.MinValue) break;
+                        copyTo[i - offset] = b;
+                    }
+                    return i - offset;
+                default:
+                    return default;
             }
-
-            return i - offset;
         }
         
         /// <summary>
@@ -131,19 +133,25 @@ namespace OscCore
                 return default;
             }
 #endif
-            var offset = Offsets[index];
-            
-            int i;
-            // when this is subtracted from i, it's the same as i - offset + copyOffset
-            var copyStartOffset = offset - copyOffset;
-            for (i = offset; i < m_SharedBuffer.Length; i++)
+            switch (Tags[index])
             {
-                byte b = m_SharedBuffer[i];
-                if (b == byte.MinValue) break;
-                copyTo[i - copyStartOffset] = b;
-            }
+                case TypeTag.AltTypeString:
+                case TypeTag.String:
+                    int i;
+                    var offset = Offsets[index];
+                    // when this is subtracted from i, it's the same as i - offset + copyOffset
+                    var copyStartOffset = offset - copyOffset;
+                    for (i = offset; i < m_SharedBuffer.Length; i++)
+                    {
+                        byte b = m_SharedBuffer[i];
+                        if (b == byte.MinValue) break;
+                        copyTo[i - copyStartOffset] = b;
+                    }
 
-            return i - offset;
+                    return i - offset;
+                default:
+                    return default;
+            }
         }
     }
 }

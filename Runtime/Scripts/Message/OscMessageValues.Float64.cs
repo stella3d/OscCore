@@ -55,7 +55,7 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Read a single 64-bit float (double) message element, with NO TYPE SAFETY CHECK!
+        /// Read a single 64-bit float (double) message element, without checking the type tag of the element.
         /// Only call this if you are really sure that the element at the given index is a valid double,
         /// as the performance difference is small.
         /// </summary>

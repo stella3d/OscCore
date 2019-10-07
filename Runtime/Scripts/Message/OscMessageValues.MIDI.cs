@@ -30,7 +30,7 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Read a single MIDI message element, with NO TYPE SAFETY CHECK!
+        /// Read a single MIDI message element, without checking the type tag of the element.
         /// Only call this if you are really sure that the element at the given index is a valid MIDI message,
         /// as the performance difference is small.
         /// </summary>
