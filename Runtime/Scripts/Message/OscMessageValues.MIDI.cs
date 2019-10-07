@@ -10,6 +10,7 @@ namespace OscCore
         /// </summary>
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MidiMessage ReadMidiElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
@@ -19,11 +20,10 @@ namespace OscCore
                 return default;
             }
 #endif
-            var offset = Offsets[index];
             switch (Tags[index])
             {
                 case TypeTag.MIDI:
-                    return *(MidiMessage*) (SharedBufferPtr + offset);
+                    return *(MidiMessage*) (SharedBufferPtr + Offsets[index]);
                 default:
                     return default;
             }

@@ -9,7 +9,10 @@ namespace OscCore
 {
     public unsafe class OscParser
     {
-        public const int BufferSize = 1024 * 8;
+        // TODO - make these preferences options
+        public const int MaxElementsPerMessage = 32;
+        public const int MaxBlobSize = 1024 * 256;
+        public const int BufferSize = 1024 * 64 + MaxBlobSize;
 
         static GCHandle BufferHandle;
         
@@ -17,16 +20,15 @@ namespace OscCore
 
         byte* BufferPtr;
 
-        static readonly Buffer<TypeTag> k_TagBuffer = new Buffer<TypeTag>(16);
+        static readonly Buffer<TypeTag> k_TagBuffer = new Buffer<TypeTag>(MaxElementsPerMessage);
 
         static OscMessageValues m_MessageValues;
 
         public OscParser()
         {
-            // TODO - initial capacity option ?
-            m_MessageValues = new OscMessageValues(SelfBuffer, 8);
-            BufferHandle = GCHandle.Alloc(SelfBuffer, GCHandleType.Pinned);
+            BufferHandle = GCHandle.Alloc(SelfBuffer);
             BufferPtr = (byte*) BufferHandle.AddrOfPinnedObject();
+            m_MessageValues = new OscMessageValues(SelfBuffer, BufferHandle, MaxElementsPerMessage);
         }
 
         ~OscParser()

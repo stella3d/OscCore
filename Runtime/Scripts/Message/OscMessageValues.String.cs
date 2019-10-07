@@ -8,8 +8,8 @@ namespace OscCore
     public sealed unsafe partial class OscMessageValues
     {
         /// <summary>
-        /// Read a single 32-bit RGBA color message element.
-        /// Checks the element type before reading & returns default if it's not interpretable as a color.
+        /// Read a single string message element.
+        /// Checks the element type before reading & returns empty if it's not interpretable as a string.
         /// </summary>
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
@@ -90,7 +90,6 @@ namespace OscCore
         /// </summary>
         /// <param name="index">The element index</param>
         /// <param name="copyTo">The byte array to copy the string's bytes to</param>
-        /// <param name="copyOffset"></param>
         /// <returns>The byte length of the string</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadStringElementBytes(int index, byte[] copyTo)
