@@ -19,8 +19,12 @@ namespace OscCore
 
         static readonly Buffer<TypeTag> k_TagBuffer = new Buffer<TypeTag>(16);
 
+        static OscMessageValues m_MessageValues;
+
         public OscParser()
         {
+            // TODO - initial capacity option ?
+            m_MessageValues = new OscMessageValues(SelfBuffer, 8);
             BufferHandle = GCHandle.Alloc(SelfBuffer, GCHandleType.Pinned);
             BufferPtr = (byte*) BufferHandle.AddrOfPinnedObject();
         }
@@ -140,8 +144,6 @@ namespace OscCore
             tags.Count = outIndex;
         }
         
-        
-        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ByteString ReadNewByteStringAddress(byte[] bytes, int offset)
         {
@@ -183,10 +185,10 @@ namespace OscCore
         
         // modified from the best answer at
         // https://stackoverflow.com/questions/11660127/faster-way-to-swap-endianness-in-c-sharp-with-32-bit-words
-        public static unsafe void SwapX4(byte* Source, int offset = 0)
+        public static unsafe void SwapX4(byte* Source, int offset = 0, int length = 4)
         {
             var bp = Source + offset;
-            byte* bp_stop = bp + 4;  
+            byte* bp_stop = bp + length;  
 
             while (bp < bp_stop)  
             {
@@ -197,6 +199,28 @@ namespace OscCore
                     (*(bp + 3)      ));
                 bp += 4;  
             }  
+        }
+
+        public static unsafe int ReadBigEndianInt32Unsafe(byte* Source, int offset = 0)
+        {
+            var bp = Source + offset;
+
+            *(int*)bp = (
+                (*bp       << 24) |
+                (*(bp + 1) << 16) |
+                (*(bp + 2) <<  8) |
+                (*(bp + 3)      ));
+
+            return *bp;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int ReadBigEndianInt(byte[] buffer, int offset)
+        {
+            return buffer[offset    ] << 24 |
+                   buffer[offset + 1] << 16 |
+                   buffer[offset + 2] <<  8 |
+                   buffer[offset + 3];
         }
     }
 }

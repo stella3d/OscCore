@@ -89,7 +89,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscValueHandle.ReadFloat32Unsafe(bytes, i);
+                var f = OscMessageValues.ReadFloat32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
@@ -154,7 +154,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscValueHandle.ReadInt32Unsafe(bytes, i);
+                var f = OscMessageValues.ReadInt32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var unsafeConvertTicks = Stopwatch.ElapsedTicks;
@@ -197,7 +197,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscValueHandle.ReadColor32(bytes, i);
+                var f = OscMessageValues.ReadColor32(bytes, i);
             }
             Stopwatch.Stop();
             var sTicks = Stopwatch.ElapsedTicks;
@@ -217,7 +217,7 @@ namespace OscCore.Tests
             Stopwatch.Restart();
             for (int i = 0; i < bytes.Length; i += 4)
             {
-                var f = OscValueHandle.ReadColor32Unsafe(bytes, i);
+                var f = OscMessageValues.ReadColor32Unsafe(bytes, i);
             }
             Stopwatch.Stop();
             var uTicks = Stopwatch.ElapsedTicks;
@@ -259,57 +259,6 @@ namespace OscCore.Tests
 
             Debug.Log($"element count {count / 4} - safe {sTicks}, inline {sInlineTicks}, ptr read method {ptrReadTicks}\n" + 
                       $"unsafe {uTicks}, inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
-        }
-        
-        [Test]
-        public unsafe void TimestampParsing()
-        {
-            const int count = 4096;
-            var bytes = TestUtil.RandomTimestampBytes(count);
-
-            var size = sizeof(NtpTimestamp);
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < bytes.Length; i += size)
-            {
-                var f = OscValueHandle.ReadTimestamp(bytes, i);
-            }
-            Stopwatch.Stop();
-            var sTicks = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < bytes.Length; i += size)
-            {
-                var f = OscValueHandle.ReadTimestampUnsafe(bytes, i);
-            }
-            Stopwatch.Stop();
-            var uTicks = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < bytes.Length; i += size)
-            {
-                fixed (byte* ptr = &bytes[i])
-                {
-                    var f = *(NtpTimestamp*) ptr;
-                }
-            }
-            Stopwatch.Stop();
-            var uInlineTicks = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            fixed (byte* ptr = bytes)
-            {
-                for (int i = 0; i < bytes.Length; i += size)
-                {
-                    var f = *(NtpTimestamp*) (ptr + i);
-                }
-            }
-
-            Stopwatch.Stop();
-            var uInline2Ticks = Stopwatch.ElapsedTicks;
-
-            Debug.Log($"timestamp parsing - element count {count / 4}, ticks - safe {sTicks}, unsafe {uTicks},\n" + 
-                      $"inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
         }
     }
 }
