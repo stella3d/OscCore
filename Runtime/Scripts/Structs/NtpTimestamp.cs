@@ -66,7 +66,7 @@ namespace OscCore
 
             var fractionMs = Fractions * k_FractionMillisecondMultiplier;
             var seconds = (double) Seconds * 1000 + fractionMs;
-            return epoch.AddSeconds(seconds);
+            return epoch.AddMilliseconds(seconds);
         }
 
         public bool Equals(NtpTimestamp other)
