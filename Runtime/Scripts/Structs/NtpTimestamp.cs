@@ -8,7 +8,7 @@ namespace OscCore
     {
         static readonly DateTime k_Epoch1900 = DateTime.Parse("1900-01-01 00:00:00.000");
         static readonly DateTime k_Epoch2036 = DateTime.Parse("2036-02-07 06:28:15");
-        
+
         public readonly uint Seconds;
         public readonly uint Fractions;
 
@@ -37,6 +37,22 @@ namespace OscCore
             var bFractions = *(uint*) ptr + 4;
             uint fractions = (bFractions & 0x000000FFU) << 24 | (bFractions & 0x0000FF00U) << 8 |
                            (bFractions & 0x00FF0000U) >> 8 | (bFractions & 0xFF000000U) >> 24;
+            
+            return new NtpTimestamp(seconds, fractions);
+        }
+        
+        public static unsafe NtpTimestamp FromBigEndianBytesNew(byte* bufferPtr, int offset)
+        {
+            var ptr = bufferPtr + offset;
+
+            var bSeconds = *(uint*) ptr;
+            // swap bytes from big to little endian 
+            uint seconds = (bSeconds & 0x000000FFU) << 24 | (bSeconds & 0x0000FF00U) << 8 |
+                           (bSeconds & 0x00FF0000U) >> 8 | (bSeconds & 0xFF000000U) >> 24;
+
+            var bFractions = *(uint*) ptr + 4;
+            uint fractions = (bFractions & 0x000000FFU) << 24 | (bFractions & 0x0000FF00U) << 8 |
+                             (bFractions & 0x00FF0000U) >> 8 | (bFractions & 0xFF000000U) >> 24;
             
             return new NtpTimestamp(seconds, fractions);
         }

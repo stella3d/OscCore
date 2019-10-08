@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-
 namespace OscCore
 {
     public sealed unsafe partial class OscMessageValues
@@ -10,7 +8,6 @@ namespace OscCore
         /// </summary>
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NtpTimestamp ReadTimestampElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
@@ -23,7 +20,17 @@ namespace OscCore
             switch (Tags[index])
             {
                 case TypeTag.TimeTag:
-                    return NtpTimestamp.FromBigEndianBytes(SharedBufferPtr, Offsets[index]);
+                    var ptr = SharedBufferPtr + Offsets[index];
+                    var bSeconds = *(uint*) ptr;
+                    // swap bytes from big to little endian 
+                    uint seconds = (bSeconds & 0x000000FFU) << 24 | (bSeconds & 0x0000FF00U) << 8 |
+                                   (bSeconds & 0x00FF0000U) >> 8 | (bSeconds & 0xFF000000U) >> 24;
+
+                    var bFractions = *(uint*) ptr + 4;
+                    uint fractions = (bFractions & 0x000000FFU) << 24 | (bFractions & 0x0000FF00U) << 8 |
+                                     (bFractions & 0x00FF0000U) >> 8 | (bFractions & 0xFF000000U) >> 24;
+                    
+                    return new NtpTimestamp(seconds, fractions);
                 default:
                     return default;
             }
@@ -36,7 +43,6 @@ namespace OscCore
         /// </summary>
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NtpTimestamp ReadTimestampElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
@@ -58,7 +64,6 @@ namespace OscCore
                              (bFractions & 0x00FF0000U) >> 8 | (bFractions & 0xFF000000U) >> 24;
             
             return new NtpTimestamp(seconds, fractions);
-            //return NtpTimestamp.FromBigEndianBytes(SharedBufferPtr, Offsets[index]);
         }
     }
 }
