@@ -23,10 +23,8 @@ namespace OscCore.Tests
         
         static byte[] SingleFloatMessage(string address, float value)
         {
-            var addressByteCount = Encoding.ASCII.GetByteCount(address);
-            var alignedByteCount = addressByteCount.Align4();
-            
             var addressBytes = Encoding.ASCII.GetBytes(address);
+            var alignedByteCount = (addressBytes.Length + 3) & ~3;
             
             var bytes = new byte[alignedByteCount + 8];
             for (var i = 0; i < addressBytes.Length; i++)

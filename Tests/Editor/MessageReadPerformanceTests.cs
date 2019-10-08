@@ -20,6 +20,7 @@ namespace OscCore.Tests
         byte[] m_BigEndianIntSourceBytes;
         byte[] m_BigEndianFloatSourceBytes;
         byte[] m_MidiSourceBytes;
+        byte[] m_TimeSourceBytes;
         
         int[] m_IntReadData;
         float[] m_FloatReadData;
@@ -34,6 +35,7 @@ namespace OscCore.Tests
             m_BigEndianFloatSourceBytes = new byte[k_Count * 4];
 
             m_MidiSourceBytes = TestUtil.RandomMidiBytes(k_Count * 4);
+            m_TimeSourceBytes = TestUtil.RandomTimestampBytes(k_Count * 4);
 
             for (int i = 0; i < m_IntSourceData.Length; i++)
                 m_IntSourceData[i] = Random.Range(-10000, 10000);
@@ -186,7 +188,7 @@ namespace OscCore.Tests
         public void ReadColor32MessageElement_CheckedVsUnchecked()
         {
             const int count = 2048;
-            var values = FromBytes(m_MidiSourceBytes, count, TypeTag.MIDI);
+            var values = FromBytes(m_MidiSourceBytes, count, TypeTag.Color32);
 
             Color32 color32;
             Stopwatch.Restart();
@@ -206,6 +208,54 @@ namespace OscCore.Tests
             Stopwatch.Stop();
             
             Debug.Log($"{count / 4} elements, unchecked Color32 element read: {Stopwatch.ElapsedTicks} ticks");
+        }
+        
+        [Test]
+        public void ReadTimestampElement_CheckedVsUnchecked()
+        {
+            const int count = 2048;
+            var values = FromBytes(m_TimeSourceBytes, count, TypeTag.TimeTag);
+
+            NtpTimestamp ts;
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                ts = values.ReadTimestampElement(i);
+            }
+            Stopwatch.Stop();
+
+            Debug.Log($"{count / 8} elements, checked NTP timestamp element read: {Stopwatch.ElapsedTicks} ticks");
+
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                ts = values.ReadTimestampElementUnchecked(i);
+            }
+            Stopwatch.Stop();
+            
+            Debug.Log($"{count / 8} elements, unchecked NTP timestamp element read: {Stopwatch.ElapsedTicks} ticks");
+        }
+        
+        [Test]
+        public unsafe void Align4FunctionVsInlineSpeed()
+        {
+            Stopwatch.Restart();
+            for (int i = 0; i < m_IntSourceData.Length; i++)
+            {
+                var i32 = m_IntSourceData[i].Align4();
+            }
+            Stopwatch.Stop();
+            var ticks1 = Stopwatch.ElapsedTicks;
+            
+            Stopwatch.Restart();
+            for (int i = 0; i < m_IntSourceData.Length; i++)
+            {
+                var i32 = (m_IntSourceData[i] + 3) & ~3;
+            }
+            Stopwatch.Stop();
+            var ticks2 = Stopwatch.ElapsedTicks;
+
+            Debug.Log($"element count {m_IntSourceData.Length} - align 4 function {ticks1}, manual inline {ticks2}");
         }
     }
 }

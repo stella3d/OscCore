@@ -38,7 +38,7 @@ namespace OscCore
         public static void Parse(byte[] buffer, int length)
         {
             var addressLength = FindAddressLength(buffer, 0);
-            var alignedAddressLength = addressLength.Align4();
+            var alignedAddressLength = (addressLength + 3) & ~3;    // align to 4 bytes
 
             var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
             Debug.Log($"parsed address: {debugStr}");
@@ -52,7 +52,7 @@ namespace OscCore
         public static void ParseToByteString(byte[] buffer, int length)
         {
             var addressLength = FindAddressLength(buffer, 0);
-            var alignedAddressLength = addressLength.Align4();
+            var alignedAddressLength = (addressLength + 3) & ~3;    // align to 4 bytes
 
             var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
             Debug.Log($"parsed address: {debugStr}");

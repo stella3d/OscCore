@@ -5,7 +5,7 @@ namespace OscCore
     public sealed unsafe partial class OscMessageValues
     {
         /// <summary>
-        /// Read a single 32-bit integer message element.
+        /// Read a single NTP timestamp message element.
         /// Checks the element type before reading & returns 0 if it's not interpretable as a integer.
         /// </summary>
         /// <param name="index">The element index</param>
@@ -30,8 +30,8 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Read a single MIDI message element, without checking the type tag of the element.
-        /// Only call this if you are really sure that the element at the given index is a valid MIDI message,
+        /// Read a single NTP timestamp message element, without checking the type tag of the element.
+        /// Only call this if you are really sure that the element at the given index is a valid timestamp,
         /// as the performance difference is small.
         /// </summary>
         /// <param name="index">The element index</param>

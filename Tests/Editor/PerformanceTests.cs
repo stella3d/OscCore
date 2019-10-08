@@ -260,5 +260,7 @@ namespace OscCore.Tests
             Debug.Log($"element count {count / 4} - safe {sTicks}, inline {sInlineTicks}, ptr read method {ptrReadTicks}\n" + 
                       $"unsafe {uTicks}, inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
         }
+        
+        
     }
 }
