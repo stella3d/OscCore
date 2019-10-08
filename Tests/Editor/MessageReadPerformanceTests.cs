@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using NUnit.Framework;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 using Random = UnityEngine.Random;
 
@@ -14,9 +15,11 @@ namespace OscCore.Tests
         
         int[] m_IntSourceData;
         float[] m_FloatSourceData;
+        MidiMessage[] m_MidiSourceData;
         
         byte[] m_BigEndianIntSourceBytes;
         byte[] m_BigEndianFloatSourceBytes;
+        byte[] m_MidiSourceBytes;
         
         int[] m_IntReadData;
         float[] m_FloatReadData;
@@ -29,6 +32,8 @@ namespace OscCore.Tests
             m_IntReadData = new int[k_Count];
             m_BigEndianIntSourceBytes = new byte[k_Count * 4];
             m_BigEndianFloatSourceBytes = new byte[k_Count * 4];
+
+            m_MidiSourceBytes = TestUtil.RandomMidiBytes(k_Count * 4);
 
             for (int i = 0; i < m_IntSourceData.Length; i++)
                 m_IntSourceData[i] = Random.Range(-10000, 10000);
@@ -113,7 +118,7 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
 
-            Debug.Log($"{count} elements, checked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count / 4} elements, checked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
 
             Stopwatch.Restart();
             for (int i = 0; i < count; i++)
@@ -122,7 +127,7 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
             
-            Debug.Log($"{count} elements, unchecked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count / 4} elements, unchecked float32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
         }
         
         [Test]
@@ -139,7 +144,7 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
 
-            Debug.Log($"{count} elements, checked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count / 4} elements, checked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
 
             Stopwatch.Restart();
             for (int i = 0; i < count; i++)
@@ -148,7 +153,59 @@ namespace OscCore.Tests
             }
             Stopwatch.Stop();
             
-            Debug.Log($"{count} elements, unchecked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+            Debug.Log($"{count / 4} elements, unchecked int32 element read: {Stopwatch.ElapsedTicks} ticks, last value {value}");
+        }
+        
+        [Test]
+        public void ReadMidiMessageElement_CheckedVsUnchecked()
+        {
+            const int count = 2048;
+            var values = FromBytes(m_MidiSourceBytes, count, TypeTag.MIDI);
+
+            MidiMessage midi;
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                midi = values.ReadMidiElement(i);
+            }
+            Stopwatch.Stop();
+
+            Debug.Log($"{count / 4} elements, checked MIDI element read: {Stopwatch.ElapsedTicks} ticks");
+
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                midi = values.ReadMidiElementUnchecked(i);
+            }
+            Stopwatch.Stop();
+            
+            Debug.Log($"{count / 4} elements, unchecked MIDI element read: {Stopwatch.ElapsedTicks} ticks");
+        }
+        
+        [Test]
+        public void ReadColor32MessageElement_CheckedVsUnchecked()
+        {
+            const int count = 2048;
+            var values = FromBytes(m_MidiSourceBytes, count, TypeTag.MIDI);
+
+            Color32 color32;
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                color32 = values.ReadColor32Element(i);
+            }
+            Stopwatch.Stop();
+
+            Debug.Log($"{count / 4} elements, checked Color32 element read: {Stopwatch.ElapsedTicks} ticks");
+
+            Stopwatch.Restart();
+            for (int i = 0; i < count; i++)
+            {
+                color32 = values.ReadColor32ElementUnchecked(i);
+            }
+            Stopwatch.Stop();
+            
+            Debug.Log($"{count / 4} elements, unchecked Color32 element read: {Stopwatch.ElapsedTicks} ticks");
         }
     }
 }

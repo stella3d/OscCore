@@ -14,19 +14,6 @@ namespace OscCore
             Read(bytes, offset);
         }
         
-        public unsafe OscBlob(byte[] bytes, int offset, int destOffset)
-        {
-            fixed (byte* ptr = &bytes[offset])
-            {
-                int size = *ptr;
-                CopiedBuffer = new byte[Size + destOffset];
-                fixed (byte* destPtr = &CopiedBuffer[0])
-                {
-                    Buffer.MemoryCopy(ptr + 4, destPtr + destOffset, size, size);
-                }
-            }
-        }
-
         public void Read(byte[] bytes, int offset)
         {
             // TODO - ptr initializer ?
@@ -46,7 +33,7 @@ namespace OscCore
 
         public override string ToString()
         {
-            return $"OSC Blob - Byte Length: {Size}";
+            return $"OSC Blob, length: {Size}";
         }
     }
 }

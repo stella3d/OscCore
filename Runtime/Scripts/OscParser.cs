@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using ByteStrings;
@@ -48,8 +47,6 @@ namespace OscCore
             ParseTags(buffer, alignedAddressLength, k_TagBuffer);
 
             Debug.Log("tag count: " + k_TagBuffer.Count);
-            
-            
         }
         
         public static void ParseToByteString(byte[] buffer, int length)
@@ -183,37 +180,6 @@ namespace OscCore
             }
 
             return index - offset;
-        }
-        
-        // modified from the best answer at
-        // https://stackoverflow.com/questions/11660127/faster-way-to-swap-endianness-in-c-sharp-with-32-bit-words
-        public static unsafe void SwapX4(byte* Source, int offset = 0, int length = 4)
-        {
-            var bp = Source + offset;
-            byte* bp_stop = bp + length;  
-
-            while (bp < bp_stop)  
-            {
-                *(uint*)bp = (uint)(
-                    (*bp       << 24) |
-                    (*(bp + 1) << 16) |
-                    (*(bp + 2) <<  8) |
-                    (*(bp + 3)      ));
-                bp += 4;  
-            }  
-        }
-
-        public static unsafe int ReadBigEndianInt32Unsafe(byte* Source, int offset = 0)
-        {
-            var bp = Source + offset;
-
-            *(int*)bp = (
-                (*bp       << 24) |
-                (*(bp + 1) << 16) |
-                (*(bp + 2) <<  8) |
-                (*(bp + 3)      ));
-
-            return *bp;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -13,9 +13,9 @@ namespace OscCore.Tests
             return copy;
         }
         
-        public static byte[] RandomFloatBytes(int count = 2048)
+        public static byte[] RandomFloatBytes(int byteCount = 2048)
         {
-            var bytes = new byte[count];
+            var bytes = new byte[byteCount];
             for (int i = 0; i < bytes.Length; i += 4)
             {
                 var f = Random.Range(-1f, 1f);
@@ -29,9 +29,9 @@ namespace OscCore.Tests
             return bytes;
         }
         
-        public static byte[] RandomIntBytes(int count = 2048)
+        public static byte[] RandomIntBytes(int byteCount = 2048)
         {
-            var bytes = new byte[count];
+            var bytes = new byte[byteCount];
             for (int i = 0; i < bytes.Length; i += 4)
             {
                 var iValue = Random.Range(-1000, 1000);
@@ -43,15 +43,33 @@ namespace OscCore.Tests
             return bytes;
         }
         
-        public static byte[] RandomColor32Bytes(int count = 2048)
+        public static byte[] RandomColor32Bytes(int byteCount = 2048)
         {
-            var bytes = new byte[count];
+            var bytes = new byte[byteCount];
             for (int i = 0; i < bytes.Length; i += 4)
             {
                 var iValue = Random.Range(0, 255);
                 var iBytes = BitConverter.GetBytes(iValue);
                 for (int j = 0; j < iBytes.Length; j++)
                     bytes[i + j] = iBytes[j];
+            }
+
+            return bytes;
+        }
+        
+        public static byte[] RandomMidiBytes(int byteCount = 2048)
+        {
+            var bytes = new byte[byteCount];
+            for (int i = 0; i < bytes.Length; i += 4)
+            {
+                var port = (byte) Random.Range(1, 16);
+                var status = (byte) Random.Range(0, 127);
+                var data1 = (byte) Random.Range(10, 255);
+                var data2 = (byte) Random.Range(10, 255);
+                bytes[i] = port;
+                bytes[i + 1] = status;
+                bytes[i + 2] = data1;
+                bytes[i + 3] = data2;
             }
 
             return bytes;

@@ -24,7 +24,7 @@ namespace OscCore
             {
                 case TypeTag.AsciiChar32: 
                     // the ascii byte is placed at the end of the 4 bytes given for an element
-                    return (char) m_SharedBuffer[Offsets[index + 3]];
+                    return (char) m_SharedBuffer[Offsets[index] + 3];
                 default: 
                     return default;
             }

@@ -47,33 +47,6 @@ namespace OscCore.Tests
             Assert.AreEqual(expected[3], midi.Data2);
         }
 
-
-        [TestCase(0.01f)]
-        [TestCase(1f)]
-        [TestCase(14.4f)]
-        public unsafe void EndiannessSwapFloat(float littleEndianValue)
-        {
-            var bBytes = ReversedCopy(BitConverter.GetBytes(littleEndianValue));
-            fixed (byte* bfPtr = bBytes)
-                OscParser.SwapX4(bfPtr);
-
-            var read = BitConverter.ToSingle(bBytes, 0);
-            Assert.AreEqual(littleEndianValue, read);
-        }
-        
-        [TestCase(1)]
-        [TestCase(69)]
-        [TestCase(42000)]
-        public unsafe void EndiannessSwapInt(int littleEndianValue)
-        {
-            var bBytes = TestUtil.ReversedCopy(BitConverter.GetBytes(littleEndianValue));
-            fixed (byte* bfPtr = bBytes)
-                OscParser.SwapX4(bfPtr);
-            
-            var read = BitConverter.ToInt32(bBytes, 0);
-            Assert.AreEqual(littleEndianValue, read);
-        }
-
         byte[] ReversedCopy(byte[] source)
         {
             var copy = new byte[source.Length];

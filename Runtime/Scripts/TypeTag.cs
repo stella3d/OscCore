@@ -34,6 +34,7 @@ namespace OscCore
                 case TypeTag.False: return true;
                 case TypeTag.Infinitum: return true;
                 case TypeTag.Nil: return true;
+                case TypeTag.AltTypeString: return true;
                 case TypeTag.True: return true;
                 case TypeTag.Blob: return true;
                 case TypeTag.AsciiChar32: return true;
@@ -41,17 +42,12 @@ namespace OscCore
                 case TypeTag.Float32: return true;
                 case TypeTag.Int64: return true;
                 case TypeTag.Int32: return true;
-                case TypeTag.String: return true;        
                 case TypeTag.MIDI: return true;
                 case TypeTag.Color32: return true;
+                case TypeTag.String: return true;
+                case TypeTag.TimeTag: return true;
                 default: return false;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static unsafe void WriteToPointer(this TypeTag tag, byte* bufferPtr, int offset)
-        {
-            *(bufferPtr + offset) = (byte) tag;
         }
     }
 }

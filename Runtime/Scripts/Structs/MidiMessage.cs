@@ -3,16 +3,20 @@ using System.Runtime.InteropServices;
 
 namespace OscCore
 {
-    [StructLayout(LayoutKind.Sequential)]
+    // significant performance gains come from explicitly laying this out with the int vs sequential layout !
+    [StructLayout(LayoutKind.Explicit)]
     public struct MidiMessage : IEquatable<MidiMessage>
     {
-        public readonly byte PortId;
-        public readonly byte Status;
-        public readonly byte Data1;
-        public readonly byte Data2;
+        [FieldOffset(0)] readonly int ps12;
+        
+        [FieldOffset(0)] public readonly byte PortId;
+        [FieldOffset(1)] public readonly byte Status;
+        [FieldOffset(2)] public readonly byte Data1;
+        [FieldOffset(3)] public readonly byte Data2;
 
         public MidiMessage(byte[] bytes, int offset)
         {
+            ps12 = 0;
             PortId = bytes[offset];
             Status = bytes[offset + 1];
             Data1 = bytes[offset + 2];
@@ -21,6 +25,7 @@ namespace OscCore
         
         public MidiMessage(byte portId, byte status, byte data1, byte data2)
         {
+            ps12 = 0;
             PortId = portId;
             Status = status;
             Data1 = data1;
@@ -29,7 +34,7 @@ namespace OscCore
 
         public override string ToString()
         {
-            return $"Port ID: {PortId}, Status: {Status}, Data: {Data1} , {Data2}";
+            return $"Port ID: {PortId}, Status: {Status}, Data 1: {Data1} , 2: {Data2}";
         }
 
         public bool Equals(MidiMessage other)
