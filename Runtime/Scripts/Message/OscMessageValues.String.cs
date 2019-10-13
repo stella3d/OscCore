@@ -67,8 +67,11 @@ namespace OscCore
                 case TypeTag.Infinitum: 
                     return "Infinitum";
                 case TypeTag.Color32:
-                    var color32Ptr = SharedBufferPtr + offset;
-                    var color32 = *(Color32*) color32Ptr;
+                    m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
+                    m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
+                    m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
+                    m_SwapBuffer32[3] = m_SharedBuffer[offset];
+                    var color32 = *SwapBufferColor32Ptr;
                     return color32.ToString();
                 case TypeTag.MIDI:
                     var midiPtr = SharedBufferPtr + offset;

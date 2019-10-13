@@ -20,10 +20,15 @@ namespace OscCore
                 return default;
             }
 #endif
+            var offset = Offsets[index];
             switch (Tags[index])
             {
                 case TypeTag.Color32:
-                    return *(Color32*) (SharedBufferPtr + Offsets[index]);
+                    m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
+                    m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
+                    m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
+                    m_SwapBuffer32[3] = m_SharedBuffer[offset];
+                    return *SwapBufferColor32Ptr;
                 default:
                     return default;
             }
@@ -46,7 +51,12 @@ namespace OscCore
                 return default;
             }
 #endif
-            return *(Color32*) (SharedBufferPtr + Offsets[index]);
+            var offset = Offsets[index];
+            m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
+            m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
+            m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
+            m_SwapBuffer32[3] = m_SharedBuffer[offset];
+            return *SwapBufferColor32Ptr;
         }
     }
 }

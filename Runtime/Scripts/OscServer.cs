@@ -74,7 +74,6 @@ namespace OscCore
             var parser = Parser;
             var addressToMethod = AddressSpace.AddressToMethod;
 
-            string tempAddress = null;
             while (!m_Disposed)
             {
                 try
@@ -91,14 +90,12 @@ namespace OscCore
                     // skip the ',' and align to 4 bytes
                     var offset = addressLength + (tagCount + 4) & ~3;
                     parser.FindOffsets(offset);
-
+                    
+                    string tempAddress = null;
                     if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var method))
                     {
                         // call the method(s) associated with this OSC address    
                         method.Invoke(parser.MessageValues);
-                        // if we have any monitors, we need a string address
-                        if (m_MonitorCallbacks.Count > 0)
-                            tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
                     }
                     else if(AddressSpace.PatternCount > 0)
                     {
@@ -107,6 +104,10 @@ namespace OscCore
                         if (AddressSpace.TryMatchPatternHandler(tempAddress, out method))
                             method.Invoke(parser.MessageValues);  
                     }
+
+                    if (m_MonitorCallbacks.Count == 0) continue;
+                    if (tempAddress == null)
+                        tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
 
                     // call all monitor callbacks
                     foreach (var callback in m_MonitorCallbacks)
