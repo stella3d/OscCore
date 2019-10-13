@@ -13,19 +13,25 @@ namespace OscCore
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
-        readonly int m_BufferSize;
+
+
+        byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
 
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
         
         public int Port { get; private set; }
         public OscAddressSpace AddressSpace { get; private set; }
+        public OscParser Parser { get; private set; }
         
         public OscServer(int port, int bufferSize = 4096)
         {
             AddressSpace = new OscAddressSpace();
-            m_BufferSize = bufferSize;
-            m_MonitorCallbacks.Clear();
+            
+            m_ReadBuffer = new byte[bufferSize];
+            m_BufferHandle = GCHandle.Alloc(m_ReadBuffer, GCHandleType.Pinned);
+            Parser = new OscParser(m_ReadBuffer, m_BufferHandle);
+
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 69 };
             m_Thread = new Thread(Serve);
             Port = port;
@@ -35,12 +41,6 @@ namespace OscCore
         {
             m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             m_Thread.Start();
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
         }
 
         public bool TryAddMethod(string address, ReceiveValueMethod method) => 
@@ -69,12 +69,10 @@ namespace OscCore
         
         unsafe void Serve()
         {
-            var buffer = new byte[m_BufferSize];
-            m_BufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
-            var bufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
-
             var socket = m_Socket;
-            var parser = new OscParser(buffer, m_BufferHandle);
+            var buffer = m_ReadBuffer;
+            var bufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
+            var parser = Parser;
             var addressToMethod = AddressSpace.AddressToMethod;
 
             string tempAddress = null;
@@ -103,7 +101,7 @@ namespace OscCore
                         if (m_MonitorCallbacks.Count > 0)
                             tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
                     }
-                    else
+                    else if(AddressSpace.PatternCount > 0)
                     {
                         // if we didn't find an address match, compare the string against all of our known patterns  
                         tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
@@ -124,6 +122,12 @@ namespace OscCore
                 }
             }
         }
+        
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         void Dispose(bool disposing)
         {
@@ -133,9 +137,11 @@ namespace OscCore
             if(m_BufferHandle.IsAllocated) m_BufferHandle.Free();
             if (disposing)
             {
-                m_Socket?.Close();
-                m_Thread?.Join();
                 AddressSpace = null;
+                if(m_Socket.IsBound)
+                    m_Socket.Close();
+                if(m_Thread.ThreadState == ThreadState.Running)
+                    m_Thread.Join();
             }
         }
 

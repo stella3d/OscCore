@@ -17,11 +17,11 @@ namespace OscCore
         readonly GCHandle m_BufferHandle;
         // used to swap bytes for 32-bit numbers when reading
         readonly byte[] m_SwapBuffer32 = new byte[4];
-        readonly byte* SwapBuffer32Ptr;
+        readonly float* SwapBuffer32Ptr;
         readonly GCHandle m_Swap32Handle;
         // used to swap bytes for 64-bit numbers when reading
         readonly byte[] m_SwapBuffer64 = new byte[8];
-        readonly byte* SwapBuffer64Ptr;
+        readonly double* SwapBuffer64Ptr;
         readonly GCHandle m_Swap64Handle;
 
         /// <summary>
@@ -51,8 +51,8 @@ namespace OscCore
             // pin byte swap buffers in place, so that we can count on the pointers never changing
             m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
             m_Swap64Handle = GCHandle.Alloc(m_SwapBuffer64, GCHandleType.Pinned);
-            SwapBuffer32Ptr = (byte*) m_Swap32Handle.AddrOfPinnedObject();
-            SwapBuffer64Ptr = (byte*) m_Swap64Handle.AddrOfPinnedObject();
+            SwapBuffer32Ptr = (float*) m_Swap32Handle.AddrOfPinnedObject();
+            SwapBuffer64Ptr = (double*) m_Swap64Handle.AddrOfPinnedObject();
         }
         
         internal OscMessageValues(byte[] buffer, GCHandle handle, int elementCapacity = 8)
@@ -84,8 +84,8 @@ namespace OscCore
             // pin swap buffers in place
             m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
             m_Swap64Handle = GCHandle.Alloc(m_SwapBuffer64, GCHandleType.Pinned);
-            SwapBuffer32Ptr = (byte*) m_Swap32Handle.AddrOfPinnedObject();
-            SwapBuffer64Ptr = (byte*) m_Swap64Handle.AddrOfPinnedObject();
+            SwapBuffer32Ptr = (float*) m_Swap32Handle.AddrOfPinnedObject();
+            SwapBuffer64Ptr = (double*) m_Swap64Handle.AddrOfPinnedObject();
         }
 
         ~OscMessageValues()

@@ -1,3 +1,15 @@
-﻿{
-	"name": "OscCore.Editor"
+{
+    "name": "OscCore.Editor",
+    "references": [
+        "GUID:9d1f21c757f944f4188b1b799669c761"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
 }

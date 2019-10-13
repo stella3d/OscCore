@@ -38,17 +38,15 @@ namespace OscCore
                     m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
                     m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
                     m_SwapBuffer32[3] = m_SharedBuffer[offset];
-                    float f32 = *SwapBuffer32Ptr;
-                    return f32;
+                    return *SwapBuffer32Ptr;
                 case TypeTag.Int64:
                     long bigEndian = *(SharedBufferPtr + offset);
                     return IPAddress.NetworkToHostOrder(bigEndian);
                 case TypeTag.Int32:
-                    int i32 = m_SharedBuffer[index    ] << 24 | 
-                              m_SharedBuffer[index + 1] << 16 |
-                              m_SharedBuffer[index + 2] <<  8 |
-                              m_SharedBuffer[index + 3];
-                    return i32;
+                    return m_SharedBuffer[index    ] << 24 | 
+                           m_SharedBuffer[index + 1] << 16 |
+                           m_SharedBuffer[index + 2] <<  8 |
+                           m_SharedBuffer[index + 3];
             }
             
             return default;
@@ -62,7 +60,7 @@ namespace OscCore
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float ReadFloat64ElementUnchecked(int index)
+        public double ReadFloat64ElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
             if (index >= ElementCount)
