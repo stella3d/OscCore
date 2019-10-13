@@ -46,10 +46,9 @@ namespace OscCore
             Offsets = new int[elementCapacity];
             m_SharedBuffer = buffer;
 
-            // pin all buffers in place, so that we can count on the pointers never changing
-            m_BufferHandle = GCHandle.Alloc(m_SharedBuffer, GCHandleType.Pinned);
-            SharedBufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
+            fixed (byte* bufferPtr = buffer) { SharedBufferPtr = bufferPtr; }
 
+            // pin byte swap buffers in place, so that we can count on the pointers never changing
             m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
             m_Swap64Handle = GCHandle.Alloc(m_SwapBuffer64, GCHandleType.Pinned);
             SwapBuffer32Ptr = (byte*) m_Swap32Handle.AddrOfPinnedObject();

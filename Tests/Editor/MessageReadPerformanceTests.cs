@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using NUnit.Framework;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -21,6 +23,8 @@ namespace OscCore.Tests
         byte[] m_BigEndianFloatSourceBytes;
         byte[] m_MidiSourceBytes;
         byte[] m_TimeSourceBytes;
+
+        List<GCHandle> m_Handles = new List<GCHandle>();
         
         int[] m_IntReadData;
         float[] m_FloatReadData;
@@ -28,11 +32,16 @@ namespace OscCore.Tests
         [OneTimeSetUp]
         public void BeforeAll()
         {
+            m_Handles.Clear();
             m_IntSourceData = new int[k_Count];
             m_FloatSourceData = new float[k_Count];
             m_IntReadData = new int[k_Count];
             m_BigEndianIntSourceBytes = new byte[k_Count * 4];
             m_BigEndianFloatSourceBytes = new byte[k_Count * 4];
+            
+            
+            m_Handles.Add(GCHandle.Alloc(m_BigEndianIntSourceBytes, GCHandleType.Pinned));
+            m_Handles.Add(GCHandle.Alloc(m_BigEndianFloatSourceBytes, GCHandleType.Pinned));
 
             m_MidiSourceBytes = TestUtil.RandomMidiBytes(k_Count * 4);
             m_TimeSourceBytes = TestUtil.RandomTimestampBytes(k_Count * 4);
@@ -66,31 +75,6 @@ namespace OscCore.Tests
                 for (int j = 0; j < bBytes.Length; j++)
                     m_BigEndianFloatSourceBytes[elementStart + j] = bBytes[j];
             }
-        }
-
-        [Test]
-        public void InlineVsFunction_Int()
-        {
-            Stopwatch.Restart();
-            for (int i = 0; i < m_BigEndianIntSourceBytes.Length; i += 4)
-            {
-                var readInt = OscParser.ReadBigEndianInt(m_BigEndianIntSourceBytes, i);
-            }
-            Stopwatch.Stop();
-            
-            Debug.Log($"{k_Count} elements, safe int32 read from big-endian : {Stopwatch.ElapsedTicks} ticks");
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < m_BigEndianIntSourceBytes.Length; i += 4)
-            {
-                var readInt = m_BigEndianIntSourceBytes[i    ] << 24 |
-                              m_BigEndianIntSourceBytes[i + 1] << 16 |
-                              m_BigEndianIntSourceBytes[i + 2] <<  8 |
-                              m_BigEndianIntSourceBytes[i + 3];
-            }
-            Stopwatch.Stop();
-            
-            Debug.Log($"{k_Count} elements, inline safe int32 read from big-endian : {Stopwatch.ElapsedTicks} ticks");
         }
 
         static OscMessageValues FromBytes(byte[] bytes, int count, TypeTag tag, int byteSize = 4)

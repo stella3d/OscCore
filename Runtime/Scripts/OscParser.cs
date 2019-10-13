@@ -1,38 +1,32 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using ByteStrings;
+using BlobHandles;
 using UnityEngine;
 
 namespace OscCore
 {
-    public unsafe class OscParser
+    public unsafe class OscParser : IDisposable
     {
         // TODO - make these preferences options
         public const int MaxElementsPerMessage = 32;
         public const int MaxBlobSize = 1024 * 256;
-        public const int BufferSize = 1024 * 64 + MaxBlobSize;
 
-        static GCHandle BufferHandle;
-        
-        readonly byte[] SelfBuffer = new byte[BufferSize];
+        internal readonly byte[] Buffer;
+        readonly byte* BufferPtr;
 
-        byte* BufferPtr;
+        public readonly OscMessageValues MessageValues;
 
-        static readonly Buffer<TypeTag> k_TagBuffer = new Buffer<TypeTag>(MaxElementsPerMessage);
+        public int TagCount { get; private set; }
 
-        static OscMessageValues m_MessageValues;
+        public OscAddressSpace AddressSpace { get; internal set; }
 
-        public OscParser()
+        public OscParser(byte[] fixedBuffer, GCHandle bufferHandle)
         {
-            BufferHandle = GCHandle.Alloc(SelfBuffer);
-            BufferPtr = (byte*) BufferHandle.AddrOfPinnedObject();
-            m_MessageValues = new OscMessageValues(SelfBuffer, BufferHandle, MaxElementsPerMessage);
-        }
-
-        ~OscParser()
-        {
-            BufferHandle.Free();
+            Buffer = fixedBuffer;
+            fixed (byte* ptr = fixedBuffer) BufferPtr = ptr;
+            MessageValues = new OscMessageValues(Buffer, bufferHandle, MaxElementsPerMessage);
         }
 
         public static void Parse(byte[] buffer, int length)
@@ -42,28 +36,17 @@ namespace OscCore
 
             var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
             Debug.Log($"parsed address: {debugStr}");
-
-            k_TagBuffer.Count = 0;
-            ParseTags(buffer, alignedAddressLength, k_TagBuffer);
-
-            Debug.Log("tag count: " + k_TagBuffer.Count);
+/*
+            ParseTags(buffer, alignedAddressLength, Tags);
+            Debug.Log("tag count: " + TagBuffer.Count);
+            */
         }
         
-        public static void ParseToByteString(byte[] buffer, int length)
+        public BlobHandle ParseAddressHandle(byte[] buffer, int length)
         {
             var addressLength = FindAddressLength(buffer, 0);
-            var alignedAddressLength = (addressLength + 3) & ~3;    // align to 4 bytes
-
-            var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
-            Debug.Log($"parsed address: {debugStr}");
-
-            k_TagBuffer.Count = 0;
-            ParseTags(buffer, alignedAddressLength, k_TagBuffer);
-
-            Debug.Log("tag count: " + k_TagBuffer.Count);
-            var bs = new ByteString();
+            return new BlobHandle(buffer, addressLength);
         }
-        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T ReadPointer<T>(byte* bufferStartPtr, int offset)
@@ -72,15 +55,10 @@ namespace OscCore
             return *(T*) (bufferStartPtr + offset);
         }
 
-        /// <summary>
-        /// Validate an OSC Address' name.
-        /// </summary>
-        /// <param name="address">The address of an OSC method</param>
-        /// <returns>true if the address is valid, false otherwise</returns>
-        public bool AddressIsValid(string address)
+        internal static bool AddressIsValid(string address)
         {
             if (address[0] != '/') return false;
-            
+
             foreach (var chr in address)
             {
                 switch (chr)
@@ -100,16 +78,33 @@ namespace OscCore
 
             return true;
         }
-        
-        /// <summary>
-        /// Validate an OSC Address Pattern.
-        /// </summary>
-        /// <param name="address">An address pattern for an OSC method</param>
-        /// <returns>true if the address pattern is valid, false otherwise</returns>
-        public bool AddressPatternIsValid(string address)
+
+        internal static AddressType GetAddressType(string address)
         {
-            if (address[0] != '/') return false;
+            if (address[0] != '/') return AddressType.Invalid;
+
+            var addressValid = true;
+            foreach (var chr in address)
+            {
+                switch (chr)
+                {
+                    case ' ':
+                    case '#':
+                    case '*':
+                    case ',':
+                    case '?':
+                    case '[':
+                    case ']':
+                    case '{':
+                    case '}':
+                        addressValid = false;
+                        break;
+                }
+            }
+
+            if (addressValid) return AddressType.Address;
             
+            // if the address isn't valid, it might be a valid address pattern.
             foreach (var chr in address)
             {
                 switch (chr)
@@ -117,41 +112,54 @@ namespace OscCore
                     case ' ':
                     case '#':
                     case ',':
-                        return false;
+                        return AddressType.Invalid;
                 }
             }
 
-            return true;
+            return AddressType.Pattern;
         }
-
-        public static void ParseTags(byte[] bytes, int start, Buffer<TypeTag> tags)
+        
+        public int ParseTags(byte[] bytes, int start = 0)
         {
-            tags.Count = 0;
+            if (bytes[start] != Constant.Comma) return 0;
+            
             var tagIndex = start + 1;         // skip the starting ','
-
             var outIndex = 0;
-            var outArray = tags.Array;
+            var tags = MessageValues.Tags;
             while (true)
             {
                 var tag = (TypeTag) bytes[tagIndex];
                 if (!tag.IsSupported()) break;
-                outArray[outIndex] = tag;
+                tags[outIndex] = tag;
                 tagIndex++;
                 outIndex++; 
             }
 
-            tags.Count = outIndex;
+            MessageValues.ElementCount = outIndex;
+            return outIndex;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ByteString ReadNewByteStringAddress(byte[] bytes, int offset)
+        public int ParseTags(int start = 0)
         {
-            var length = FindAddressLength(bytes, offset);
-            return length == -1 ? default : new ByteString(bytes, length, offset);
+            if (Buffer[start] != Constant.Comma) return 0;
+            
+            var tagIndex = start + 1;         // skip the starting ','
+            var outIndex = 0;
+            var tags = MessageValues.Tags;
+            while (true)
+            {
+                var tag = (TypeTag) Buffer[tagIndex];
+                if (!tag.IsSupported()) break;
+                tags[outIndex] = tag;
+                tagIndex++;
+                outIndex++; 
+            }
+
+            MessageValues.ElementCount = outIndex;
+            return outIndex;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FindArrayLength(byte[] bytes, int offset)
+        public static int FindArrayLength(byte[] bytes, int offset = 0)
         {
             if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
                 return -1;
@@ -163,8 +171,7 @@ namespace OscCore
             return index - offset;
         }
         
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int FindAddressLength(byte[] bytes, int offset)
+        public static int FindAddressLength(byte[] bytes, int offset = 0)
         {
             if (bytes[offset] != Constant.ForwardSlash)
                 return -1;
@@ -172,23 +179,103 @@ namespace OscCore
             var index = offset + 1;
 
             byte b = bytes[index];
-            // we don't support lacking a type tag string
             while (b != byte.MinValue && b != Constant.Comma)
             {
                 b = bytes[index];
                 index++;
             }
 
-            return index - offset;
+            var length = index - offset;
+            return (length + 3) & ~3;            // align to 4 bytes
+        }
+        
+        public int FindAddressLength(int offset = 0)
+        {
+            var buffer = Buffer;
+            if (buffer[offset] != Constant.ForwardSlash)
+                return -1;
+            
+            var index = offset + 1;
+
+            byte b = buffer[index];
+            while (b != byte.MinValue && b != Constant.Comma)
+            {
+                b = buffer[index];
+                index++;
+            }
+
+            var length = index - offset;
+            return (length + 3) & ~3;            // align to 4 bytes
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static int ReadBigEndianInt(byte[] buffer, int offset)
+        public int GetStringLength(int offset)
         {
-            return buffer[offset    ] << 24 |
-                   buffer[offset + 1] << 16 |
-                   buffer[offset + 2] <<  8 |
-                   buffer[offset + 3];
+            var end = Buffer.Length - offset;
+            int index;
+            for (index = offset; index < end; index++)
+            {
+                if (Buffer[index] != 0) break;
+            }
+
+            var length = index - offset;
+            return (length + 3) & ~3;            // align to 4 bytes
+        }
+
+        public void FindOffsets(int offset)
+        {
+            var tags = MessageValues.Tags;
+            var offsets = MessageValues.Offsets;
+            for (int i = 0; i < MessageValues.ElementCount; i++)
+            {
+                offsets[i] = offset;
+                switch (tags[i])
+                {
+                    // false, true, nil & infinitum tags add 0 to the offset
+                    case TypeTag.Int32:
+                    case TypeTag.Float32:
+                    case TypeTag.Color32:    
+                    case TypeTag.AsciiChar32:
+                    case TypeTag.MIDI:
+                        offset += 4; 
+                        break;
+                    case TypeTag.Float64:
+                    case TypeTag.Int64:
+                    case TypeTag.TimeTag:
+                        offset += 8;
+                        break;
+                    case TypeTag.String:
+                    case TypeTag.AltTypeString:
+                        offset += GetStringLength(offset);
+                        break;
+                    case TypeTag.Blob:
+                        // read the int that specifies the size of the blob
+                        offset += 4 + *(int*)(BufferPtr + offset);
+                        break;
+                }
+            }
+        }
+
+        public bool TryParseMessage()
+        {
+            var addressLength = FindAddressLength();
+            if (addressLength < 0) 
+                return false;
+
+            var tagCount = ParseTags(addressLength);
+            if (tagCount > 0)
+            {
+                // skip the ',' and align to 4 bytes
+                var tagByteLength = ((tagCount + 1) + 3) & ~3;            
+                FindOffsets(addressLength + tagByteLength);
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Dispose()
+        {
+            //if(BufferHandle.IsAllocated) BufferHandle.Free();
         }
     }
 }
