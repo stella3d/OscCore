@@ -14,8 +14,7 @@ namespace OscCore
         readonly Thread m_Thread;
         bool m_Disposed;
 
-
-        byte[] m_ReadBuffer;
+        readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
 
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
