@@ -1,0 +1,3 @@
+[submodule "BlobHandles"]
+	path = BlobHandles
+	url = git@github.com:stella3d/BlobHandles.git
