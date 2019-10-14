@@ -24,13 +24,6 @@ namespace OscCore
         readonly byte* m_Color32SwapPtr;
         readonly GCHandle m_Color32SwapHandle;
         
-        readonly Color32* SwapBufferColor32Ptr;
-        readonly GCHandle m_Swap32Handle;
-        // used to swap bytes for 64-bit numbers when reading
-        readonly byte[] m_SwapBuffer64 = new byte[8];
-        readonly double* SwapBuffer64Ptr;
-        readonly GCHandle m_Swap64Handle;
-        
         public OscWriter(int capacity = 4096)
         {
             m_Buffer = new byte[capacity];
@@ -81,12 +74,7 @@ namespace OscCore
                 if (start + length > bytes.Length) 
                     return;
                 
-                // write the size 
-                m_Buffer[m_Length++] = (byte) (length >> 24);
-                m_Buffer[m_Length++] = (byte) (length >> 16);
-                m_Buffer[m_Length++] = (byte) (length >>  8);
-                m_Buffer[m_Length++] = (byte) (length);
-                
+                Write(length);
                 Buffer.BlockCopy(bytes, start, m_Buffer, m_Length, length);
             }
         }
