@@ -4,13 +4,13 @@ using UnityEngine;
 
 namespace OscCore
 {
-    public sealed unsafe class OscWriter
+    public sealed unsafe class OscWriter : IDisposable
     {
         int m_Length;
-        readonly byte[] m_Buffer;
-        byte* m_Ptr;
-
-        GCHandle m_BufferHandle;
+        
+        internal readonly byte[] m_Buffer;
+        readonly byte* m_BufferPtr;
+        readonly GCHandle m_BufferHandle;
         
         readonly float[] m_FloatSwap = new float[1];
         readonly byte* m_FloatSwapPtr;
@@ -27,40 +27,42 @@ namespace OscCore
         public OscWriter(int capacity = 4096)
         {
             m_Buffer = new byte[capacity];
-            m_Ptr = PtrUtil.Pin<byte, byte>(m_Buffer, out m_BufferHandle);
+            m_BufferPtr = PtrUtil.Pin<byte, byte>(m_Buffer, out m_BufferHandle);
             m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
             m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
             m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
         }
 
+        ~OscWriter() { Dispose(); }
+
         /// <summary>Write a 32-bit integer element</summary>
         public void Write(int data)
         {
-            m_Buffer[m_Length++] = (byte) (data >> 24);
-            m_Buffer[m_Length++] = (byte) (data >> 16);
-            m_Buffer[m_Length++] = (byte) (data >>  8);
-            m_Buffer[m_Length++] = (byte) (data);
+            m_BufferPtr[m_Length++] = (byte) (data >> 24);
+            m_BufferPtr[m_Length++] = (byte) (data >> 16);
+            m_BufferPtr[m_Length++] = (byte) (data >>  8);
+            m_BufferPtr[m_Length++] = (byte) (data);
         }
         
         /// <summary>Write a 32-bit floating point element</summary>
         public void Write(float data)
         {
             m_FloatSwap[0] = data;
-            m_Buffer[m_Length++] = m_FloatSwapPtr[3];
-            m_Buffer[m_Length++] = m_FloatSwapPtr[2];
-            m_Buffer[m_Length++] = m_FloatSwapPtr[1];
-            m_Buffer[m_Length++] = m_FloatSwapPtr[0];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
         }
         
         /// <summary>Write an ASCII string element</summary>
         public void Write(string data)
         {
             foreach (var chr in data)
-                m_Buffer[m_Length++] = (byte) chr;
+                m_BufferPtr[m_Length++] = (byte) chr;
 
             var alignedLength = (data.Length + 3) & ~3;
             for (int i = data.Length; i < alignedLength; i++)
-                m_Buffer[m_Length++] = 0;
+                m_BufferPtr[m_Length++] = 0;
         }
         
         /// <summary>Write a blob element</summary>
@@ -82,55 +84,63 @@ namespace OscCore
         /// <summary>Write a 64-bit integer element</summary>
         public void Write(long data)
         {
-            m_Buffer[m_Length++] = (byte) (data >> 56);
-            m_Buffer[m_Length++] = (byte) (data >> 48);
-            m_Buffer[m_Length++] = (byte) (data >> 40);
-            m_Buffer[m_Length++] = (byte) (data >> 32);
-            m_Buffer[m_Length++] = (byte) (data >> 24);
-            m_Buffer[m_Length++] = (byte) (data >> 16);
-            m_Buffer[m_Length++] = (byte) (data >>  8);
-            m_Buffer[m_Length++] = (byte) (data);
+            m_BufferPtr[m_Length++] = (byte) (data >> 56);
+            m_BufferPtr[m_Length++] = (byte) (data >> 48);
+            m_BufferPtr[m_Length++] = (byte) (data >> 40);
+            m_BufferPtr[m_Length++] = (byte) (data >> 32);
+            m_BufferPtr[m_Length++] = (byte) (data >> 24);
+            m_BufferPtr[m_Length++] = (byte) (data >> 16);
+            m_BufferPtr[m_Length++] = (byte) (data >>  8);
+            m_BufferPtr[m_Length++] = (byte) (data);
         }
         
         /// <summary>Write a 64-bit floating point element</summary>
         public void Write(double data)
         {
             m_DoubleSwap[0] = data;
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[7];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[6];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[5];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[4];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[3];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[2];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[1];
-            m_Buffer[m_Length++] = m_DoubleSwapPtr[0];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[7];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[6];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[5];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[4];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_DoubleSwapPtr[0];
         }
         
         /// <summary>Write a 32-bit RGBA color element</summary>
         public void Write(Color32 data)
         {
             m_Color32Swap[0] = data;
-            m_Buffer[m_Length++] = m_Color32SwapPtr[3];
-            m_Buffer[m_Length++] = m_Color32SwapPtr[2];
-            m_Buffer[m_Length++] = m_Color32SwapPtr[1];
-            m_Buffer[m_Length++] = m_Color32SwapPtr[0];
+            m_BufferPtr[m_Length++] = m_Color32SwapPtr[3];
+            m_BufferPtr[m_Length++] = m_Color32SwapPtr[2];
+            m_BufferPtr[m_Length++] = m_Color32SwapPtr[1];
+            m_BufferPtr[m_Length++] = m_Color32SwapPtr[0];
         }
         
         /// <summary>Write a MIDI message element</summary>
         public void WriteMidi(MidiMessage data)
         {
-            m_Buffer[m_Length++] = data.PortId;
-            m_Buffer[m_Length++] = data.Status;
-            m_Buffer[m_Length++] = data.Data1;
-            m_Buffer[m_Length++] = data.Data2;
+            m_BufferPtr[m_Length++] = data.PortId;
+            m_BufferPtr[m_Length++] = data.Status;
+            m_BufferPtr[m_Length++] = data.Data1;
+            m_BufferPtr[m_Length++] = data.Data2;
         }
 
         /// <summary>Write a single ascii character element</summary>
         public void WriteAsciiChar(char data)
         {
             // char is written in the last byte of the 4-byte block;
-            m_Buffer[m_Length + 3] = (byte) data;
-            m_Length++;
+            m_BufferPtr[m_Length + 3] = (byte) data;
+            m_Length += 4;
+        }
+
+        public void Dispose()
+        {
+            m_BufferHandle.SafeFree();
+            m_Color32SwapHandle.SafeFree();
+            m_FloatSwapHandle.SafeFree();
+            m_DoubleSwapHandle.SafeFree();
         }
     }
 }
