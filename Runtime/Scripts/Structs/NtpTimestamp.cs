@@ -113,5 +113,10 @@ namespace OscCore
         {
             return !left.Equals(right);
         }
+
+        public override string ToString()
+        {
+            return $"Seconds: {Seconds} , Fractions {Fractions}";
+        }
     }
 }

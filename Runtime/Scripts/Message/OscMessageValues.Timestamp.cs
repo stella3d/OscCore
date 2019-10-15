@@ -65,5 +65,21 @@ namespace OscCore
             
             return new NtpTimestamp(seconds, fractions);
         }
+        
+        internal NtpTimestamp ReadTimestampIndex(int index)
+        {
+            var ptr = SharedBufferPtr + index;
+
+            var bSeconds = *(uint*) ptr;
+            // swap bytes from big to little endian 
+            uint seconds = (bSeconds & 0x000000FFU) << 24 | (bSeconds & 0x0000FF00U) << 8 |
+                           (bSeconds & 0x00FF0000U) >> 8 | (bSeconds & 0xFF000000U) >> 24;
+
+            var bFractions = *(uint*) (ptr + 4);
+            uint fractions = (bFractions & 0x000000FFU) << 24 | (bFractions & 0x0000FF00U) << 8 |
+                             (bFractions & 0x00FF0000U) >> 8 | (bFractions & 0xFF000000U) >> 24;
+            
+            return new NtpTimestamp(seconds, fractions);
+        }
     }
 }

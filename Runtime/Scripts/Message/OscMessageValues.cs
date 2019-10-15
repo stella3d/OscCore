@@ -18,6 +18,7 @@ namespace OscCore
         // used to swap bytes for 32-bit numbers when reading
         readonly byte[] m_SwapBuffer32 = new byte[4];
         readonly float* SwapBuffer32Ptr;
+        readonly uint* SwapBuffer32UintPtr;
         readonly Color32* SwapBufferColor32Ptr;
         readonly GCHandle m_Swap32Handle;
         // used to swap bytes for 64-bit numbers when reading
@@ -53,6 +54,7 @@ namespace OscCore
             m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
             var swap32Ptr = m_Swap32Handle.AddrOfPinnedObject();
             SwapBuffer32Ptr = (float*) swap32Ptr;
+            SwapBuffer32UintPtr = (uint*) swap32Ptr;
             SwapBufferColor32Ptr = (Color32*) (byte*) swap32Ptr;
             
             SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
@@ -88,6 +90,7 @@ namespace OscCore
             m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
             var swap32Ptr = m_Swap32Handle.AddrOfPinnedObject();
             SwapBuffer32Ptr = (float*) swap32Ptr;
+            SwapBuffer32UintPtr = (uint*) swap32Ptr;
             SwapBufferColor32Ptr = (Color32*) (byte*) swap32Ptr;
             
             SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
@@ -106,18 +109,6 @@ namespace OscCore
         {
             for (int i = 0; i < ElementCount; i++)
                 elementAction(i, Tags[i]);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static float ReadFloat32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static int ReadInt32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *ptr;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

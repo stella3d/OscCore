@@ -10,6 +10,7 @@ using Random = UnityEngine.Random;
 
 namespace OscCore.Tests
 {
+    /*
     public class SimpleListPerformanceTests
     {
         const int k_Count = 1000;
@@ -260,7 +261,6 @@ namespace OscCore.Tests
             Debug.Log($"element count {count / 4} - safe {sTicks}, inline {sInlineTicks}, ptr read method {ptrReadTicks}\n" + 
                       $"unsafe {uTicks}, inline {uInlineTicks}, inline with ptr increment {uInline2Ticks}");
         }
-        
-        
     }
+    */
 }

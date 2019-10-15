@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 
 namespace OscCore
 {
-    public static unsafe class PtrUtil
+    static unsafe class PtrUtil
     {
         public static TPtr* Pin<TData, TPtr>(TData[] array, out GCHandle handle) 
             where TData: unmanaged

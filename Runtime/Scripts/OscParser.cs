@@ -9,12 +9,20 @@ namespace OscCore
 {
     public unsafe class OscParser : IDisposable
     {
+        internal static readonly long BundleStringValue = BundleStringAsLong();    // "#bundle " 
+        
         // TODO - make these preferences options
         public const int MaxElementsPerMessage = 32;
         public const int MaxBlobSize = 1024 * 256;
 
         internal readonly byte[] Buffer;
         readonly byte* BufferPtr;
+        
+        /// <summary>
+        /// Pointer to the first 8 bytes of the read buffer.
+        /// Used to determine if a message is a bundle in a single comparison
+        /// </summary>
+        internal readonly long* BufferLongPtr;
 
         public readonly OscMessageValues MessageValues;
 
@@ -25,27 +33,25 @@ namespace OscCore
         public OscParser(byte[] fixedBuffer, GCHandle bufferHandle)
         {
             Buffer = fixedBuffer;
-            fixed (byte* ptr = fixedBuffer) BufferPtr = ptr;
+            fixed (byte* ptr = fixedBuffer)
+            {
+                BufferPtr = ptr;
+                BufferLongPtr = (long*) ptr;
+            }
             MessageValues = new OscMessageValues(Buffer, bufferHandle, MaxElementsPerMessage);
         }
 
         public static void Parse(byte[] buffer, int length)
         {
             var addressLength = FindAddressLength(buffer, 0);
-            var alignedAddressLength = (addressLength + 3) & ~3;    // align to 4 bytes
-
             var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
             Debug.Log($"parsed address: {debugStr}");
-/*
-            ParseTags(buffer, alignedAddressLength, Tags);
-            Debug.Log("tag count: " + TagBuffer.Count);
-            */
         }
-        
-        public BlobHandle ParseAddressHandle(byte[] buffer, int length)
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool AddressIsBundle()
         {
-            var addressLength = FindAddressLength(buffer, 0);
-            return new BlobHandle(buffer, addressLength);
+            return *BufferLongPtr == BundleStringValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -255,6 +261,12 @@ namespace OscCore
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public NtpTimestamp ReadTimeTag(int offset)
+        {
+            return MessageValues.ReadTimestampElement(offset);
+        }
+
         public bool TryParseMessage()
         {
             var addressLength = FindAddressLength();
@@ -272,10 +284,16 @@ namespace OscCore
 
             return false;
         }
+        
+        static long BundleStringAsLong()
+        {
+            var bundleBytes = Encoding.ASCII.GetBytes("#bundle ");
+            bundleBytes[7] = 0;
+            return BitConverter.ToInt64(bundleBytes, 0);
+        }
 
         public void Dispose()
         {
-            //if(BufferHandle.IsAllocated) BufferHandle.Free();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
@@ -6,9 +7,7 @@ namespace OscCore
 {
     public sealed unsafe class OscWriter : IDisposable
     {
-        int m_Length;
-        
-        internal readonly byte[] m_Buffer;
+        public readonly byte[] Buffer;
         readonly byte* m_BufferPtr;
         readonly GCHandle m_BufferHandle;
         
@@ -24,16 +23,23 @@ namespace OscCore
         readonly byte* m_Color32SwapPtr;
         readonly GCHandle m_Color32SwapHandle;
         
+        int m_Length;
+
+        public int Length => m_Length;
+        
         public OscWriter(int capacity = 4096)
         {
-            m_Buffer = new byte[capacity];
-            m_BufferPtr = PtrUtil.Pin<byte, byte>(m_Buffer, out m_BufferHandle);
+            Buffer = new byte[capacity];
+            m_BufferPtr = PtrUtil.Pin<byte, byte>(Buffer, out m_BufferHandle);
             m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
             m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
             m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
         }
 
         ~OscWriter() { Dispose(); }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Reset() { m_Length = 0; }
 
         /// <summary>Write a 32-bit integer element</summary>
         public void Write(int data)
@@ -54,6 +60,44 @@ namespace OscCore
             m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
         }
         
+        /// <summary>Write a 2D vector as two float elements</summary>
+        public void Write(Vector2 data)
+        {
+            m_FloatSwap[0] = data.x;
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+
+            m_FloatSwap[0] = data.y;
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+        }
+        
+        /// <summary>Write a 3D vector as three float elements</summary>
+        public void Write(Vector3 data)
+        {
+            m_FloatSwap[0] = data.x;
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+            
+            m_FloatSwap[0] = data.y;
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+            
+            m_FloatSwap[0] = data.z;
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
+            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+        }
+
         /// <summary>Write an ASCII string element</summary>
         public void Write(string data)
         {
@@ -77,7 +121,7 @@ namespace OscCore
                     return;
                 
                 Write(length);
-                Buffer.BlockCopy(bytes, start, m_Buffer, m_Length, length);
+                System.Buffer.BlockCopy(bytes, start, Buffer, m_Length, length);
             }
         }
         
@@ -119,7 +163,7 @@ namespace OscCore
         }
         
         /// <summary>Write a MIDI message element</summary>
-        public void WriteMidi(MidiMessage data)
+        public void Write(MidiMessage data)
         {
             m_BufferPtr[m_Length++] = data.PortId;
             m_BufferPtr[m_Length++] = data.Status;

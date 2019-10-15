@@ -63,5 +63,15 @@ namespace OscCore
                    m_SharedBuffer[offset + 2] <<  8 |
                    m_SharedBuffer[offset + 3];
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal uint ReadUIntIndex(int index)
+        {
+            m_SwapBuffer32[0] = m_SharedBuffer[index + 3];
+            m_SwapBuffer32[1] = m_SharedBuffer[index + 2];
+            m_SwapBuffer32[2] = m_SharedBuffer[index + 1];
+            m_SwapBuffer32[3] = m_SharedBuffer[index];
+            return *SwapBuffer32UintPtr;
+        }
     }
 }

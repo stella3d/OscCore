@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using UnityEngine;
 
 namespace OscCore
 {
@@ -66,11 +67,14 @@ namespace OscCore
             return m_MonitorCallbacks.Remove(callback);
         }
         
+        readonly Stack<int> m_BundleElementOffsets = new Stack<int>();
+        
         unsafe void Serve()
         {
             var socket = m_Socket;
             var buffer = m_ReadBuffer;
             var bufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
+            var bufferLongPtr = Parser.BufferLongPtr;
             var parser = Parser;
             var addressToMethod = AddressSpace.AddressToMethod;
 
@@ -80,6 +84,17 @@ namespace OscCore
                 {
                     int receivedByteCount = socket.Receive(buffer);
                     if (receivedByteCount <= 0) continue;
+
+                    // determine if the message is a bundle by comparing the first 8 bytes of the buffer as a long
+                    if (*bufferLongPtr == OscParser.BundleStringValue)    
+                    {
+                        var time = parser.MessageValues.ReadTimestampIndex(8);
+                        var firstElementSize = parser.MessageValues.ReadUIntIndex(16);
+                        Debug.Log($"#bundle, time: {time}, 1st element size {firstElementSize}");
+                        Debug.Log(Encoding.UTF8.GetString(buffer, 20, receivedByteCount));
+                        
+                        // TODO - bundle handling
+                    }
                     
                     var addressLength = parser.FindAddressLength();
                     if (addressLength < 0) continue;                         // address didn't start with '/'
@@ -122,7 +137,9 @@ namespace OscCore
                 }
             }
         }
+
         
+
         public void Dispose()
         {
             Dispose(true);
