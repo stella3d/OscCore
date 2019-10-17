@@ -84,33 +84,5 @@ namespace OscCore.Tests
             Array.Reverse(copy);
             return copy;
         }
-
-        [Test]
-        public void ReadColor32_UnsafeMatchesSafe()
-        {
-            var cBytes = new byte[] { 50, 100, 200, 255 };
-            var color32 = new Color32(cBytes[0], cBytes[1], cBytes[2], cBytes[3]);
-
-            var safeRead = OscMessageValues.ReadColor32(cBytes, 0);
-            var unSafeRead = OscMessageValues.ReadColor32Unsafe(cBytes, 0);
-            
-            Debug.Log($"constructor {color32}, safe: {safeRead} , unsafe: {unSafeRead}");
-            Assert.AreEqual(color32, safeRead);
-            Assert.AreEqual(color32, unSafeRead);
-        }
-        
-        [Test]
-        public void ReadMidi_UnsafeMatchesSafe()
-        {
-            var bytes = new byte[] { 1, 144, 60, 42 };
-            var midiMessage = new MidiMessage(bytes[0], bytes[1], bytes[2], bytes[3]);
-
-            var safeRead = OscMessageValues.ReadMidi(bytes, 0);
-            var unSafeRead = OscMessageValues.ReadMidiUnsafe(bytes, 0);
-            
-            Debug.Log($"constructor {midiMessage}, safe: {safeRead} , unsafe: {unSafeRead}");
-            Assert.AreEqual(midiMessage, safeRead);
-            Assert.AreEqual(midiMessage, unSafeRead);
-        }
     }
 }

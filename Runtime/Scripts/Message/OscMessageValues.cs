@@ -110,33 +110,5 @@ namespace OscCore
             for (int i = 0; i < ElementCount; i++)
                 elementAction(i, Tags[i]);
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static MidiMessage ReadMidi(byte[] bytes, int offset)
-        {
-            return new MidiMessage(bytes, offset);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static MidiMessage ReadMidiUnsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *(MidiMessage*) ptr;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Color32 ReadColor32(byte[] bytes, int offset)
-        {
-            var r = bytes[offset];
-            var g = bytes[offset + 1];
-            var b = bytes[offset + 2];
-            var a = bytes[offset + 3];
-            return new Color32(r, g, b, a);
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Color32 ReadColor32Unsafe(byte[] bytes, int offset)
-        {
-            fixed (byte* ptr = &bytes[offset]) return *(Color32*) ptr;
-        }
     }
 }
