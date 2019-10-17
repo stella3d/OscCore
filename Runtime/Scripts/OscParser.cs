@@ -261,12 +261,6 @@ namespace OscCore
             }
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NtpTimestamp ReadTimeTag(int offset)
-        {
-            return MessageValues.ReadTimestampElement(offset);
-        }
-
         public bool TryParseMessage()
         {
             var addressLength = FindAddressLength();

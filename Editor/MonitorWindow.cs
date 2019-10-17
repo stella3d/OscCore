@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using BlobHandles;
 using UnityEditor;
 using UnityEngine;
 
@@ -83,12 +84,12 @@ namespace OscCore
             }
         }
 
-        void Monitor(string address, OscMessageValues values)
+        void Monitor(BlobString address, OscMessageValues values)
         {
             if(m_UseAlt)
-                m_ToQueueAlt.Add(MessageToString(address, values));
+                m_ToQueueAlt.Add(MessageToString(address.ToString(), values));
             else
-                m_ToQueue.Add(MessageToString(address, values));
+                m_ToQueue.Add(MessageToString(address.ToString(), values));
             
             m_NeedsRepaint = true;
         }

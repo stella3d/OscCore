@@ -2,15 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using BlobHandles;
 using UnityEngine;
 
 namespace OscCore
 {
     public sealed class OscServer : IDisposable
     {
+        public static readonly Dictionary<int, OscServer> PortToServer = new Dictionary<int, OscServer>();
+        
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
@@ -18,6 +22,8 @@ namespace OscCore
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
 
+        readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
+        
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
         
         public int Port { get; private set; }
@@ -26,6 +32,12 @@ namespace OscCore
         
         public OscServer(int port, int bufferSize = 4096)
         {
+            if (PortToServer.ContainsKey(port))
+            {
+                Debug.LogError($"port {port} is already in use, cannot start an OSC Server on it");
+                return;
+            }
+
             AddressSpace = new OscAddressSpace();
             
             m_ReadBuffer = new byte[bufferSize];
@@ -39,8 +51,19 @@ namespace OscCore
 
         public void Start()
         {
+            m_Disposed = false;
             m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
             m_Thread.Start();
+        }
+        
+        public void Pause()
+        {
+            m_Disposed = true;
+        }
+        
+        public void Resume()
+        {
+            m_Disposed = false;
         }
 
         public bool TryAddMethod(string address, ReceiveValueMethod method) => 
@@ -67,8 +90,6 @@ namespace OscCore
             return m_MonitorCallbacks.Remove(callback);
         }
         
-        readonly Stack<int> m_BundleElementOffsets = new Stack<int>();
-        
         unsafe void Serve()
         {
             var socket = m_Socket;
@@ -88,25 +109,79 @@ namespace OscCore
                     // determine if the message is a bundle by comparing the first 8 bytes of the buffer as a long
                     if (*bufferLongPtr == OscParser.BundleStringValue)    
                     {
-                        var time = parser.MessageValues.ReadTimestampIndex(8);
-                        var firstElementSize = parser.MessageValues.ReadUIntIndex(16);
-                        Debug.Log($"#bundle, time: {time}, 1st element size {firstElementSize}");
-                        Debug.Log(Encoding.UTF8.GetString(buffer, 20, receivedByteCount));
-                        
-                        // TODO - bundle handling
+                        // Timestamp isn't used yet
+                        // var time = parser.MessageValues.ReadTimestampIndex(8);
+
+                        int MessageOffset = 16;    // 8 byte #bundle label + 8 byte timestamp
+                        while (MessageOffset < receivedByteCount)
+                        {
+                            var messageSize = (int) parser.MessageValues.ReadUIntIndex(MessageOffset);
+                            var contentIndex = MessageOffset + 4;
+
+                            var bundleAddressLength = parser.FindAddressLength(contentIndex);
+                            if (bundleAddressLength < 0)
+                            {
+                                MessageOffset += messageSize + 4;
+                                continue;                         
+                            }
+
+                            var bundleTagCount = parser.ParseTags(buffer, contentIndex + bundleAddressLength);
+                            if (bundleTagCount <= 0) 
+                            {
+                                MessageOffset += messageSize + 4;
+                                continue;                         
+                            }
+                            
+                            // skip the ',' and align to 4 bytes
+                            var bundleOffset = (MessageOffset + bundleAddressLength + bundleTagCount + 4) & ~3;
+                            parser.FindOffsets(bundleOffset);
+                            
+                            if (addressToMethod.TryGetValueFromBytes(bufferPtr, bundleAddressLength, out var bundleMethod))
+                            {
+                                // call the method(s) associated with this OSC address    
+                                bundleMethod.Invoke(parser.MessageValues);
+                            }
+                            // if we have no handler for this exact address, we may have a pattern that matches it
+                            else if(AddressSpace.PatternCount > 0)
+                            {
+                                if (!m_ByteLengthToStringBuffer.TryGetValue(bundleAddressLength, out var stringBuffer))
+                                {
+                                    // if we don't have an existing string of the right length to re-use, create a new one
+                                    stringBuffer = Encoding.ASCII.GetString(bufferPtr + contentIndex, bundleAddressLength);
+                                    m_ByteLengthToStringBuffer[bundleAddressLength] = stringBuffer;
+                                }
+                                else
+                                {
+                                    OverwriteAsciiString(stringBuffer, bufferPtr + MessageOffset);
+                                }
+
+                                // test the address against all registered address patterns for a method to invoke if matched
+                                if (AddressSpace.TryMatchPatternHandler(stringBuffer, out bundleMethod))
+                                {
+                                    bundleMethod.Invoke(parser.MessageValues);
+                                    // add the method found via pattern matching as a handler for this exact address
+                                    // this means that next time a message is received at this address,
+                                    // we don't need to run pattern matching again
+                                    addressToMethod.Add(string.Copy(stringBuffer), bundleMethod);
+                                }
+                            }
+                            
+                            MessageOffset += messageSize + 4;
+                        }
+
+                        continue;
                     }
-                    
+
+                    // The message isn't a bundle
                     var addressLength = parser.FindAddressLength();
                     if (addressLength < 0) continue;                         // address didn't start with '/'
 
                     var tagCount = parser.ParseTags(buffer, addressLength);
                     if (tagCount <= 0) continue;
                     
-                    // skip the ',' and align to 4 bytes
                     var offset = addressLength + (tagCount + 4) & ~3;
                     parser.FindOffsets(offset);
                     
-                    string tempAddress = null;
                     if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var method))
                     {
                         // call the method(s) associated with this OSC address    
@@ -114,31 +189,49 @@ namespace OscCore
                     }
                     else if(AddressSpace.PatternCount > 0)
                     {
-                        // if we didn't find an address match, compare the string against all of our known patterns  
-                        tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
-                        if (AddressSpace.TryMatchPatternHandler(tempAddress, out method))
-                            method.Invoke(parser.MessageValues);  
+                        if (!m_ByteLengthToStringBuffer.TryGetValue(addressLength, out var stringBuffer))
+                        {
+                            stringBuffer = Encoding.ASCII.GetString(bufferPtr, addressLength);
+                            m_ByteLengthToStringBuffer[addressLength] = stringBuffer;
+                        }
+                        else
+                        {
+                            OverwriteAsciiString(stringBuffer, bufferPtr);
+                        }
+
+                        if (AddressSpace.TryMatchPatternHandler(stringBuffer, out method))
+                        {
+                            method.Invoke(parser.MessageValues);
+                            addressToMethod.Add(string.Copy(stringBuffer), method);
+                        }
                     }
 
                     if (m_MonitorCallbacks.Count == 0) continue;
-                    if (tempAddress == null)
-                        tempAddress = Encoding.UTF8.GetString(bufferPtr, addressLength);
 
+                    var monitorAddressStr = new BlobString(bufferPtr, addressLength);
                     // call all monitor callbacks
                     foreach (var callback in m_MonitorCallbacks)
-                        callback(tempAddress, parser.MessageValues);
+                        callback(monitorAddressStr, parser.MessageValues);
                 }
                 catch (SocketException) {}
                 catch (ThreadAbortException) {}
                 catch (Exception e)
                 {
-                    if (!m_Disposed) UnityEngine.Debug.LogException(e); 
+                    if (!m_Disposed) Debug.LogException(e); 
                     break;
                 }
             }
         }
 
-        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static unsafe void OverwriteAsciiString(string str, byte* bufferPtr)
+        {
+            fixed (char* addressPtr = str)
+            {
+                for (int i = 0; i < str.Length; i++)
+                    addressPtr[i] = (char) bufferPtr[i];
+            }
+        }
 
         public void Dispose()
         {

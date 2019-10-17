@@ -219,27 +219,5 @@ namespace OscCore.Tests
             
             Debug.Log($"{count / 8} elements, unchecked NTP timestamp element read: {Stopwatch.ElapsedTicks} ticks");
         }
-        
-        [Test]
-        public unsafe void Align4FunctionVsInlineSpeed()
-        {
-            Stopwatch.Restart();
-            for (int i = 0; i < m_IntSourceData.Length; i++)
-            {
-                var i32 = m_IntSourceData[i].Align4();
-            }
-            Stopwatch.Stop();
-            var ticks1 = Stopwatch.ElapsedTicks;
-            
-            Stopwatch.Restart();
-            for (int i = 0; i < m_IntSourceData.Length; i++)
-            {
-                var i32 = (m_IntSourceData[i] + 3) & ~3;
-            }
-            Stopwatch.Stop();
-            var ticks2 = Stopwatch.ElapsedTicks;
-
-            Debug.Log($"element count {m_IntSourceData.Length} - align 4 function {ticks1}, manual inline {ticks2}");
-        }
     }
 }
