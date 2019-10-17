@@ -9,8 +9,6 @@ namespace OscCore
 {
     public unsafe class OscParser : IDisposable
     {
-        internal static readonly long BundleStringValue = BundleStringAsLong();    // "#bundle " 
-        
         // TODO - make these preferences options
         public const int MaxElementsPerMessage = 32;
         public const int MaxBlobSize = 1024 * 256;
@@ -51,7 +49,7 @@ namespace OscCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AddressIsBundle()
         {
-            return *BufferLongPtr == BundleStringValue;
+            return *BufferLongPtr == Constant.BundlePrefixLong;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -278,13 +276,9 @@ namespace OscCore
 
             return false;
         }
+
         
-        static long BundleStringAsLong()
-        {
-            var bundleBytes = Encoding.ASCII.GetBytes("#bundle ");
-            bundleBytes[7] = 0;
-            return BitConverter.ToInt64(bundleBytes, 0);
-        }
+        
 
         public void Dispose()
         {

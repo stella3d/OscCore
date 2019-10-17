@@ -107,7 +107,7 @@ namespace OscCore
                     if (receivedByteCount <= 0) continue;
 
                     // determine if the message is a bundle by comparing the first 8 bytes of the buffer as a long
-                    if (*bufferLongPtr == OscParser.BundleStringValue)    
+                    if (*bufferLongPtr == Constant.BundlePrefixLong)    
                     {
                         // Timestamp isn't used yet
                         // var time = parser.MessageValues.ReadTimestampIndex(8);
