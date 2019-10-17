@@ -257,7 +257,7 @@ namespace OscCore
 
         ~OscServer()
         {
-            Dispose(false);
+            Dispose(true);
         }
     }
 }
