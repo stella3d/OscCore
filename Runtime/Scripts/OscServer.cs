@@ -27,6 +27,8 @@ namespace OscCore
         
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
         
+        readonly List<ReceiveValueMethod> m_PatternMatchedMethods = new List<ReceiveValueMethod>();
+
         public int Port { get; private set; }
         public OscAddressSpace AddressSpace { get; private set; }
         public OscParser Parser { get; private set; }
@@ -45,7 +47,7 @@ namespace OscCore
             m_BufferHandle = GCHandle.Alloc(m_ReadBuffer, GCHandleType.Pinned);
             Parser = new OscParser(m_ReadBuffer, m_BufferHandle);
 
-            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 69 };
+            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 64 };
             m_Thread = new Thread(Serve);
             Port = port;
         }
@@ -107,147 +109,158 @@ namespace OscCore
             {
                 try
                 {
-                    if (socket.Available <= 0) continue;
+                    // it's probably better to let Receive() block the thread than test socket.Available > 0 constantly
+                    int receivedByteCount = socket.Receive(buffer);
+                    if (receivedByteCount == 0) continue;
+                    
 #if OSCCORE_PROFILING && UNITY_EDITOR
                     Profiler.BeginSample("Receive OSC");
 #endif
-                    int receivedByteCount = socket.Receive(buffer);
-                    
                     // compare the first 8 bytes at once, against '#bundle ' represented as a long   
-                    if (*bufferLongPtr == Constant.BundlePrefixLong)
+                    if (*bufferLongPtr != Constant.BundlePrefixLong)
                     {
-                        // the message is a bundle, so we need to recursively scan the bundle elements
-                        int MessageOffset = 0; 
-                        var recurse = false;
-                        do
+                         // The message isn't a bundle
+                        var addressLength = parser.FindAddressLength();
+                        if (addressLength < 0) continue;                         // address didn't start with '/'
+
+                        var tagCount = parser.ParseTags(buffer, addressLength);
+                        if (tagCount <= 0) continue;
+                        
+                        var offset = addressLength + (tagCount + 4) & ~3;
+                        parser.FindOffsets(offset);
+                        
+                        if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var method))
                         {
-                            // Timestamp isn't used yet
-                            // var time = parser.MessageValues.ReadTimestampIndex(8);
-
-                            MessageOffset += 16;            // '#bundle ' + timestamp = 16 bytes
-                            
-                            while (MessageOffset < receivedByteCount && !recurse)
+                            // call the method(s) associated with this OSC address    
+                            method.Invoke(parser.MessageValues);
+                        }
+                        else if(AddressSpace.PatternCount > 0)
+                        {
+                            // to support OSC address patterns, we test unmatched addresses against regular expressions
+                            // To do that, we need it as a regular string.  We may be able to mutate a previous string, 
+                            // instead of always allocating a new one
+                            if (!m_ByteLengthToStringBuffer.TryGetValue(addressLength, out var stringBuffer))
                             {
-                                var messageSize = (int) parser.MessageValues.ReadUIntIndex(MessageOffset);
-                                var contentIndex = MessageOffset + 4;
-
-                                if (parser.IsBundleTagAtIndex(contentIndex))
-                                {
-                                    // we've found a bundle within a bundle - break out of this inner loop to recurse
-                                    MessageOffset = contentIndex;
-                                    recurse = true;
-                                    continue;
-                                }
-
-                                var bundleAddressLength = parser.FindAddressLength(contentIndex);
-                                if (bundleAddressLength <= 0)
-                                {
-                                    MessageOffset += messageSize + 4;
-                                    continue;
-                                }
-
-                                var bundleTagCount = parser.ParseTags(buffer, contentIndex + bundleAddressLength);
-                                if (bundleTagCount <= 0)
-                                {
-                                    MessageOffset += messageSize + 4;
-                                    continue;
-                                }
-
-                                // skip the ',' and align to 4 bytes
-                                var bundleOffset = (contentIndex + bundleAddressLength + bundleTagCount + 4) & ~3;
-                                parser.FindOffsets(bundleOffset);
-
-                                if (addressToMethod.TryGetValueFromBytes(bufferPtr + contentIndex, bundleAddressLength,
-                                    out var bundleMethod))
-                                {
-                                    // call the method(s) associated with this OSC address    
-                                    bundleMethod.Invoke(parser.MessageValues);
-                                }
-                                // if we have no handler for this exact address, we may have a pattern that matches it
-                                else if (AddressSpace.PatternCount > 0)
-                                {
-                                    if (!m_ByteLengthToStringBuffer.TryGetValue(bundleAddressLength, out var stringBuffer))
-                                    {
-                                        // if we don't have an existing string of the right length to re-use, create a new one
-                                        var contentPtr = bufferPtr + contentIndex;
-                                        stringBuffer = Encoding.ASCII.GetString(contentPtr, bundleAddressLength);
-                                        m_ByteLengthToStringBuffer[bundleAddressLength] = stringBuffer;
-                                    }
-                                    else
-                                    {
-                                        OverwriteAsciiString(stringBuffer, bufferPtr + contentIndex);
-                                    }
-
-                                    // test the address against all registered address patterns for a method to invoke if matched
-                                    if (AddressSpace.TryMatchPatternHandler(stringBuffer, out bundleMethod))
-                                    {
-                                        bundleMethod.Invoke(parser.MessageValues);
-                                        // add the method found via pattern matching as a handler for this exact address
-                                        // this means that next time a message is received at this address,
-                                        // we don't need to run pattern matching again
-                                        addressToMethod.Add(string.Copy(stringBuffer), bundleMethod);
-                                    }
-                                }
-
-                                MessageOffset += messageSize + 4;
-                                
-                                if (m_MonitorCallbacks.Count == 0) continue;
-
-                                var bundleMemberAddressStr = new BlobString(bufferPtr + contentIndex, bundleAddressLength);
-                                // call all monitor callbacks
-                                foreach (var callback in m_MonitorCallbacks)
-                                    callback(bundleMemberAddressStr, parser.MessageValues);
+                                stringBuffer = Encoding.ASCII.GetString(bufferPtr, addressLength);
+                                m_ByteLengthToStringBuffer[addressLength] = stringBuffer;
                             }
-                        } 
-                        // restart the while loop every time a bundle within a bundle is detected
-                        while (recurse);
-                        // done parsing this bundle message , wait for the next one
+                            else
+                            {
+                                // If we've previously received a message of the same byte length, we can re-use it
+                                OverwriteAsciiString(stringBuffer, bufferPtr);
+                            }
+
+                            if (AddressSpace.TryMatchPatternHandler(stringBuffer, m_PatternMatchedMethods))
+                            {
+                                var bufferCopy = string.Copy(stringBuffer);
+                                addressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
+                                foreach (var matchedMethod in m_PatternMatchedMethods)
+                                    matchedMethod.Invoke(parser.MessageValues);
+                            }
+                        }
+
                         Profiler.EndSample();
+                        
+                        if (m_MonitorCallbacks.Count == 0) continue;
+
+                        var monitorAddressStr = new BlobString(bufferPtr, addressLength);
+                        foreach (var callback in m_MonitorCallbacks)
+                            callback(monitorAddressStr, parser.MessageValues);
+
                         continue;
                     }
-
-                    // The message isn't a bundle
-                    var addressLength = parser.FindAddressLength();
-                    if (addressLength < 0) continue;                         // address didn't start with '/'
-
-                    var tagCount = parser.ParseTags(buffer, addressLength);
-                    if (tagCount <= 0) continue;
                     
-                    var offset = addressLength + (tagCount + 4) & ~3;
-                    parser.FindOffsets(offset);
-                    
-                    if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var method))
+                    // the message is a bundle, so we need to recursively scan the bundle elements
+                    // '#bundle ' + timestamp = 16 bytes
+                    int MessageOffset = 0;         
+                    bool recurse;
+                    do
                     {
-                        // call the method(s) associated with this OSC address    
-                        method.Invoke(parser.MessageValues);
-                    }
-                    else if(AddressSpace.PatternCount > 0)
-                    {
-                        if (!m_ByteLengthToStringBuffer.TryGetValue(addressLength, out var stringBuffer))
+                        // Timestamp isn't used yet, but it will be eventually
+                        // var time = parser.MessageValues.ReadTimestampIndex(MessageOffset + 8);
+                        MessageOffset += 16;
+                        recurse = false;
+                        
+                        while (MessageOffset < receivedByteCount && !recurse)
                         {
-                            stringBuffer = Encoding.ASCII.GetString(bufferPtr, addressLength);
-                            m_ByteLengthToStringBuffer[addressLength] = stringBuffer;
-                        }
-                        else
-                        {
-                            OverwriteAsciiString(stringBuffer, bufferPtr);
-                        }
+                            var messageSize = (int) parser.MessageValues.ReadUIntIndex(MessageOffset);
+                            var contentIndex = MessageOffset + 4;
 
-                        if (AddressSpace.TryMatchPatternHandler(stringBuffer, out method))
-                        {
-                            method.Invoke(parser.MessageValues);
-                            addressToMethod.Add(string.Copy(stringBuffer), method);
-                        }
-                    }
+                            if (parser.IsBundleTagAtIndex(contentIndex))
+                            {
+                                // this bundle element's contents are a bundle, break out to the outer loop to scan it
+                                MessageOffset = contentIndex;
+                                recurse = true;
+                                continue;
+                            }
 
+                            var bundleAddressLength = parser.FindAddressLength(contentIndex);
+                            if (bundleAddressLength <= 0)
+                            {
+                                // if an error occured parsing the address, skip this message entirely
+                                MessageOffset += messageSize + 4;
+                                continue;
+                            }
+
+                            var bundleTagCount = parser.ParseTags(buffer, contentIndex + bundleAddressLength);
+                            if (bundleTagCount <= 0)
+                            {
+                                MessageOffset += messageSize + 4;
+                                continue;
+                            }
+
+                            // skip the ',' and align to 4 bytes
+                            var bundleOffset = (contentIndex + bundleAddressLength + bundleTagCount + 4) & ~3;
+                            parser.FindOffsets(bundleOffset);
+
+                            if (addressToMethod.TryGetValueFromBytes(bufferPtr + contentIndex, bundleAddressLength,
+                                out var bundleMethod))
+                            {
+                                // call the method(s) associated with this OSC address    
+                                bundleMethod.Invoke(parser.MessageValues);
+                            }
+                            // if we have no handler for this exact address, we may have a pattern that matches it
+                            else if (AddressSpace.PatternCount > 0)
+                            {
+                                if (!m_ByteLengthToStringBuffer.TryGetValue(bundleAddressLength, out var stringBuffer))
+                                {
+                                    // if we don't have an existing string of the right length to re-use, create a new one
+                                    var contentPtr = bufferPtr + contentIndex;
+                                    stringBuffer = Encoding.ASCII.GetString(contentPtr, bundleAddressLength);
+                                    m_ByteLengthToStringBuffer[bundleAddressLength] = stringBuffer;
+                                }
+                                else
+                                {
+                                    OverwriteAsciiString(stringBuffer, bufferPtr + contentIndex);
+                                }
+
+                                // test the address against all registered address patterns for a method to invoke if matched
+                                if (AddressSpace.TryMatchPatternHandler(stringBuffer, m_PatternMatchedMethods))
+                                {
+                                    // add the method found via pattern matching as a handler for this exact address
+                                    // this means that next time a message is received at this address,
+                                    // we don't need to run pattern matching again
+                                    var bufferCopy = string.Copy(stringBuffer);
+                                    addressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
+                                    foreach (var matchedMethod in m_PatternMatchedMethods)
+                                        matchedMethod.Invoke(parser.MessageValues);
+                                }
+                            }
+
+                            MessageOffset += messageSize + 4;
+                            
+                            if (m_MonitorCallbacks.Count == 0) continue;
+
+                            // this doesn't actually allocate a string unless the monitor callback converts to string
+                            var bundleMemberAddressStr = new BlobString(bufferPtr + contentIndex, bundleAddressLength);
+                            foreach (var callback in m_MonitorCallbacks)
+                                callback(bundleMemberAddressStr, parser.MessageValues);
+                        }
+                    } 
+                    // restart the outer while loop every time a bundle within a bundle is detected
+                    while (recurse);
+                    // done parsing this bundle message , wait for the next one
                     Profiler.EndSample();
-                    
-                    if (m_MonitorCallbacks.Count == 0) continue;
-
-                    var monitorAddressStr = new BlobString(bufferPtr, addressLength);
-                    // call all monitor callbacks
-                    foreach (var callback in m_MonitorCallbacks)
-                        callback(monitorAddressStr, parser.MessageValues);
                 }
                 catch (SocketException) {}
                 catch (ThreadAbortException) {}

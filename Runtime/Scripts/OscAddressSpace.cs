@@ -164,33 +164,33 @@ namespace OscCore
                     return false;
             }
         }
-        
+
         /// <summary>
         /// Try to match an address against all known address patterns,
         /// and add a handler for the address if a pattern is matched
         /// </summary>
         /// <param name="address">The address to match</param>
+        /// <param name="allMatchedMethods"></param>
         /// <returns>True if a match was found, false otherwise</returns>
-        public bool TryMatchPatternHandler(string address, out ReceiveValueMethod handler)
+        public bool TryMatchPatternHandler(string address, List<ReceiveValueMethod> allMatchedMethods)
         {
             if (!OscParser.AddressIsValid(address))
-            {
-                handler = default;
                 return false;
-            }
             
+            allMatchedMethods.Clear();
+
+            bool any = false;
             for (var i = 0; i < PatternCount; i++)
             {
                 if (Patterns[i].IsMatch(address))
                 {
-                    handler = PatternMethods[i];
+                    var handler = PatternMethods[i];
                     AddressToMethod.Add(address, handler);
-                    return true;
+                    any = true;
                 }
             }
 
-            handler = default;
-            return false;
+            return any;
         }
     }
 }

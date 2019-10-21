@@ -27,7 +27,9 @@ namespace BlobHandles
         {
             if (!SourceToBlob.TryGetValue(address, out var blobStr))
             {
+                blobStr = new BlobString(address);
                 HandleToValue[blobStr.Handle] = callback;
+                SourceToBlob.Add(address, blobStr);
             }
             else
             {
@@ -36,8 +38,22 @@ namespace BlobHandles
                 else
                     HandleToValue[blobStr.Handle] = callback;
             }
+        }
+        
+        /// <summary>Adds a list of callbacks to be executed when a message is received at the address</summary>
+        /// <param name="address">The address to associate the methods with</param>
+        /// <param name="callbacks">The methods to be invoked</param>
+        [Il2CppSetOption(Option.NullChecks, false)]
+        internal void Add(string address, List<ReceiveValueMethod> callbacks)
+        {
+            if (callbacks.Count == 0) return;
 
-            SourceToBlob.Add(address, new BlobString(address));
+            var callback = callbacks[0];
+            if(callbacks.Count > 1)
+                for (int i = 1; i < callbacks.Count; i++)
+                    callback += callbacks[i];
+            
+            Add(address, callback);
         }
 
         /// <summary>Removes the callback at the specified address</summary>
@@ -70,7 +86,6 @@ namespace BlobHandles
             return HandleToValue.TryGetValue(new BlobHandle(ptr, byteCount), out value);
         }
 
-        [Il2CppSetOption(Option.NullChecks, false)]
         public void Clear()
         {
             HandleToValue.Clear();
