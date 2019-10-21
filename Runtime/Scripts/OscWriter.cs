@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using MiniNtp;
 using UnityEngine;
 
 namespace OscCore
@@ -22,6 +23,8 @@ namespace OscCore
         readonly Color32[] m_Color32Swap = new Color32[1];
         readonly byte* m_Color32SwapPtr;
         readonly GCHandle m_Color32SwapHandle;
+
+        readonly MidiMessage m_BufferMidiPtr;
         
         int m_Length;
 
@@ -30,10 +33,13 @@ namespace OscCore
         public OscWriter(int capacity = 4096)
         {
             Buffer = new byte[capacity];
+            // Even though Unity's GC does not move objects around, pin them to be safe.
             m_BufferPtr = PtrUtil.Pin<byte, byte>(Buffer, out m_BufferHandle);
             m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
             m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
             m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
+            
+            
         }
 
         ~OscWriter() { Dispose(); }
@@ -170,6 +176,11 @@ namespace OscCore
             m_BufferPtr[m_Length++] = data.Status;
             m_BufferPtr[m_Length++] = data.Data1;
             m_BufferPtr[m_Length++] = data.Data2;
+        }
+
+        public void Write(NtpTimestamp time)
+        {
+            time.ToBigEndianBytes((uint*)(m_BufferPtr + m_Length));
         }
 
         /// <summary>Write a single ascii character element</summary>
