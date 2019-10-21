@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using MiniNtp;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -87,7 +88,7 @@ namespace OscCore.Tests
         }
     }
     
-    internal static class MidiTestData
+    static class MidiTestData
     {
         public static IEnumerable Basic 
         {
@@ -110,10 +111,10 @@ namespace OscCore.Tests
                 
                 var expected2 = new[]
                 {
-                    (byte) 16,                   // port id
+                    (byte) 16,                   
                     (byte) 128,                  // status - ch1 note off
                     (byte) 72,                   // note C4
-                    (byte) 42,                   // note velocity
+                    (byte) 42,                   
                 };
                 var bytes2 = new[]
                 {
@@ -122,6 +123,58 @@ namespace OscCore.Tests
                 
                 yield return new TestCaseData(bytes2, 0, expected2);
             }
+        }
+    }
+
+
+    static class BundleData
+    {
+        public static byte[] GetRecursiveBundlesExample()
+        {
+            var writer = new OscWriter(512);
+
+            var now = DateTime.Now;
+            writer.WriteBundlePrefix();
+            writer.Write(new NtpTimestamp(now));
+
+            WriteFloatBundleElement(writer, "/composition/video/opacity", 0.5f);
+            WriteFloatBundleElement(writer, "/composition/layers/2/video/opacity", 0.64f);
+            
+            writer.WriteBundlePrefix();
+            writer.Write(new NtpTimestamp(now));
+
+            WriteIntBundleElement(writer, "/composition/layers/1/video/mixer/blendmode", 24);
+            WriteFloatBundleElement(writer, "/composition/layers/1/video/opacity", 0.72f);
+
+            var bytes = new byte[writer.Length];
+            writer.CopyBuffer(bytes, 0);
+            return bytes;
+        }
+
+        static void WriteIntBundleElement(OscWriter writer, string address, int value)
+        {
+            var typeTags = ",i";
+            var firstAddressByteCount = Encoding.ASCII.GetByteCount(address).Align4();
+            var firstTypeTagByteCount = Encoding.ASCII.GetByteCount(typeTags).Align4();
+            var elementSize = firstAddressByteCount + firstTypeTagByteCount + 4 ;
+            
+            writer.Write(elementSize);
+            writer.Write(address);
+            writer.Write(typeTags);
+            writer.Write(value);
+        }
+
+        static void WriteFloatBundleElement(OscWriter writer, string address, float value)
+        {
+            var typeTags = ",f";
+            var firstAddressByteCount = Encoding.ASCII.GetByteCount(address).Align4();
+            var firstTypeTagByteCount = Encoding.ASCII.GetByteCount(typeTags).Align4();
+            var elementSize = firstAddressByteCount + firstTypeTagByteCount + 4 ;
+            
+            writer.Write(elementSize);
+            writer.Write(address);
+            writer.Write(typeTags);
+            writer.Write(value);
         }
     }
 }

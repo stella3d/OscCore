@@ -259,6 +259,12 @@ namespace OscCore
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsBundleTagAtIndex(int index)
+        {
+            return *((long*) BufferPtr + index) == Constant.BundlePrefixLong;
+        }
+
         public bool TryParseMessage()
         {
             var addressLength = FindAddressLength();

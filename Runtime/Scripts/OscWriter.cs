@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using MiniNtp;
@@ -198,6 +199,11 @@ namespace OscCore
             // memory copy tested reliably faster than block copy for bytes under ~64 
             System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
             m_Length += size;
+        }
+
+        public void CopyBuffer(byte[] copyTo, int copyOffset = 0)
+        {
+            System.Buffer.BlockCopy(Buffer, 0, copyTo, copyOffset, Length);
         }
 
         public void Dispose()
