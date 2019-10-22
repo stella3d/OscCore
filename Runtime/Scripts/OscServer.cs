@@ -136,31 +136,11 @@ namespace OscCore
                         }
                         else if(AddressSpace.PatternCount > 0)
                         {
-                            // to support OSC address patterns, we test unmatched addresses against regular expressions
-                            // To do that, we need it as a regular string.  We may be able to mutate a previous string, 
-                            // instead of always allocating a new one
-                            if (!m_ByteLengthToStringBuffer.TryGetValue(addressLength, out var stringBuffer))
-                            {
-                                stringBuffer = Encoding.ASCII.GetString(bufferPtr, addressLength);
-                                m_ByteLengthToStringBuffer[addressLength] = stringBuffer;
-                            }
-                            else
-                            {
-                                // If we've previously received a message of the same byte length, we can re-use it
-                                OverwriteAsciiString(stringBuffer, bufferPtr);
-                            }
-
-                            if (AddressSpace.TryMatchPatternHandler(stringBuffer, m_PatternMatchedMethods))
-                            {
-                                var bufferCopy = string.Copy(stringBuffer);
-                                addressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
-                                foreach (var matchedMethod in m_PatternMatchedMethods)
-                                    matchedMethod.Invoke(parser.MessageValues);
-                            }
+                            TryMatchPatterns(parser, bufferPtr, addressLength);
                         }
-
+#if OSCCORE_PROFILING && UNITY_EDITOR
                         Profiler.EndSample();
-                        
+#endif                        
                         if (m_MonitorCallbacks.Count == 0) continue;
 
                         var monitorAddressStr = new BlobString(bufferPtr, addressLength);
@@ -222,29 +202,7 @@ namespace OscCore
                             // if we have no handler for this exact address, we may have a pattern that matches it
                             else if (AddressSpace.PatternCount > 0)
                             {
-                                if (!m_ByteLengthToStringBuffer.TryGetValue(bundleAddressLength, out var stringBuffer))
-                                {
-                                    // if we don't have an existing string of the right length to re-use, create a new one
-                                    var contentPtr = bufferPtr + contentIndex;
-                                    stringBuffer = Encoding.ASCII.GetString(contentPtr, bundleAddressLength);
-                                    m_ByteLengthToStringBuffer[bundleAddressLength] = stringBuffer;
-                                }
-                                else
-                                {
-                                    OverwriteAsciiString(stringBuffer, bufferPtr + contentIndex);
-                                }
-
-                                // test the address against all registered address patterns for a method to invoke if matched
-                                if (AddressSpace.TryMatchPatternHandler(stringBuffer, m_PatternMatchedMethods))
-                                {
-                                    // add the method found via pattern matching as a handler for this exact address
-                                    // this means that next time a message is received at this address,
-                                    // we don't need to run pattern matching again
-                                    var bufferCopy = string.Copy(stringBuffer);
-                                    addressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
-                                    foreach (var matchedMethod in m_PatternMatchedMethods)
-                                        matchedMethod.Invoke(parser.MessageValues);
-                                }
+                                TryMatchPatterns(parser, bufferPtr, bundleAddressLength);
                             }
 
                             MessageOffset += messageSize + 4;
@@ -253,14 +211,12 @@ namespace OscCore
 
                             // this doesn't actually allocate a string unless the monitor callback converts to string
                             var bundleMemberAddressStr = new BlobString(bufferPtr + contentIndex, bundleAddressLength);
-                            foreach (var callback in m_MonitorCallbacks)
+                            foreach (var callback in m_MonitorCallbacks) 
                                 callback(bundleMemberAddressStr, parser.MessageValues);
                         }
                     } 
                     // restart the outer while loop every time a bundle within a bundle is detected
                     while (recurse);
-                    // done parsing this bundle message , wait for the next one
-                    Profiler.EndSample();
                 }
                 catch (SocketException) {}
                 catch (ThreadAbortException) {}
@@ -275,10 +231,35 @@ namespace OscCore
 #endif
         }
 
+        unsafe void TryMatchPatterns(OscParser parser, byte* bufferPtr, int addressLength)
+        {
+            // to support OSC address patterns, we test unmatched addresses against regular expressions
+            // To do that, we need it as a regular string.  We may be able to mutate a previous string, 
+            // instead of always allocating a new one
+            if (!m_ByteLengthToStringBuffer.TryGetValue(addressLength, out var stringBuffer))
+            {
+                stringBuffer = Encoding.ASCII.GetString(bufferPtr, addressLength);
+                m_ByteLengthToStringBuffer[addressLength] = stringBuffer;
+            }
+            else
+            {
+                // If we've previously received a message of the same byte length, we can re-use it
+                OverwriteAsciiString(stringBuffer, bufferPtr);
+            }
+
+            if (AddressSpace.TryMatchPatternHandler(stringBuffer, m_PatternMatchedMethods))
+            {
+                var bufferCopy = string.Copy(stringBuffer);
+                AddressSpace.AddressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
+                foreach (var matchedMethod in m_PatternMatchedMethods)
+                    matchedMethod.Invoke(parser.MessageValues);
+            }
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static unsafe void OverwriteAsciiString(string str, byte* bufferPtr)
         {
-            fixed (char* addressPtr = str)
+            fixed (char* addressPtr = str)                    // done parsing this bundle message , wait for the next one
             {
                 for (int i = 0; i < str.Length; i++)
                     addressPtr[i] = (char) bufferPtr[i];
