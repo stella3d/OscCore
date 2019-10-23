@@ -6,6 +6,7 @@ namespace OscCore.Tests
     public static class TestUtil
     {
         static readonly byte[] k_Swap32 = new byte[4];
+        static readonly byte[] k_Swap64 = new byte[8];
         
         public static int ReverseBytes(this int self)
         {
@@ -19,12 +20,25 @@ namespace OscCore.Tests
         public static float ReverseBytes(this float self)
         {
             var fBytes = BitConverter.GetBytes(self);
-            BitConverter.GetBytes(self);
             k_Swap32[0] = fBytes[3];
             k_Swap32[1] = fBytes[2];
             k_Swap32[2] = fBytes[1];
             k_Swap32[3] = fBytes[0];
             return BitConverter.ToSingle(k_Swap32, 0);
+        }
+        
+        public static double ReverseBytes(this double self)
+        {
+            var dBytes = BitConverter.GetBytes(self);
+            k_Swap64[0] = dBytes[7];
+            k_Swap64[1] = dBytes[6];
+            k_Swap64[2] = dBytes[5];
+            k_Swap64[3] = dBytes[4];
+            k_Swap64[4] = dBytes[3];
+            k_Swap64[5] = dBytes[2];
+            k_Swap64[6] = dBytes[1];
+            k_Swap64[7] = dBytes[0];
+            return BitConverter.ToDouble(k_Swap64, 0);
         }
         
         public static byte[] ReversedCopy(byte[] source)
