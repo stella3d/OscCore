@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using NUnit.Framework;
+using UnityEngine;
 
 namespace OscCore.Tests
 {
@@ -64,6 +65,24 @@ namespace OscCore.Tests
 
             Assert.AreEqual(lengthBefore + 8, m_Writer.Length);
             var convertedBack = BitConverter.ToDouble(m_Writer.Buffer, lengthBefore).ReverseBytes();
+            Assert.AreEqual(value, convertedBack);
+        }
+        
+        [TestCase(50, 100, 0, 255)]
+        [TestCase(120, 80, 255, 100)]
+        [TestCase(255, 150, 50, 255)]
+        public void WriteColor32(byte r, byte g, byte b, byte a)
+        {
+            var value = new Color32(r, g, b, a);
+            var lengthBefore = m_Writer.Length;
+            m_Writer.Write(value);
+
+            Assert.AreEqual(lengthBefore + 4, m_Writer.Length);
+            var bR = m_Writer.Buffer[lengthBefore + 3];
+            var bG = m_Writer.Buffer[lengthBefore + 2];
+            var bB = m_Writer.Buffer[lengthBefore + 1];
+            var bA = m_Writer.Buffer[lengthBefore];
+            var convertedBack = new Color32(bR, bG, bB, bA);
             Assert.AreEqual(value, convertedBack);
         }
         
