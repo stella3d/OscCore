@@ -23,7 +23,7 @@ namespace OscCore
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
         
-        Action[] m_MainThreadQueue = new Action[32];
+        Action[] m_MainThreadQueue = new Action[512];
         int m_MainThreadCount;
 
         readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
@@ -118,7 +118,19 @@ namespace OscCore
             return m_MonitorCallbacks.Remove(callback);
         }
 
-        
+        public void Update()
+        {
+            try
+            {
+                for (int i = 0; i < m_MainThreadCount; i++)
+                {
+                    m_MainThreadQueue[i]();
+                }
+            }
+            catch (Exception e) { }
+            m_MainThreadCount = 0;
+        }
+
         unsafe void Serve()
         {
 #if OSCCORE_PROFILING && UNITY_EDITOR

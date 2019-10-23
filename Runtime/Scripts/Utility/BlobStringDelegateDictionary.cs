@@ -27,7 +27,7 @@ namespace BlobHandles
         {
             if (!SourceToBlob.TryGetValue(address, out var blobStr))
             {
-                blobStr = new BlobString(address);
+                blobStr = new BlobString(address, true);
                 HandleToValue[blobStr.Handle] = callbacks;
                 SourceToBlob.Add(address, blobStr);
             }
@@ -93,6 +93,8 @@ namespace BlobHandles
         [Il2CppSetOption(Option.NullChecks, false)]
         public unsafe bool TryGetValueFromBytes(byte* ptr, int byteCount, out OscActionPair value)
         {
+            var debugBlobStr = new BlobString(ptr, byteCount);
+            debugBlobStr.Dispose();
             return HandleToValue.TryGetValue(new BlobHandle(ptr, byteCount), out value);
         }
 

@@ -70,7 +70,7 @@ namespace OscCore.Tests
         public void WriteBlobString(string value)
         {
             BlobString.Encoding = Encoding.ASCII;
-            var blobStr = new BlobString(value, Allocator.Temp);
+            var blobStr = new BlobString(value, false, Allocator.Temp);
             m_Writer.Write(blobStr);
             
             blobStr.Dispose();
