@@ -66,5 +66,17 @@ namespace OscCore.Tests
             var convertedBack = BitConverter.ToDouble(m_Writer.Buffer, lengthBefore).ReverseBytes();
             Assert.AreEqual(value, convertedBack);
         }
+        
+        [Test]
+        public void WriteMidi()
+        {
+            var value = new MidiMessage(1, 4, 16, 80);
+            var lengthBefore = m_Writer.Length;
+            m_Writer.Write(value);
+
+            Assert.AreEqual(lengthBefore + 4, m_Writer.Length);
+            var convertedBack = new MidiMessage(m_Writer.Buffer, lengthBefore);
+            Assert.True(value == convertedBack);
+        }
     }
 }
