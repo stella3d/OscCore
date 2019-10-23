@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using UnityEngine;
 
 namespace OscCore
@@ -34,14 +35,15 @@ namespace OscCore
             m_Writer.Write(",");
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+
+        static readonly uint k_Int32TypeTagBytes = GetAlignedAsciiBytes(",i")[0];
         
         /// <summary>Send a message with a single 32-bit integer element</summary>
         public void Send(string address, int element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",i";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_Int32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -71,13 +73,14 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
+        static readonly uint k_Float32TypeTagBytes = GetAlignedAsciiBytes(",f")[0];
+
         /// <summary>Send a message with a single 32-bit float element</summary>
         public void Send(string address, float element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",f";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_Float32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -107,33 +110,33 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
+        static readonly uint k_StringTypeTagBytes = GetAlignedAsciiBytes(",s")[0];
+        
         /// <summary>Send a message with a single string element</summary>
         public void Send(string address, string element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",s";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_StringTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+        
+        static readonly uint k_BlobTypeTagBytes = GetAlignedAsciiBytes(",b")[0];
 
         /// <summary>Send a message with a single blob element</summary>
         /// <param name="address">The OSC address</param>
         /// <param name="bytes">The bytes to copy from</param>
         /// <param name="length">The number of bytes in the blob element</param>
         /// <param name="start">The index in the bytes array to start copying from</param>
-        public void Send(string address, int length, byte[] bytes, int start = 0)
+        public void Send(string address, byte[] bytes, int length, int start = 0)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",b";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_BlobTypeTagBytes);
             m_Writer.Write(bytes, length, start);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
-        
-
         
         /// <summary>Send a message with a 2 32-bit float elements</summary>
         public void Send(string address, Vector2 element)
@@ -157,46 +160,50 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
+        static readonly uint k_Int64TypeTagBytes = GetAlignedAsciiBytes(",d")[0];
+        
         /// <summary>Send a message with a single 64-bit float element</summary>
         public void Send(string address, double element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",d";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_Int64TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+
+        static readonly uint k_Float64TypeTagBytes = GetAlignedAsciiBytes(",h")[0];
 
         /// <summary>Send a message with a single 64-bit integer element</summary>
         public void Send(string address, long element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",h";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_Float64TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+        
+        static readonly uint k_Color32TypeTagBytes = GetAlignedAsciiBytes(",r")[0];
         
         /// <summary>Send a message with a single 32-bit color element</summary>
         public void Send(string address, Color32 element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",r";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_Color32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+        
+        static readonly uint k_MidiTypeTagBytes = GetAlignedAsciiBytes(",m")[0];
         
         /// <summary>Send a message with a single MIDI message element</summary>
         public void Send(string address, MidiMessage element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",m";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_MidiTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -243,6 +250,23 @@ namespace OscCore
             m_Writer.Write(address);
             m_Writer.Write(tags);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
+        }
+        
+        static unsafe uint[] GetAlignedAsciiBytes(string input)
+        {
+            var count = Encoding.ASCII.GetByteCount(input);
+            var alignedCount = (count + 3) & ~3;
+            var bytes = new uint[alignedCount / 4];
+
+            fixed (uint* bPtr = bytes)
+            {
+                fixed (char* strPtr = input)
+                {
+                    Encoding.ASCII.GetBytes(strPtr, input.Length, (byte*) bPtr, count);
+                }
+            }
+
+            return bytes;
         }
     }
 }

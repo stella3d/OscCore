@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
+using BlobHandles;
 using MiniNtp;
 using UnityEngine;
 
@@ -26,7 +26,6 @@ namespace OscCore
         readonly byte* m_Color32SwapPtr;
         readonly GCHandle m_Color32SwapHandle;
 
-        
         int m_Length;
 
         public int Length => m_Length;
@@ -34,12 +33,14 @@ namespace OscCore
         public OscWriter(int capacity = 4096)
         {
             Buffer = new byte[capacity];
+
             // Even though Unity's GC does not move objects around, pin them to be safe.
             m_BufferPtr = PtrUtil.Pin<byte, byte>(Buffer, out m_BufferHandle);
+            m_BufferMidiPtr = (MidiMessage*) m_BufferPtr;
+
             m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
             m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
             m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
-            m_BufferMidiPtr = (MidiMessage*) m_BufferPtr;
         }
 
         ~OscWriter() { Dispose(); }
@@ -69,47 +70,36 @@ namespace OscCore
         /// <summary>Write a 2D vector as two float elements</summary>
         public void Write(Vector2 data)
         {
-            m_FloatSwap[0] = data.x;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
-
-            m_FloatSwap[0] = data.y;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+            Write(data.x);
+            Write(data.y);
         }
         
         /// <summary>Write a 3D vector as three float elements</summary>
         public void Write(Vector3 data)
         {
-            m_FloatSwap[0] = data.x;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
-            
-            m_FloatSwap[0] = data.y;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
-            
-            m_FloatSwap[0] = data.z;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+            Write(data.x);
+            Write(data.y);
+            Write(data.z);
         }
 
-        /// <summary>Write an ASCII string element</summary>
+        /// <summary>Write an ASCII string element. The string MUST be ASCII-encoded!</summary>
         public void Write(string data)
         {
             foreach (var chr in data)
                 m_BufferPtr[m_Length++] = (byte) chr;
 
+            var alignedLength = (data.Length + 3) & ~3;
+            for (int i = data.Length; i < alignedLength; i++)
+                m_BufferPtr[m_Length++] = 0;
+        }
+        
+        /// <summary>Write an ASCII string element. The string MUST be ASCII-encoded!</summary>
+        public void Write(BlobString data)
+        {
+            var strLength = data.Length;
+            System.Buffer.MemoryCopy(data.Handle.Pointer, m_BufferPtr + m_Length, strLength, strLength);
+            m_Length += strLength;
+            
             var alignedLength = (data.Length + 3) & ~3;
             for (int i = data.Length; i < alignedLength; i++)
                 m_BufferPtr[m_Length++] = 0;
@@ -192,7 +182,7 @@ namespace OscCore
         }
 
         /// <summary>Write a single ascii character element</summary>
-        public void WriteAsciiChar(char data)
+        public void Write(char data)
         {
             // char is written in the last byte of the 4-byte block;
             m_BufferPtr[m_Length + 3] = (byte) data;
@@ -206,6 +196,42 @@ namespace OscCore
             // memory copy tested reliably faster than block copy for bytes under ~64 
             System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
             m_Length += size;
+        }
+
+        /// <summary>
+        /// Write a pre-aligned byte array representing a type tag string.
+        /// A bit faster than writing the tags using the regular string writing function.
+        /// </summary>
+        internal void WriteTagBytes(byte[] bytes)
+        {
+            var bPtr = m_BufferPtr + m_Length;
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                bPtr[i] = bytes[i];
+            }
+
+            m_Length += bytes.Length;
+        }
+        
+        /// <summary>Write bytes directly from a pointer</summary>
+        /// <param name="tagBytes">4-aligned bytes representing a type tag string</param>
+        internal void WriteTagBytes(uint[] tagBytes)
+        {
+            var bPtr = (uint*)(m_BufferPtr + m_Length);
+            for (int i = 0; i < tagBytes.Length; i++)
+            {
+                bPtr[i] = tagBytes[i];
+            }
+
+            m_Length += tagBytes.Length * 4;
+        }
+        
+        /// <summary>Write bytes directly from a pointer</summary>
+        /// <param name="tagBytes">4 bytes representing a type tag string</param>
+        internal void WriteTagBytes(uint tagBytes)
+        {
+            ((uint*)(m_BufferPtr + m_Length))[0] = tagBytes;
+            m_Length += 4;
         }
 
         public void CopyBuffer(byte[] copyTo, int copyOffset = 0)
