@@ -97,7 +97,7 @@ namespace OscCore
             for (int i = data.Length; i < alignedLength; i++)
                 m_BufferPtr[m_Length++] = 0;
         }
-        
+
         /// <summary>Write an ASCII string element. The string MUST be ASCII-encoded!</summary>
         public void Write(BlobString data)
         {
@@ -211,6 +211,31 @@ namespace OscCore
         internal void WriteTagBytes(uint tagBytes)
         {
             ((uint*)(m_BufferPtr + m_Length))[0] = tagBytes;
+            m_Length += 4;
+        }
+                
+        /// <summary>
+        /// Combines Reset(), Write(address), and Write(tags) in a single function to reduce call overhead
+        /// </summary>
+        /// <param name="address">The OSC address to send to</param>
+        /// <param name="tags">4 bytes that represent type tags</param>
+        public void WriteAddressAndTags(string address, uint tags)
+        {
+            m_Length = 0;
+            foreach (var chr in address)
+                m_BufferPtr[m_Length++] = (byte) chr;
+
+            var alignedLength = (address.Length + 3) & ~3;
+            // if our length was already aligned to 4 bytes, that means we don't have a string terminator yet,
+            // so we need to write one, which requires aligning to the next 4-byte mark.
+            if (alignedLength == address.Length)
+                alignedLength += 4;
+            
+            for (int i = address.Length; i < alignedLength; i++)
+                m_BufferPtr[m_Length++] = 0;
+            
+            // write the 4 bytes for the type tags
+            ((uint*)(m_BufferPtr + m_Length))[0] = tags;
             m_Length += 4;
         }
 

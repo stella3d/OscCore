@@ -8,12 +8,13 @@ namespace OscCore
     public class OscClient
     {
         readonly Socket m_Socket;
-        
-        public IPEndPoint Destination { get; }
-
         readonly OscWriter m_Writer;
 
+        /// <summary>Serializes outgoing messages</summary>
         public OscWriter Writer => m_Writer;
+
+        /// <summary>Where this client is sending messages to</summary>
+        public IPEndPoint Destination { get; }
 
         public OscClient(string ipAddress, int port)
         {
@@ -41,9 +42,7 @@ namespace OscCore
         /// <summary>Send a message with a single 32-bit integer element</summary>
         public void Send(string address, int element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_Int32TypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_Int32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -78,9 +77,7 @@ namespace OscCore
         /// <summary>Send a message with a single 32-bit float element</summary>
         public void Send(string address, float element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_Float32TypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_Float32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -115,9 +112,7 @@ namespace OscCore
         /// <summary>Send a message with a single string element</summary>
         public void Send(string address, string element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_StringTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_StringTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -131,9 +126,7 @@ namespace OscCore
         /// <param name="start">The index in the bytes array to start copying from</param>
         public void Send(string address, byte[] bytes, int length, int start = 0)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_BlobTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_BlobTypeTagBytes);
             m_Writer.Write(bytes, length, start);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -165,9 +158,7 @@ namespace OscCore
         /// <summary>Send a message with a single 64-bit float element</summary>
         public void Send(string address, double element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_Int64TypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_Int64TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -177,9 +168,7 @@ namespace OscCore
         /// <summary>Send a message with a single 64-bit integer element</summary>
         public void Send(string address, long element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_Float64TypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_Float64TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -189,9 +178,7 @@ namespace OscCore
         /// <summary>Send a message with a single 32-bit color element</summary>
         public void Send(string address, Color32 element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_Color32TypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_Color32TypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -201,9 +188,7 @@ namespace OscCore
         /// <summary>Send a message with a single MIDI message element</summary>
         public void Send(string address, MidiMessage element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_MidiTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_MidiTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -213,9 +198,7 @@ namespace OscCore
         /// <summary>Send a message with a single ascii character element</summary>
         public void Send(string address, char element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(k_CharTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_CharTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
@@ -226,9 +209,7 @@ namespace OscCore
         /// <summary>Send a message with a single True or False tag element</summary>
         public void Send(string address, bool element)
         {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(element ? k_TrueTypeTagBytes : k_FalseTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, element ? k_TrueTypeTagBytes : k_FalseTypeTagBytes);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
@@ -237,7 +218,8 @@ namespace OscCore
         /// <summary>Send a message with a single Nil ('N') tag element</summary>
         public void SendNil(string address)
         {
-            SendNull(address, k_NilTypeTagBytes);
+            m_Writer.WriteAddressAndTags(address, k_NilTypeTagBytes);
+            m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
         const uint k_InfinitumTypeTagBytes = 18732;    // ",I  " 
@@ -245,14 +227,7 @@ namespace OscCore
         /// <summary>Send a message with a single Infinitum ('I') tag element</summary>
         public void SendInfinitum(string address)
         {
-            SendNull(address, k_InfinitumTypeTagBytes);
-        }
-
-        void SendNull(string address, uint tags)
-        {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            m_Writer.WriteTagBytes(tags);
+            m_Writer.WriteAddressAndTags(address, k_InfinitumTypeTagBytes);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
