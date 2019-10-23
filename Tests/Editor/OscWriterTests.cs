@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -25,21 +26,9 @@ namespace OscCore.Tests
         public void WriteInt32(int value)
         {
             m_Writer.Write(value);
-
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             // this tests both that it wrote to the right place in the buffer as well as that the value is right
             var convertedBack = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
-            Assert.AreEqual(value, convertedBack);
-        }
-        
-        [TestCase(50000000)]
-        [TestCase(144 * 100000)]
-        public void WriteInt64(long value)
-        {
-            m_Writer.Write(value);
-            Assert.AreEqual(m_WriterLengthBefore + 8, m_Writer.Length);
-            var bigEndian = BitConverter.ToInt64(m_Writer.Buffer, m_WriterLengthBefore);
-            var convertedBack = IPAddress.NetworkToHostOrder(bigEndian);
             Assert.AreEqual(value, convertedBack);
         }
         
@@ -51,6 +40,62 @@ namespace OscCore.Tests
             m_Writer.Write(value);
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             var convertedBack = BitConverter.ToSingle(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
+            Assert.AreEqual(value, convertedBack);
+        }
+        
+        [TestCase("/composition/tempo")]
+        [TestCase("/layers/1/opacity")]
+        [TestCase("/composition/layers/2/video/blend")]
+        public void WriteString(string value)
+        {
+            m_Writer.Write(value);
+            var asciiByteCount = Encoding.ASCII.GetByteCount(value);
+            // strings align to 4 byte chunks like all other osc data types
+            var alignedByteCount = (asciiByteCount + 3) & ~3;
+            Assert.AreEqual(m_WriterLengthBefore + alignedByteCount, m_Writer.Length);
+            
+            var convertedBack = Encoding.ASCII.GetString(m_Writer.Buffer, m_WriterLengthBefore, asciiByteCount);
+            Assert.AreEqual(value, convertedBack);
+        }
+        
+        [TestCase(43)]
+        [TestCase(62)]
+        [TestCase(144)]
+        public void WriteBlob(int size)
+        {
+            var bytes = RandomBytes(size);
+            m_Writer.Write(bytes, size);
+
+            var alignedByteCount = (size + 3) & ~3;
+            var blobContentIndex = m_WriterLengthBefore + 4;
+            var blobWriteEndIndex = blobContentIndex + size;
+            // was the blob size written properly ?
+            var writtenSize = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
+            Assert.AreEqual(size, writtenSize);
+            Assert.AreEqual(blobContentIndex + alignedByteCount, m_Writer.Length);
+
+            // were the blob contents written the same as the source ?
+            for (int i = blobContentIndex; i < blobWriteEndIndex; i++)
+            {
+                Assert.AreEqual(bytes[i - blobContentIndex], m_Writer.Buffer[i]);
+            }
+
+            // did we write the necessary trailing bytes to align to the next 4 byte interval ?
+            var zeroEndIndex = blobContentIndex + alignedByteCount;
+            for (int i = blobWriteEndIndex; i < zeroEndIndex; i++)
+            {
+                Assert.Zero(m_Writer.Buffer[i]);
+            }
+        }
+        
+        [TestCase(50000000)]
+        [TestCase(144 * 100000)]
+        public void WriteInt64(long value)
+        {
+            m_Writer.Write(value);
+            Assert.AreEqual(m_WriterLengthBefore + 8, m_Writer.Length);
+            var bigEndian = BitConverter.ToInt64(m_Writer.Buffer, m_WriterLengthBefore);
+            var convertedBack = IPAddress.NetworkToHostOrder(bigEndian);
             Assert.AreEqual(value, convertedBack);
         }
         
@@ -105,28 +150,6 @@ namespace OscCore.Tests
             Assert.True(chr == convertedBack);
         }
         
-        [TestCase(32)]
-        [TestCase(43)]
-        [TestCase(144)]
-        public void WriteBlob(int size)
-        {
-            var bytes = RandomBytes(size);
-            m_Writer.Write(bytes, size);
-
-            var blobContentIndex = m_WriterLengthBefore + 4;
-            var blobWriteEndIndex = blobContentIndex + size;
-            // was the blob size written properly ?
-            var writtenSize = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
-            Assert.AreEqual(size, writtenSize);
-            Assert.AreEqual(m_WriterLengthBefore + 4 + size, m_Writer.Length);
-
-            // was the blob written the same as the source ?
-            for (int i = blobContentIndex; i < blobWriteEndIndex; i++)
-            {
-                Assert.AreEqual(bytes[i - blobContentIndex], m_Writer.Buffer[i]);
-            }
-        }
-
         static byte[] RandomBytes(int count)
         {
             var bytes = new byte[count];
