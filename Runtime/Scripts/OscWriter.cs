@@ -184,6 +184,7 @@ namespace OscCore
             m_Length += 4;
         }
 
+        /// <summary>Write a 64-bit NTP timestamp element</summary>
         public void Write(NtpTimestamp time)
         {
             time.ToBigEndianBytes((uint*)(m_BufferPtr + m_Length));

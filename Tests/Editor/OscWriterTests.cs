@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Text;
+using MiniNtp;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -26,6 +27,7 @@ namespace OscCore.Tests
         public void WriteInt32(int value)
         {
             m_Writer.Write(value);
+            
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             // this tests both that it wrote to the right place in the buffer as well as that the value is right
             var convertedBack = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
@@ -38,6 +40,7 @@ namespace OscCore.Tests
         public void WriteFloat32(float value)
         {
             m_Writer.Write(value);
+            
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             var convertedBack = BitConverter.ToSingle(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
             Assert.AreEqual(value, convertedBack);
@@ -49,6 +52,7 @@ namespace OscCore.Tests
         public void WriteString(string value)
         {
             m_Writer.Write(value);
+            
             var asciiByteCount = Encoding.ASCII.GetByteCount(value);
             // strings align to 4 byte chunks like all other osc data types
             var alignedByteCount = (asciiByteCount + 3) & ~3;
@@ -93,6 +97,7 @@ namespace OscCore.Tests
         public void WriteInt64(long value)
         {
             m_Writer.Write(value);
+            
             Assert.AreEqual(m_WriterLengthBefore + 8, m_Writer.Length);
             var bigEndian = BitConverter.ToInt64(m_Writer.Buffer, m_WriterLengthBefore);
             var convertedBack = IPAddress.NetworkToHostOrder(bigEndian);
@@ -105,6 +110,7 @@ namespace OscCore.Tests
         public void WriteFloat64(double value)
         {
             m_Writer.Write(value);
+            
             Assert.AreEqual(m_WriterLengthBefore + 8, m_Writer.Length);
             var convertedBack = BitConverter.ToDouble(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
             Assert.AreEqual(value, convertedBack);
@@ -144,10 +150,21 @@ namespace OscCore.Tests
         public void WriteAsciiChar(char chr)
         {
             m_Writer.WriteAsciiChar(chr);
-
+            
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             var convertedBack = (char) m_Writer.Buffer[m_WriterLengthBefore + 3];
             Assert.True(chr == convertedBack);
+        }
+        
+        [Test]
+        public void WriteTimestamp()
+        {
+            var stamp = new NtpTimestamp(DateTime.Now);
+            m_Writer.Write(stamp);
+
+            Assert.AreEqual(m_WriterLengthBefore + 8, m_Writer.Length);
+            var convertedBack = NtpTimestamp.FromBigEndianBytes(m_Writer.Buffer, m_WriterLengthBefore);
+            Assert.True(stamp == convertedBack);
         }
         
         static byte[] RandomBytes(int count)
