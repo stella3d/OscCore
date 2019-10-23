@@ -5,6 +5,28 @@ namespace OscCore.Tests
 {
     public static class TestUtil
     {
+        static readonly byte[] k_Swap32 = new byte[4];
+        
+        public static int ReverseBytes(this int self)
+        {
+            k_Swap32[0] = (byte) (self >> 24);
+            k_Swap32[1] = (byte) (self >> 16);
+            k_Swap32[2] = (byte) (self >>  8);
+            k_Swap32[3] = (byte) (self);
+            return BitConverter.ToInt32(k_Swap32, 0);
+        }
+        
+        public static float ReverseBytes(this float self)
+        {
+            var fBytes = BitConverter.GetBytes(self);
+            BitConverter.GetBytes(self);
+            k_Swap32[0] = fBytes[3];
+            k_Swap32[1] = fBytes[2];
+            k_Swap32[2] = fBytes[1];
+            k_Swap32[3] = fBytes[0];
+            return BitConverter.ToSingle(k_Swap32, 0);
+        }
+        
         public static byte[] ReversedCopy(byte[] source)
         {
             var copy = new byte[source.Length];
