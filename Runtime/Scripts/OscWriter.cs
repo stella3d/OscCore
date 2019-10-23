@@ -197,34 +197,6 @@ namespace OscCore
             System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
             m_Length += size;
         }
-
-        /// <summary>
-        /// Write a pre-aligned byte array representing a type tag string.
-        /// A bit faster than writing the tags using the regular string writing function.
-        /// </summary>
-        internal void WriteTagBytes(byte[] bytes)
-        {
-            var bPtr = m_BufferPtr + m_Length;
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                bPtr[i] = bytes[i];
-            }
-
-            m_Length += bytes.Length;
-        }
-        
-        /// <summary>Write bytes directly from a pointer</summary>
-        /// <param name="tagBytes">4-aligned bytes representing a type tag string</param>
-        internal void WriteTagBytes(uint[] tagBytes)
-        {
-            var bPtr = (uint*)(m_BufferPtr + m_Length);
-            for (int i = 0; i < tagBytes.Length; i++)
-            {
-                bPtr[i] = tagBytes[i];
-            }
-
-            m_Length += tagBytes.Length * 4;
-        }
         
         /// <summary>Write bytes directly from a pointer</summary>
         /// <param name="tagBytes">4 bytes representing a type tag string</param>
