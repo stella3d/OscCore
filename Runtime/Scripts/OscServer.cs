@@ -82,6 +82,17 @@ namespace OscCore
             }
             return server;
         }
+        
+        public static bool Remove(int port)
+        {
+            OscServer server;
+            if (PortToServer.TryGetValue(port, out server))
+            {
+                server.Dispose();
+                return PortToServer.Remove(port);
+            }
+            return false;
+        }
 
         public bool TryAddMethod(string address, OscActionPair method) => 
             AddressSpace.TryAddMethod(address, method);
@@ -304,6 +315,7 @@ namespace OscCore
             if(m_BufferHandle.IsAllocated) m_BufferHandle.Free();
             if (disposing)
             {
+                AddressSpace.AddressToMethod.Dispose();
                 AddressSpace = null;
                 if (m_Socket.IsBound)
                 {
