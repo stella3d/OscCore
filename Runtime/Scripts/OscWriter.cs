@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using MiniNtp;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ namespace OscCore
         public readonly byte[] Buffer;
         readonly byte* m_BufferPtr;
         readonly GCHandle m_BufferHandle;
+        readonly MidiMessage* m_BufferMidiPtr;
         
         readonly float[] m_FloatSwap = new float[1];
         readonly byte* m_FloatSwapPtr;
@@ -24,7 +26,6 @@ namespace OscCore
         readonly byte* m_Color32SwapPtr;
         readonly GCHandle m_Color32SwapHandle;
 
-        readonly MidiMessage m_BufferMidiPtr;
         
         int m_Length;
 
@@ -38,6 +39,7 @@ namespace OscCore
             m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
             m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
             m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
+            m_BufferMidiPtr = (MidiMessage*) m_BufferPtr;
         }
 
         ~OscWriter() { Dispose(); }
@@ -125,6 +127,13 @@ namespace OscCore
             Write(length);
             System.Buffer.BlockCopy(bytes, start, Buffer, m_Length, length);
             m_Length += length;
+
+            // write any trailing zeros necessary
+            var remainder = ((length + 3) & ~3) - length;
+            for (int i = 0; i < remainder; i++)
+            {
+                m_BufferPtr[m_Length++] = 0;
+            }
         }
         
         /// <summary>Write a 64-bit integer element</summary>
@@ -170,15 +179,15 @@ namespace OscCore
         /// <summary>Write a MIDI message element</summary>
         public void Write(MidiMessage data)
         {
-            m_BufferPtr[m_Length++] = data.PortId;
-            m_BufferPtr[m_Length++] = data.Status;
-            m_BufferPtr[m_Length++] = data.Data1;
-            m_BufferPtr[m_Length++] = data.Data2;
+            var midiWritePtr = (MidiMessage*) (m_BufferPtr + m_Length);
+            midiWritePtr[0] = data;
+            m_Length += 4;
         }
 
         public void Write(NtpTimestamp time)
         {
             time.ToBigEndianBytes((uint*)(m_BufferPtr + m_Length));
+            m_Length += 8;
         }
 
         /// <summary>Write a single ascii character element</summary>
