@@ -10,12 +10,12 @@ namespace BlobHandles
     {
         const int defaultSize = 16;
         
-        public readonly Dictionary<BlobHandle, ReceiveValueMethod> HandleToValue;
+        public readonly Dictionary<BlobHandle, OscActionPair> HandleToValue;
         internal readonly Dictionary<string, BlobString> SourceToBlob;
 
         public OscAddressMethods(int initialCapacity = defaultSize)
         {
-            HandleToValue = new Dictionary<BlobHandle, ReceiveValueMethod>(initialCapacity);
+            HandleToValue = new Dictionary<BlobHandle, OscActionPair>(initialCapacity);
             SourceToBlob = new Dictionary<string, BlobString>(initialCapacity);
         }
         
@@ -23,37 +23,46 @@ namespace BlobHandles
         /// <param name="address">The address to associate the method with</param>
         /// <param name="callback">The method to be invoked</param>
         [Il2CppSetOption(Option.NullChecks, false)]
-        public void Add(string address, ReceiveValueMethod callback)
+        public void Add(string address, OscActionPair callbacks)
         {
             if (!SourceToBlob.TryGetValue(address, out var blobStr))
             {
                 blobStr = new BlobString(address);
-                HandleToValue[blobStr.Handle] = callback;
+                HandleToValue[blobStr.Handle] = callbacks;
                 SourceToBlob.Add(address, blobStr);
             }
             else
             {
                 if(HandleToValue.ContainsKey(blobStr.Handle))
-                    HandleToValue[blobStr.Handle] += callback;
+                    HandleToValue[blobStr.Handle] += callbacks;
                 else
-                    HandleToValue[blobStr.Handle] = callback;
+                    HandleToValue[blobStr.Handle] = callbacks;
             }
+        }
+        
+        /// <summary>Adds a callback to be executed when a message is received at the address</summary>
+        /// <param name="address">The address to associate the method with</param>
+        /// <param name="callback">The method to be invoked</param>
+        [Il2CppSetOption(Option.NullChecks, false)]
+        public void Add(string address, Action<OscMessageValues> callback)
+        {
+            Add(address, new OscActionPair(callback, null));
         }
         
         /// <summary>Adds a list of callbacks to be executed when a message is received at the address</summary>
         /// <param name="address">The address to associate the methods with</param>
         /// <param name="callbacks">The methods to be invoked</param>
         [Il2CppSetOption(Option.NullChecks, false)]
-        internal void Add(string address, List<ReceiveValueMethod> callbacks)
+        internal void Add(string address, List<OscActionPair> callbacks)
         {
             if (callbacks.Count == 0) return;
 
-            var callback = callbacks[0];
+            var pair = callbacks[0];
             if(callbacks.Count > 1)
                 for (int i = 1; i < callbacks.Count; i++)
-                    callback += callbacks[i];
+                    pair += callbacks[i];
             
-            Add(address, callback);
+            Add(address, pair);
         }
 
         /// <summary>Removes the callback at the specified address</summary>
@@ -61,27 +70,28 @@ namespace BlobHandles
         /// <param name="callback">The callback to remove</param>
         /// <returns>true if the string was found and removed, false otherwise</returns>
         [Il2CppSetOption(Option.NullChecks, false)]
-        public bool Remove(string address, ReceiveValueMethod callback)
+        public bool Remove(string address, OscActionPair callbacks)
         {
             if (!SourceToBlob.TryGetValue(address, out var blobStr)) 
                 return false;
-            if (!HandleToValue.TryGetValue(blobStr.Handle, out var method))
+            if (!HandleToValue.TryGetValue(blobStr.Handle, out var existingPair))
                 return false;
 
-            if (method.GetInvocationList().Length == 1)
+            var valueReadMethod = existingPair.ValueRead;
+            if (valueReadMethod.GetInvocationList().Length == 1)
             {
                 var removed = HandleToValue.Remove(blobStr.Handle) && SourceToBlob.Remove(address);
                 blobStr.Dispose();
                 return removed;
             }
             
-            HandleToValue[blobStr.Handle] -= callback;
+            HandleToValue[blobStr.Handle] -= callbacks;
             return true;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Il2CppSetOption(Option.NullChecks, false)]
-        public unsafe bool TryGetValueFromBytes(byte* ptr, int byteCount, out ReceiveValueMethod value)
+        public unsafe bool TryGetValueFromBytes(byte* ptr, int byteCount, out OscActionPair value)
         {
             return HandleToValue.TryGetValue(new BlobHandle(ptr, byteCount), out value);
         }

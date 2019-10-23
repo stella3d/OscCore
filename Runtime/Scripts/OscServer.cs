@@ -22,12 +22,15 @@ namespace OscCore
 
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
+        
+        Action[] m_MainThreadQueue = new Action[32];
+        int m_MainThreadCount;
 
         readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
         
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
         
-        readonly List<ReceiveValueMethod> m_PatternMatchedMethods = new List<ReceiveValueMethod>();
+        readonly List<OscActionPair> m_PatternMatchedMethods = new List<OscActionPair>();
 
         public int Port { get; private set; }
         public OscAddressSpace AddressSpace { get; private set; }
@@ -68,11 +71,22 @@ namespace OscCore
         {
             m_Disposed = false;
         }
+        
+        public static OscServer GetOrCreate(int port)
+        {
+            OscServer server;
+            if (!PortToServer.TryGetValue(port, out server))
+            {
+                server = new OscServer(port);
+                PortToServer[port] = server;
+            }
+            return server;
+        }
 
-        public bool TryAddMethod(string address, ReceiveValueMethod method) => 
+        public bool TryAddMethod(string address, OscActionPair method) => 
             AddressSpace.TryAddMethod(address, method);
         
-        public bool RemoveMethod(string address, ReceiveValueMethod method) => 
+        public bool RemoveMethod(string address, OscActionPair method) => 
             AddressSpace.RemoveMethod(address, method);
 
         /// <summary>
@@ -92,6 +106,7 @@ namespace OscCore
         {
             return m_MonitorCallbacks.Remove(callback);
         }
+
         
         unsafe void Serve()
         {
@@ -129,10 +144,13 @@ namespace OscCore
                         var offset = addressLength + (tagCount + 4) & ~3;
                         parser.FindOffsets(offset);
                         
-                        if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var method))
+                        if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var methodPair))
                         {
-                            // call the method(s) associated with this OSC address    
-                            method.Invoke(parser.MessageValues);
+                            // call the value read method associated with this OSC address    
+                            methodPair.ValueRead(parser.MessageValues);
+                            // if there's a main thread method, queue it
+                            if(methodPair.MainThreadQueued != null)    
+                                m_MainThreadQueue[m_MainThreadCount++] = methodPair.MainThreadQueued;
                         }
                         else if(AddressSpace.PatternCount > 0)
                         {
@@ -194,10 +212,13 @@ namespace OscCore
                             parser.FindOffsets(bundleOffset);
 
                             if (addressToMethod.TryGetValueFromBytes(bufferPtr + contentIndex, bundleAddressLength,
-                                out var bundleMethod))
+                                out var bundleMethodPair))
                             {
-                                // call the method(s) associated with this OSC address    
-                                bundleMethod.Invoke(parser.MessageValues);
+                                // call the value read method associated with this OSC address    
+                                bundleMethodPair.ValueRead(parser.MessageValues);
+                                // if there's a main thread method, queue it
+                                if(bundleMethodPair.MainThreadQueued != null)    
+                                    m_MainThreadQueue[m_MainThreadCount++] = bundleMethodPair.MainThreadQueued;
                             }
                             // if we have no handler for this exact address, we may have a pattern that matches it
                             else if (AddressSpace.PatternCount > 0)
@@ -252,7 +273,10 @@ namespace OscCore
                 var bufferCopy = string.Copy(stringBuffer);
                 AddressSpace.AddressToMethod.Add(bufferCopy, m_PatternMatchedMethods);
                 foreach (var matchedMethod in m_PatternMatchedMethods)
-                    matchedMethod.Invoke(parser.MessageValues);
+                {
+                    matchedMethod.ValueRead(parser.MessageValues);
+                    m_MainThreadQueue[m_MainThreadCount++] = matchedMethod.MainThreadQueued;
+                }
             }
         }
 

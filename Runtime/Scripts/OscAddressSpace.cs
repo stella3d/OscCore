@@ -22,7 +22,7 @@ namespace OscCore
         // Keep a list of registered address patterns and the methods they're associated with just like addresses
         internal int PatternCount;
         internal Regex[] Patterns = new Regex[k_DefaultPatternCapacity];
-        internal ReceiveValueMethod[] PatternMethods = new ReceiveValueMethod[k_DefaultPatternCapacity];
+        internal OscActionPair[] PatternMethods = new OscActionPair[k_DefaultPatternCapacity];
         
         readonly Queue<int> FreedPatternIndices = new Queue<int>();
         readonly Dictionary<string, int> PatternStringToIndex = new Dictionary<string, int>();
@@ -32,7 +32,7 @@ namespace OscCore
             AddressToMethod = new OscAddressMethods(startingCapacity);
         }
 
-        public bool TryAddMethod(string address, ReceiveValueMethod onReceived)
+        public bool TryAddMethod(string address, OscActionPair onReceived)
         {
             if (string.IsNullOrEmpty(address) || onReceived == null) 
                 return false;
@@ -76,7 +76,7 @@ namespace OscCore
             }
         }
 
-        public bool RemoveMethod(string address, ReceiveValueMethod onReceived)
+        public bool RemoveMethod(string address, OscActionPair onReceived)
         {
             if (string.IsNullOrEmpty(address) || onReceived == null) 
                 return false;
@@ -90,7 +90,7 @@ namespace OscCore
                     if (!PatternStringToIndex.TryGetValue(address, out var patternIndex))
                         return false;
 
-                    var method = PatternMethods[patternIndex];
+                    var method = PatternMethods[patternIndex].ValueRead;
                     if (method.GetInvocationList().Length == 1)
                     {
                         Patterns[patternIndex] = null;
@@ -109,7 +109,7 @@ namespace OscCore
             }
         }
 
-        public bool TryMatchPattern(string address, out ReceiveValueMethod method)
+        public bool TryMatchPattern(string address, out OscActionPair method)
         {
             for (var i = 0; i < PatternCount; i++)
             {
@@ -124,7 +124,7 @@ namespace OscCore
             return false;
         }
         
-        bool AddAddressMethod(string address, ReceiveValueMethod onReceived)
+        bool AddAddressMethod(string address, OscActionPair onReceived)
         {
             switch (OscParser.GetAddressType(address))
             {    
@@ -172,7 +172,7 @@ namespace OscCore
         /// <param name="address">The address to match</param>
         /// <param name="allMatchedMethods"></param>
         /// <returns>True if a match was found, false otherwise</returns>
-        public bool TryMatchPatternHandler(string address, List<ReceiveValueMethod> allMatchedMethods)
+        public bool TryMatchPatternHandler(string address, List<OscActionPair> allMatchedMethods)
         {
             if (!OscParser.AddressIsValid(address))
                 return false;
