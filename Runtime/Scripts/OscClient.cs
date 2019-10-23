@@ -36,7 +36,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
-        static readonly uint k_Int32TypeTagBytes = GetAlignedAsciiBytes(",i")[0];
+        const uint k_Int32TypeTagBytes = 26924;    // ",i  " 
         
         /// <summary>Send a message with a single 32-bit integer element</summary>
         public void Send(string address, int element)
@@ -73,8 +73,8 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        static readonly uint k_Float32TypeTagBytes = GetAlignedAsciiBytes(",f")[0];
-
+        const uint k_Float32TypeTagBytes = 26156;    // ",f  " 
+        
         /// <summary>Send a message with a single 32-bit float element</summary>
         public void Send(string address, float element)
         {
@@ -110,7 +110,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
-        static readonly uint k_StringTypeTagBytes = GetAlignedAsciiBytes(",s")[0];
+        const uint k_StringTypeTagBytes = 29484;    // ",s  " 
         
         /// <summary>Send a message with a single string element</summary>
         public void Send(string address, string element)
@@ -122,7 +122,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        static readonly uint k_BlobTypeTagBytes = GetAlignedAsciiBytes(",b")[0];
+        const uint k_BlobTypeTagBytes = 25132;    // ",b  " 
 
         /// <summary>Send a message with a single blob element</summary>
         /// <param name="address">The OSC address</param>
@@ -160,7 +160,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        static readonly uint k_Int64TypeTagBytes = GetAlignedAsciiBytes(",d")[0];
+        const uint k_Int64TypeTagBytes = 25644;    // ",d  " 
         
         /// <summary>Send a message with a single 64-bit float element</summary>
         public void Send(string address, double element)
@@ -172,7 +172,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
-        static readonly uint k_Float64TypeTagBytes = GetAlignedAsciiBytes(",h")[0];
+        const uint k_Float64TypeTagBytes = 26668;    // ",h  " 
 
         /// <summary>Send a message with a single 64-bit integer element</summary>
         public void Send(string address, long element)
@@ -184,7 +184,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        static readonly uint k_Color32TypeTagBytes = GetAlignedAsciiBytes(",r")[0];
+        const uint k_Color32TypeTagBytes = 29228;    // ",r  " 
         
         /// <summary>Send a message with a single 32-bit color element</summary>
         public void Send(string address, Color32 element)
@@ -196,7 +196,7 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        static readonly uint k_MidiTypeTagBytes = GetAlignedAsciiBytes(",m")[0];
+        const uint k_MidiTypeTagBytes = 27948;    // ",m  " 
         
         /// <summary>Send a message with a single MIDI message element</summary>
         public void Send(string address, MidiMessage element)
@@ -208,47 +208,51 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
+        const uint k_CharTypeTagBytes = 25388;    // ",c  " 
+
         /// <summary>Send a message with a single ascii character element</summary>
         public void Send(string address, char element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string typeTags = ",c";
-            m_Writer.Write(typeTags);
+            m_Writer.WriteTagBytes(k_CharTypeTagBytes);
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+
+        const uint k_TrueTypeTagBytes = 21548;    // ",T  " 
+        const uint k_FalseTypeTagBytes = 17964;    // ",F  " 
 
         /// <summary>Send a message with a single True or False tag element</summary>
         public void Send(string address, bool element)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            const string trueTag = ",T";
-            const string falseTag = ",F";
-            m_Writer.Write(element ? trueTag : falseTag);
+            m_Writer.WriteTagBytes(element ? k_TrueTypeTagBytes : k_FalseTypeTagBytes);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
+        const uint k_NilTypeTagBytes = 20012;    // ",N  " 
+
         /// <summary>Send a message with a single Nil ('N') tag element</summary>
         public void SendNil(string address)
         {
-            const string tag = ",N";
-            SendNull(address, tag);
+            SendNull(address, k_NilTypeTagBytes);
         }
         
+        const uint k_InfinitumTypeTagBytes = 18732;    // ",I  " 
+
         /// <summary>Send a message with a single Infinitum ('I') tag element</summary>
         public void SendInfinitum(string address)
         {
-            const string tag = ",I";
-            SendNull(address, tag);
+            SendNull(address, k_InfinitumTypeTagBytes);
         }
 
-        void SendNull(string address, string tags)
+        void SendNull(string address, uint tags)
         {
             m_Writer.Reset();
             m_Writer.Write(address);
-            m_Writer.Write(tags);
+            m_Writer.WriteTagBytes(tags);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         

@@ -82,6 +82,25 @@ namespace OscCore
 
             return true;
         }
+        
+        public static bool CharacterIsValidInAddress(char c)
+        {
+            switch (c)
+            {
+                case ' ':
+                case '#':
+                case '*':
+                case ',':
+                case '?':
+                case '[':
+                case ']':
+                case '{':
+                case '}':
+                    return false;
+                default:
+                    return true;
+            }
+        }
 
         internal static AddressType GetAddressType(string address)
         {

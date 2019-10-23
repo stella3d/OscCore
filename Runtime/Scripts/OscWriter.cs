@@ -89,6 +89,11 @@ namespace OscCore
                 m_BufferPtr[m_Length++] = (byte) chr;
 
             var alignedLength = (data.Length + 3) & ~3;
+            // if our length was already aligned to 4 bytes, that means we don't have a string terminator yet,
+            // so we need to write one, which requires aligning to the next 4-byte mark.
+            if (alignedLength == data.Length)
+                alignedLength += 4;
+            
             for (int i = data.Length; i < alignedLength; i++)
                 m_BufferPtr[m_Length++] = 0;
         }
@@ -101,6 +106,9 @@ namespace OscCore
             m_Length += strLength;
             
             var alignedLength = (data.Length + 3) & ~3;
+            if (alignedLength == data.Length)
+                alignedLength += 4;
+            
             for (int i = data.Length; i < alignedLength; i++)
                 m_BufferPtr[m_Length++] = 0;
         }

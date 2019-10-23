@@ -281,8 +281,12 @@ namespace OscCore
             if (disposing)
             {
                 AddressSpace = null;
-                if(m_Socket.IsBound)
+                if (m_Socket.IsBound)
+                {
                     m_Socket.Close();
+                    m_Socket.Dispose();
+                }
+
                 if(m_Thread.ThreadState == ThreadState.Running)
                     m_Thread.Join();
             }
