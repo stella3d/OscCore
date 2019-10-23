@@ -2,7 +2,7 @@
     "name": "OscCore.Tests.Editor",
     "references": [
         "GUID:9d1f21c757f944f4188b1b799669c761",
-        "GUID:79b0218b49ed7e14ab898fb325e38b3f"
+        "GUID:b7159db16e428174da6301d7fb076771"
     ],
     "optionalUnityReferences": [
         "TestAssemblies"

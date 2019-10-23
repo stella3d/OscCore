@@ -4,3 +4,6 @@
 [submodule "MiniNTP"]
 	path = MiniNTP
 	url = git@github.com:stella3d/MiniNTP.git
+[submodule "NtpTimestamp"]
+	path = NtpTimestamp
+	url = git@github.com:stella3d/NtpTimestamp.git
