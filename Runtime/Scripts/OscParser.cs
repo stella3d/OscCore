@@ -2,12 +2,10 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using BlobHandles;
-using UnityEngine;
 
 namespace OscCore
 {
-    public unsafe class OscParser : IDisposable
+    public unsafe class OscParser
     {
         // TODO - make these preferences options
         public const int MaxElementsPerMessage = 32;
@@ -24,10 +22,6 @@ namespace OscCore
 
         public readonly OscMessageValues MessageValues;
 
-        public int TagCount { get; private set; }
-
-        public OscAddressSpace AddressSpace { get; internal set; }
-
         public OscParser(byte[] fixedBuffer, GCHandle bufferHandle)
         {
             Buffer = fixedBuffer;
@@ -43,20 +37,6 @@ namespace OscCore
         {
             var addressLength = FindAddressLength(buffer, 0);
             var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
-            Debug.Log($"parsed address: {debugStr}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AddressIsBundle()
-        {
-            return *BufferLongPtr == Constant.BundlePrefixLong;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T ReadPointer<T>(byte* bufferStartPtr, int offset)
-            where T: unmanaged
-        {
-            return *(T*) (bufferStartPtr + offset);
         }
 
         internal static bool AddressIsValid(string address)
@@ -202,33 +182,44 @@ namespace OscCore
             var index = offset + 1;
 
             byte b = bytes[index];
-            while (b != byte.MinValue && b != Constant.Comma)
+            while (b != byte.MinValue)
             {
                 b = bytes[index];
                 index++;
             }
 
             var length = index - offset;
-            return (length + 3) & ~3;            // align to 4 bytes
+            return length;
         }
         
-        public int FindAddressLength(int offset = 0)
+        public int FindAddressLength()
         {
-            var buffer = Buffer;
-            if (buffer[offset] != Constant.ForwardSlash)
+            if (BufferPtr[0] != Constant.ForwardSlash)
+                return -1;
+            
+            var index = 0;
+            do
+            {
+                index++;
+            } 
+            while (BufferPtr[index] != byte.MinValue);
+            return index;
+        }
+        
+        public int FindAddressLength(int offset)
+        {
+            if (BufferPtr[offset] != Constant.ForwardSlash)
                 return -1;
             
             var index = offset + 1;
-
-            byte b = buffer[index];
-            while (b != byte.MinValue && b != Constant.Comma)
+            do
             {
-                b = buffer[index];
                 index++;
-            }
+            } 
+            while (BufferPtr[index] != byte.MinValue);
 
             var length = index - offset;
-            return (length + 3) & ~3;            // align to 4 bytes
+            return length;
         }
 
         public int GetStringLength(int offset)
@@ -282,31 +273,6 @@ namespace OscCore
         public bool IsBundleTagAtIndex(int index)
         {
             return *((long*) BufferPtr + index) == Constant.BundlePrefixLong;
-        }
-
-        public bool TryParseMessage()
-        {
-            var addressLength = FindAddressLength();
-            if (addressLength < 0) 
-                return false;
-
-            var tagCount = ParseTags(addressLength);
-            if (tagCount > 0)
-            {
-                // skip the ',' and align to 4 bytes
-                var tagByteLength = ((tagCount + 1) + 3) & ~3;            
-                FindOffsets(addressLength + tagByteLength);
-                return true;
-            }
-
-            return false;
-        }
-
-        
-        
-
-        public void Dispose()
-        {
         }
     }
 }

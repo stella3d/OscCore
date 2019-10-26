@@ -12,7 +12,9 @@ namespace OscCore.Tests
 
         [Range(4, 32)]
         [SerializeField]
+#pragma warning disable 649
         int m_RandomAddressCount;
+#pragma warning restore 649
 
         [SerializeField]
         int m_Port = 7000;

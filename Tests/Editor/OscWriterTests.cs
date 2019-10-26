@@ -67,16 +67,18 @@ namespace OscCore.Tests
         [TestCase("/composition/tempo")]
         [TestCase("/layers/1/opacity")]
         [TestCase("/composition/layers/2/video/blend")]
+        [TestCase("/composition/layers/2/video/mode")]
         public void WriteBlobString(string value)
         {
             BlobString.Encoding = Encoding.ASCII;
-            var blobStr = new BlobString(value, false, Allocator.Temp);
+            var blobStr = new BlobString(value, Allocator.Temp);
             m_Writer.Write(blobStr);
             
             blobStr.Dispose();
             var asciiByteCount = Encoding.ASCII.GetByteCount(value);
             var alignedByteCount = (asciiByteCount + 3) & ~3;
-            Assert.AreEqual(m_WriterLengthBefore + alignedByteCount, m_Writer.Length);
+            var expected = alignedByteCount == asciiByteCount ? asciiByteCount + 4 : alignedByteCount;
+            Assert.AreEqual(expected, m_Writer.Length);
             
             var convertedBack = Encoding.ASCII.GetString(m_Writer.Buffer, m_WriterLengthBefore, asciiByteCount);
             Assert.AreEqual(value, convertedBack);

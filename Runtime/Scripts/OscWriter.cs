@@ -205,14 +205,6 @@ namespace OscCore
             System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
             m_Length += size;
         }
-        
-        /// <summary>Write bytes directly from a pointer</summary>
-        /// <param name="tagBytes">4 bytes representing a type tag string</param>
-        internal void WriteTagBytes(uint tagBytes)
-        {
-            ((uint*)(m_BufferPtr + m_Length))[0] = tagBytes;
-            m_Length += 4;
-        }
                 
         /// <summary>
         /// Combines Reset(), Write(address), and Write(tags) in a single function to reduce call overhead

@@ -21,13 +21,13 @@ namespace BlobHandles
         
         /// <summary>Adds a callback to be executed when a message is received at the address</summary>
         /// <param name="address">The address to associate the method with</param>
-        /// <param name="callback">The method to be invoked</param>
+        /// <param name="callbacks">The method(s) to be invoked</param>
         [Il2CppSetOption(Option.NullChecks, false)]
         public void Add(string address, OscActionPair callbacks)
         {
             if (!SourceToBlob.TryGetValue(address, out var blobStr))
             {
-                blobStr = new BlobString(address, true);
+                blobStr = new BlobString(address);
                 HandleToValue[blobStr.Handle] = callbacks;
                 SourceToBlob.Add(address, blobStr);
             }

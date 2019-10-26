@@ -23,6 +23,7 @@ namespace OscCore
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
         
+        // TODO - real solution for queueing into this array
         Action[] m_MainThreadQueue = new Action[512];
         int m_MainThreadCount;
 
@@ -127,7 +128,8 @@ namespace OscCore
                     m_MainThreadQueue[i]();
                 }
             }
-            catch (Exception e) { }
+            // TODO - fix the main thread queue
+            catch (Exception) { }
             m_MainThreadCount = 0;
         }
 
@@ -150,36 +152,43 @@ namespace OscCore
                     // it's probably better to let Receive() block the thread than test socket.Available > 0 constantly
                     int receivedByteCount = socket.Receive(buffer);
                     if (receivedByteCount == 0) continue;
-                    
-#if OSCCORE_PROFILING && UNITY_EDITOR
+#if OSCCORE_PROFILING
                     Profiler.BeginSample("Receive OSC");
 #endif
-                    // compare the first 8 bytes at once, against '#bundle ' represented as a long   
+                    // determine if the message is a bundle or not 
                     if (*bufferLongPtr != Constant.BundlePrefixLong)
                     {
-                         // The message isn't a bundle
+                        // address length here doesn't include the null terminator and alignment padding.
+                        // this is so we can look up the address by only its content bytes.
                         var addressLength = parser.FindAddressLength();
                         if (addressLength < 0) continue;                         // address didn't start with '/'
+                        var alignedAddressLength = (addressLength + 3) & ~3;
 
-                        var tagCount = parser.ParseTags(buffer, addressLength);
+                        var tagCount = parser.ParseTags(buffer, alignedAddressLength);
                         if (tagCount <= 0) continue;
                         
-                        var offset = addressLength + (tagCount + 4) & ~3;
+                        var offset = alignedAddressLength + (tagCount + 4) & ~3;
                         parser.FindOffsets(offset);
                         
+                        // see if we have a method registered for this address
                         if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var methodPair))
                         {
                             // call the value read method associated with this OSC address    
                             methodPair.ValueRead(parser.MessageValues);
                             // if there's a main thread method, queue it
-                            if(methodPair.MainThreadQueued != null)    
+                            if (methodPair.MainThreadQueued != null)
+                            {
+                                if(m_MainThreadCount >= m_MainThreadQueue.Length)
+                                    Array.Resize(ref m_MainThreadQueue, m_MainThreadQueue.Length * 2);
+                                
                                 m_MainThreadQueue[m_MainThreadCount++] = methodPair.MainThreadQueued;
+                            }
                         }
                         else if(AddressSpace.PatternCount > 0)
                         {
                             TryMatchPatterns(parser, bufferPtr, addressLength);
                         }
-#if OSCCORE_PROFILING && UNITY_EDITOR
+#if OSCCORE_PROFILING
                         Profiler.EndSample();
 #endif                        
                         if (m_MonitorCallbacks.Count == 0) continue;
@@ -192,13 +201,13 @@ namespace OscCore
                     }
                     
                     // the message is a bundle, so we need to recursively scan the bundle elements
-                    // '#bundle ' + timestamp = 16 bytes
                     int MessageOffset = 0;         
                     bool recurse;
                     do
                     {
                         // Timestamp isn't used yet, but it will be eventually
                         // var time = parser.MessageValues.ReadTimestampIndex(MessageOffset + 8);
+                        // '#bundle ' + timestamp = 16 bytes
                         MessageOffset += 16;
                         recurse = false;
                         
@@ -240,8 +249,13 @@ namespace OscCore
                                 // call the value read method associated with this OSC address    
                                 bundleMethodPair.ValueRead(parser.MessageValues);
                                 // if there's a main thread method, queue it
-                                if(bundleMethodPair.MainThreadQueued != null)    
+                                if (bundleMethodPair.MainThreadQueued != null)
+                                {
+                                    if(m_MainThreadCount >= m_MainThreadQueue.Length)
+                                        Array.Resize(ref m_MainThreadQueue, m_MainThreadQueue.Length * 2);
+                                
                                     m_MainThreadQueue[m_MainThreadCount++] = bundleMethodPair.MainThreadQueued;
+                                }
                             }
                             // if we have no handler for this exact address, we may have a pattern that matches it
                             else if (AddressSpace.PatternCount > 0)
@@ -270,7 +284,7 @@ namespace OscCore
                     break;
                 }
             }
-#if OSCCORE_PROFILING && UNITY_EDITOR   
+#if OSCCORE_PROFILING  
             Profiler.EndThreadProfiling();
 #endif
         }
