@@ -1,7 +1,5 @@
-﻿using System;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace OscCore
 {
@@ -31,12 +29,6 @@ namespace OscCore
                 BufferLongPtr = (long*) ptr;
             }
             MessageValues = new OscMessageValues(Buffer, bufferHandle, MaxElementsPerMessage);
-        }
-
-        public static void Parse(byte[] buffer, int length)
-        {
-            var addressLength = FindAddressLength(buffer, 0);
-            var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
         }
 
         internal static bool AddressIsValid(string address)
@@ -141,27 +133,7 @@ namespace OscCore
             MessageValues.ElementCount = outIndex;
             return outIndex;
         }
-        
-        public int ParseTags(int start = 0)
-        {
-            if (Buffer[start] != Constant.Comma) return 0;
-            
-            var tagIndex = start + 1;         // skip the starting ','
-            var outIndex = 0;
-            var tags = MessageValues.Tags;
-            while (true)
-            {
-                var tag = (TypeTag) Buffer[tagIndex];
-                if (!tag.IsSupported()) break;
-                tags[outIndex] = tag;
-                tagIndex++;
-                outIndex++; 
-            }
 
-            MessageValues.ElementCount = outIndex;
-            return outIndex;
-        }
-        
         public static int FindArrayLength(byte[] bytes, int offset = 0)
         {
             if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
@@ -244,7 +216,7 @@ namespace OscCore
                 offsets[i] = offset;
                 switch (tags[i])
                 {
-                    // false, true, nil & infinitum tags add 0 to the offset
+                    // false, true, nil, infinitum & array[] tags add 0 to the offset
                     case TypeTag.Int32:
                     case TypeTag.Float32:
                     case TypeTag.Color32:    
