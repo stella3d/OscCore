@@ -49,7 +49,7 @@ namespace OscCore
             
             m_ReadBuffer = new byte[bufferSize];
             m_BufferHandle = GCHandle.Alloc(m_ReadBuffer, GCHandleType.Pinned);
-            Parser = new OscParser(m_ReadBuffer, m_BufferHandle);
+            Parser = new OscParser(m_ReadBuffer);
 
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 64 };
             m_Thread = new Thread(Serve);

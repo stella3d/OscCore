@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace OscCore
 {
@@ -11,16 +10,13 @@ namespace OscCore
 
         internal readonly byte[] Buffer;
         readonly byte* BufferPtr;
-        
-        /// <summary>
-        /// Pointer to the first 8 bytes of the read buffer.
-        /// Used to determine if a message is a bundle in a single comparison
-        /// </summary>
         internal readonly long* BufferLongPtr;
 
         public readonly OscMessageValues MessageValues;
 
-        public OscParser(byte[] fixedBuffer, GCHandle bufferHandle)
+        /// <summary>Create a new parser.</summary>
+        /// <param name="fixedBuffer">The buffer to read messages from.  Must be fixed in memory !</param>
+        public OscParser(byte[] fixedBuffer)
         {
             Buffer = fixedBuffer;
             fixed (byte* ptr = fixedBuffer)
@@ -28,7 +24,7 @@ namespace OscCore
                 BufferPtr = ptr;
                 BufferLongPtr = (long*) ptr;
             }
-            MessageValues = new OscMessageValues(Buffer, bufferHandle, MaxElementsPerMessage);
+            MessageValues = new OscMessageValues(Buffer, MaxElementsPerMessage);
         }
 
         internal static bool AddressIsValid(string address)

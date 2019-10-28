@@ -11,8 +11,6 @@ namespace OscCore.Tests
 {
     public class OscWriterTests
     {
-        const string bpmAddress = "/composition/bpm";
-        
         readonly OscWriter m_Writer = new OscWriter();
 
         int m_WriterLengthBefore;
@@ -33,6 +31,7 @@ namespace OscCore.Tests
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             // this tests both that it wrote to the right place in the buffer as well as that the value is right
             var convertedBack = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
+            
             Assert.AreEqual(value, convertedBack);
         }
         

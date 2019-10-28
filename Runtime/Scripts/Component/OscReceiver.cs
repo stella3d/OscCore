@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace OscCore
 {
     [ExecuteAlways]
-    public class OscServerRunner : MonoBehaviour
+    public class OscReceiver : MonoBehaviour
     {
         [SerializeField] int m_Port = 9000;
 
         OscServer m_Server;
 
-        OscServer Server => m_Server;   
+        public OscServer Server => m_Server;   
      
         void OnEnable()
         {
