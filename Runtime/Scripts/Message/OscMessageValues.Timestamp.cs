@@ -13,11 +13,7 @@ namespace OscCore
         public NtpTimestamp ReadTimestampElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             switch (Tags[index])
             {
@@ -38,11 +34,7 @@ namespace OscCore
         public NtpTimestamp ReadTimestampElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var ptr = SharedBufferPtr + Offsets[index];
             return NtpTimestamp.FromBigEndianBytes(ptr);

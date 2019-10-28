@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 // allow tests to modify things as if in the same assembly
 [assembly:InternalsVisibleTo("OscCore.Tests.Editor")]
@@ -72,6 +74,7 @@ namespace OscCore
                 elementAction(i, Tags[i]);
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         bool OutOfBounds(int index)
         {
             if (index >= ElementCount)

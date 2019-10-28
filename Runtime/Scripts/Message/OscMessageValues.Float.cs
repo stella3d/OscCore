@@ -13,11 +13,7 @@ namespace OscCore
         public float ReadFloatElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             switch (Tags[index])
@@ -49,11 +45,7 @@ namespace OscCore
         public float ReadFloatElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             m_SwapBuffer32[0] = SharedBufferPtr[offset + 3];

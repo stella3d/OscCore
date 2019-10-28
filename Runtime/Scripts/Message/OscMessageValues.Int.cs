@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 
 namespace OscCore
@@ -14,11 +13,7 @@ namespace OscCore
         public int ReadIntElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             switch (Tags[index])
@@ -51,11 +46,7 @@ namespace OscCore
         public int ReadIntElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif            
             var offset = Offsets[index];
             return m_SharedBuffer[offset    ] << 24 |

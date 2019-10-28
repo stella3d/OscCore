@@ -14,11 +14,7 @@ namespace OscCore
         public long ReadInt64Element(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             switch (Tags[index])
@@ -66,11 +62,7 @@ namespace OscCore
         public long ReadInt64ElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogWarning($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif      
             long bigEndian = *(SharedBufferPtr + Offsets[index]);
             return IPAddress.NetworkToHostOrder(bigEndian);
