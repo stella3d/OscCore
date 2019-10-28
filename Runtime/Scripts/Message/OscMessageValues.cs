@@ -71,5 +71,16 @@ namespace OscCore
             for (int i = 0; i < ElementCount; i++)
                 elementAction(i, Tags[i]);
         }
+        
+        bool OutOfBounds(int index)
+        {
+            if (index >= ElementCount)
+            {
+                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
+                return true;
+            }
+
+            return false;
+        }
     }
 }

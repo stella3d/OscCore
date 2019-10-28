@@ -32,8 +32,7 @@ namespace OscCore
             {
                 case TypeTag.Blob:
                     var offset = Offsets[index];
-                    // var size = BitConverter.ToInt32(m_SharedBuffer, offset);
-                    int size = *(SharedBufferPtr + offset);
+                    var size = ReadIntIndex(offset);
                     var dataStart = offset + 4;    // skip the size int
                     if (copyTo.Length - copyOffset <= size)
                         Array.Resize(ref copyTo, size + copyOffset + k_ResizeByteHeadroom);
@@ -44,5 +43,6 @@ namespace OscCore
                     return default;
             }
         }
+
     }
 }

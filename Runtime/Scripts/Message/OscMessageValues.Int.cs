@@ -73,5 +73,14 @@ namespace OscCore
             m_SwapBuffer32[3] = m_SharedBuffer[index];
             return *SwapBuffer32UintPtr;
         }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal int ReadIntIndex(int index)
+        {
+            return m_SharedBuffer[index    ] << 24 |
+                   m_SharedBuffer[index + 1] << 16 |
+                   m_SharedBuffer[index + 2] << 8 |
+                   m_SharedBuffer[index + 3];
+        }
     }
 }
