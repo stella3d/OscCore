@@ -8,6 +8,12 @@ There are already at least 4 other OSC implementations for Unity:
 
 OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details)
 
+## Version Compatibility
+
+Releases are checked for compatability with the latest release of these versions, and should work with anything in between.
+- **2018.4.x** (LTS)
+- **2019.x** (Official release)
+
 ## Installation
 
 Download & import the .unitypackage for your platform from the [Releases](https://github.com/stella3d/OscCore/releases) page.
