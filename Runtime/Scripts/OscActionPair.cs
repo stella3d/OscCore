@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace OscCore
 {
@@ -8,12 +7,12 @@ namespace OscCore
         /// <summary>
         /// This callback runs immediately on the data receiving thread
         /// </summary>
-        public Action<OscMessageValues> ValueRead;
+        public readonly Action<OscMessageValues> ValueRead;
         
         /// <summary>
         /// An event queued on the main thread for the next frame
         /// </summary>
-        public Action MainThreadQueued;
+        public readonly Action MainThreadQueued;
 
         public OscActionPair(Action<OscMessageValues> valueRead, Action mainThreadQueued)
         {

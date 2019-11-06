@@ -17,6 +17,7 @@ namespace OscCore
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
+        bool m_Started;
 
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
@@ -27,7 +28,7 @@ namespace OscCore
 
         readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
         
-        readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
+        readonly HashSet<MonitorCallback> m_MonitorCallbacks = new HashSet<MonitorCallback>();
         
         readonly List<OscActionPair> m_PatternMatchedMethods = new List<OscActionPair>();
         
@@ -59,9 +60,24 @@ namespace OscCore
 
         public void Start()
         {
+            // make sure redundant calls don't do anything after the first
+            if (m_Started) return;
+
             m_Disposed = false;
-            m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
+            if (!m_Socket.IsBound)
+            {
+                try
+                {
+                    m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+            
             m_Thread.Start();
+            m_Started = true;
         }
         
         public void Pause()
@@ -96,11 +112,27 @@ namespace OscCore
             return false;
         }
 
-        public bool TryAddMethod(string address, OscActionPair method) => 
-            AddressSpace.TryAddMethod(address, method);
+        /// <summary>
+        /// Add methods associated with an OSC address.
+        /// </summary>
+        /// <param name="address">The OSC address to associate a method with</param>
+        /// <param name="actionPair">The pair of callbacks to add</param>
+        /// <returns>True if the address was valid & methods associated with it, false otherwise</returns>
+        public bool TryAddMethod(string address, OscActionPair actionPair) => 
+            AddressSpace.TryAddMethod(address, actionPair);
         
-        public bool RemoveMethod(string address, OscActionPair method) => 
-            AddressSpace.RemoveMethod(address, method);
+        /// <summary>
+        /// Remove methods associated with an OSC address.
+        /// </summary>
+        /// <param name="address">The OSC address to remove methods from</param>
+        /// <param name="actionPair">The pair of callbacks to remove</param>
+        /// <returns>True if successfully removed, false otherwise</returns>
+        public bool RemoveMethod(string address, OscActionPair actionPair)
+        {
+            // if the address space is null, this got called during cleanup / shutdown,
+            // and effectively all addresses are removed by setting it to null
+            return AddressSpace == null || AddressSpace.RemoveMethod(address, actionPair);
+        }
 
         /// <summary>
         /// Add a method to be invoked every time an OSC message is received. If there are any monitor callbacks added,
@@ -109,8 +141,7 @@ namespace OscCore
         /// <param name="callback">The method to invoke</param>
         public void AddMonitorCallback(MonitorCallback callback)
         {
-            if (!m_MonitorCallbacks.Contains(callback)) 
-                m_MonitorCallbacks.Add(callback);
+            m_MonitorCallbacks.Add(callback);
         }
         
         /// <summary>Remove a monitor method</summary>

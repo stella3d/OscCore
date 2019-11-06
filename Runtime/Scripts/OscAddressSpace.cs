@@ -27,6 +27,8 @@ namespace OscCore
         readonly Queue<int> FreedPatternIndices = new Queue<int>();
         readonly Dictionary<string, int> PatternStringToIndex = new Dictionary<string, int>();
 
+        public int HandlerCount => AddressToMethod.HandleToValue.Count;
+
         public OscAddressSpace(int startingCapacity = k_DefaultCapacity)
         {
             AddressToMethod = new OscAddressMethods(startingCapacity);
@@ -84,8 +86,7 @@ namespace OscCore
             switch (OscParser.GetAddressType(address))
             {    
                 case AddressType.Address:
-                    AddressToMethod.Remove(address, onReceived);
-                    return true;
+                    return AddressToMethod.Remove(address, onReceived);
                 case AddressType.Pattern:
                     if (!PatternStringToIndex.TryGetValue(address, out var patternIndex))
                         return false;
@@ -104,62 +105,6 @@ namespace OscCore
                     PatternCount--;
                     FreedPatternIndices.Enqueue(patternIndex);
                     return PatternStringToIndex.Remove(address);
-                default: 
-                    return false;
-            }
-        }
-
-        public bool TryMatchPattern(string address, out OscActionPair method)
-        {
-            for (var i = 0; i < PatternCount; i++)
-            {
-                if (Patterns[i].IsMatch(address))
-                {
-                    method = PatternMethods[i];
-                    return true;
-                }
-            }
-
-            method = default;
-            return false;
-        }
-        
-        bool AddAddressMethod(string address, OscActionPair onReceived)
-        {
-            switch (OscParser.GetAddressType(address))
-            {    
-                case AddressType.Address:
-                    AddressToMethod.Add(address, onReceived);
-                    return true;
-                case AddressType.Pattern:
-                    int index;
-                    // if a method has already been registered for this pattern, add the new delegate
-                    if (PatternStringToIndex.TryGetValue(address, out index))
-                    {
-                        PatternMethods[index] += onReceived;
-                        return true;
-                    }
-
-                    if (FreedPatternIndices.Count > 0)
-                    {
-                        index = FreedPatternIndices.Dequeue();
-                    }
-                    else
-                    {
-                        index = PatternCount;
-                        if (index >= Patterns.Length)
-                        {
-                            var newSize = Patterns.Length * 2;
-                            Array.Resize(ref Patterns, newSize);
-                            Array.Resize(ref PatternMethods, newSize);
-                        }
-                    }
-
-                    Patterns[index] = new Regex(address);
-                    PatternMethods[index] = onReceived;
-                    PatternStringToIndex[address] = index;
-                    PatternCount++;
-                    return true;
                 default: 
                     return false;
             }
@@ -191,21 +136,6 @@ namespace OscCore
             }
 
             return any;
-        }
-
-        public bool TryMatchIncomingPattern(Regex pattern, List<OscActionPair> matchedMethods)
-        {
-            matchedMethods.Clear();
-            foreach (var kvp in AddressToMethod.SourceToBlob)
-            {
-                if (!pattern.IsMatch(kvp.Key))
-                    continue;
-                
-                if(AddressToMethod.HandleToValue.TryGetValue(kvp.Value.Handle, out var actionPair))
-                    matchedMethods.Add(actionPair);
-            }
-            
-            return false;
         }
     }
 }
