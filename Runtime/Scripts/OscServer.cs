@@ -64,7 +64,7 @@ namespace OscCore
             if (m_Started) return;
 
             m_Disposed = false;
-            if (!m_Socket.IsBound)
+            if (!m_Socket.IsBound && !PortToServer.ContainsKey(Port))
             {
                 try
                 {
