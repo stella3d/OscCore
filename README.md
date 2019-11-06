@@ -6,14 +6,17 @@ A **performance-oriented** OSC library for Unity
 There are already at least 4 other OSC implementations for Unity:
 - [OscJack](https://github.com/keijiro/OscJack), [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
 
-OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.
+OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details)
 
-###### Because of Strings
+
+### Performance Details
+
+###### Strings and Addresses
 
 Every OSC message starts with an "address", specified as an ascii string.  
 It's perfectly reasonable to represent this address in C# as a standard `string`, which is how other libraries work.
 
-However, because strings in C# are immutable & UTF16, every time we receive a message from the network, this now requires us to allocate a new `string` & expand the received ascii string's bytes to UTF16.   
+However, because strings in C# are immutable & UTF16, every time we receive a message from the network, this now requires us to allocate a new `string`, and in the process expand the received ascii string's bytes (where each character is a single byte) to UTF16 (each character is two bytes).   
 
 OscCore eliminates both 
 - string allocation
@@ -29,6 +32,6 @@ This has two benefits
 ### Protocol Support
 
 All [OSC 1.0 types](http://opensoundcontrol.org/spec-1_0), required and non-standard are supported.  
-The spec is somewhat unclear about how array / list tags are supposed to work, however.
+The spec is somewhat unclear about how array / list tags are supposed to work, however.  
 
 
