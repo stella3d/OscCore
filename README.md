@@ -22,7 +22,7 @@ Proper support for the [Unity package manager](https://docs.unity3d.com/Packages
 Every OSC message starts with an "address", specified as an ascii string.  
 It's perfectly reasonable to represent this address in C# as a standard `string`, which is how other libraries work.
 
-However, because strings in C# are immutable & UTF16, every time we receive a message from the network, this now requires us to allocate a new `string`, and in the process expand the received ascii string's bytes (where each character is a single byte) to UTF16 (each character is two bytes).   
+However, because strings in C# are immutable & UTF16, every time we receive a message from the network, this now requires us to allocate a new `string`, and in the process expand the received ascii string's bytes (where each character is a single byte) to UTF16 (each `char` is two bytes).   
 
 OscCore eliminates both 
 - string allocation
@@ -38,6 +38,7 @@ This has two benefits
 ### Protocol Support
 
 All [OSC 1.0 types](http://opensoundcontrol.org/spec-1_0), required and non-standard are supported.  
-The spec is somewhat unclear about how array / list tags are supposed to work, however.  
+
+The spec is somewhat unclear about how array / list tags are supposed to work, however.  OscCore can parse them but they don't do anything right now.
 
 
