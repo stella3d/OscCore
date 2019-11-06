@@ -192,6 +192,21 @@ namespace OscCore
 
             return any;
         }
+
+        public bool TryMatchIncomingPattern(Regex pattern, List<OscActionPair> matchedMethods)
+        {
+            matchedMethods.Clear();
+            foreach (var kvp in AddressToMethod.SourceToBlob)
+            {
+                if (!pattern.IsMatch(kvp.Key))
+                    continue;
+                
+                if(AddressToMethod.HandleToValue.TryGetValue(kvp.Value.Handle, out var actionPair))
+                    matchedMethods.Add(actionPair);
+            }
+            
+            return false;
+        }
     }
 }
 

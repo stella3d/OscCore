@@ -9,7 +9,7 @@ namespace OscCore
         public const int MaxBlobSize = 1024 * 256;
 
         internal readonly byte[] Buffer;
-        readonly byte* BufferPtr;
+        internal readonly byte* BufferPtr;
         internal readonly long* BufferLongPtr;
 
         public readonly OscMessageValues MessageValues;

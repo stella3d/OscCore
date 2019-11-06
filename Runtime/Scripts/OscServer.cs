@@ -12,19 +12,17 @@ using UnityEngine.Profiling;
 
 namespace OscCore
 {
-    public sealed class OscServer : IDisposable
+    public sealed unsafe class OscServer : IDisposable
     {
-        public static readonly Dictionary<int, OscServer> PortToServer = new Dictionary<int, OscServer>();
-        
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
 
         readonly byte[] m_ReadBuffer;
         GCHandle m_BufferHandle;
+        byte* m_BufferPtr;
         
-        // TODO - real solution for queueing into this array
-        Action[] m_MainThreadQueue = new Action[512];
+        Action[] m_MainThreadQueue = new Action[16];
         int m_MainThreadCount;
 
         readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
@@ -32,6 +30,8 @@ namespace OscCore
         readonly List<MonitorCallback> m_MonitorCallbacks = new List<MonitorCallback>();
         
         readonly List<OscActionPair> m_PatternMatchedMethods = new List<OscActionPair>();
+        
+        public static readonly Dictionary<int, OscServer> PortToServer = new Dictionary<int, OscServer>();
 
         public int Port { get; private set; }
         public OscAddressSpace AddressSpace { get; private set; }
@@ -41,7 +41,7 @@ namespace OscCore
         {
             if (PortToServer.ContainsKey(port))
             {
-                Debug.LogError($"port {port} is already in use, cannot start an OSC Server on it");
+                Debug.LogError($"port {port} is already in use, cannot start a new OSC Server on it");
                 return;
             }
 
@@ -49,6 +49,7 @@ namespace OscCore
             
             m_ReadBuffer = new byte[bufferSize];
             m_BufferHandle = GCHandle.Alloc(m_ReadBuffer, GCHandleType.Pinned);
+            m_BufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
             Parser = new OscParser(m_ReadBuffer);
 
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 64 };
@@ -119,17 +120,14 @@ namespace OscCore
             return m_MonitorCallbacks.Remove(callback);
         }
 
+        /// <summary>Must be called on the main thread every frame to handle queued events</summary>
         public void Update()
         {
-            try
+            for (int i = 0; i < m_MainThreadCount; i++)
             {
-                for (int i = 0; i < m_MainThreadCount; i++)
-                {
-                    m_MainThreadQueue[i]();
-                }
+                m_MainThreadQueue[i]();
             }
-            // TODO - fix the main thread queue
-            catch (Exception) { }
+            
             m_MainThreadCount = 0;
         }
 
@@ -140,7 +138,7 @@ namespace OscCore
 #endif
             var socket = m_Socket;
             var buffer = m_ReadBuffer;
-            var bufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
+            var bufferPtr = Parser.BufferPtr;
             var bufferLongPtr = Parser.BufferLongPtr;
             var parser = Parser;
             var addressToMethod = AddressSpace.AddressToMethod;
@@ -288,8 +286,8 @@ namespace OscCore
             Profiler.EndThreadProfiling();
 #endif
         }
-
-        unsafe void TryMatchPatterns(OscParser parser, byte* bufferPtr, int addressLength)
+        
+        void TryMatchPatterns(OscParser parser, byte* bufferPtr, int addressLength)
         {
             // to support OSC address patterns, we test unmatched addresses against regular expressions
             // To do that, we need it as a regular string.  We may be able to mutate a previous string, 
@@ -316,9 +314,9 @@ namespace OscCore
                 }
             }
         }
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static unsafe void OverwriteAsciiString(string str, byte* bufferPtr)
+        static void OverwriteAsciiString(string str, byte* bufferPtr)
         {
             fixed (char* addressPtr = str)                    // done parsing this bundle message , wait for the next one
             {
@@ -326,7 +324,7 @@ namespace OscCore
                     addressPtr[i] = (char) bufferPtr[i];
             }
         }
-
+        
         public void Dispose()
         {
             Dispose(true);
