@@ -51,6 +51,87 @@ The notable parts missing from [the spec](http://opensoundcontrol.org/spec-1_0) 
 
   This is simple enough to implement, but without a mechanism for clock synchronization, it could easily lead to errors.  If the sending application worked from a different time source than OscCore, events would happen at the wrong time.
 
+## Usage
+
+#### For incoming messages
+
+Add a `OscReceiver` component to a GameObject somewhere. 
+
+The `OscServer` instance attached to the component is what will actually handle incoming messages - the component is just a wrapper.
+
+The server must have its `Update()` method ticked to handle main thread queued callbacks. `OscReceiver`handles this for you. 
+
+##### Adding address handlers
+
+There are several different kinds of method that can be registered with a server.
+
+###### Single method
+
+You can register a single callback, to be executed on the server's background thread immediately when a message is received, by calling `TryAddMethod`.
+
+If you have no need to queue a method to be called on the main thread, you probably want this one.
+```csharp
+class SingleCallbackExample
+{
+  OscServer Server { get; set; }      // get the server instance from the OscReceiver component
+
+  void ReadValues(OscMessageValues values)
+  {
+      // call ReadElement methods here to extract values
+  }
+
+  public SingleCallbackExample()
+  {
+    // add a single callback that reads messsage values at `/layers/1/opacity`
+    Server.TryAddMethod(ReadValues);
+  }
+}
+```
+
+###### Method pair
+
+You can register a pair of methods to an address.
+
+An `OscActionPair` consists of two methods, with the main thread one being optional.
+
+1) Runs on background thread, immediate execution, just like single methods
+2) Runs on main thread, queued on the next frame
+
+This is useful for invoking UnityEvents on the main thread, or any other use case that needs a main thread api.
+Read the message values in the first callback.
+
+```csharp
+class CallbackPairExample
+{
+  OscServer Server { get; }
+  OscActionPair ActionPair { get; set;}
+
+  float MessageValue;
+
+  void ReadValues(OscMessageValues values) 
+  {
+    MessageValue = values.ReadFloatElement(0);
+  }
+  
+  void MainThreadMethod() 
+  {
+    // do something with MessageValue on the main thread
+  }
+
+  public CallbackPairExample()
+  {
+    // create and add a pair of methods 
+    ActionPair = new OscActionPair(ReadValues, MainThreadMethod);
+    Server.TryAddMethodPair(ActionPair);
+  }
+}
+```
+
+###### Monitor Callbacks
+
+IF you just want to inspect message, you can add a monitor callback to be able to inspect every invoming message.
+
+A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window] (https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
 
 ## Performance Details
 
