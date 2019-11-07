@@ -6,12 +6,14 @@ A **performance-oriented** OSC library for Unity
 There are already at least 4 other OSC implementations for Unity:
 - [OscJack](https://github.com/keijiro/OscJack), [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
 
-OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details)
+OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
 
 OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
 
 The initial focus is on basic functionality. 
-Higher-level components like those found in previous libraries may come later or in a package built around this.
+Higher-level components like those found in previous libraries may come later or in a package built around this.  
+
+One of the existing libraries may satisfy your needs if you don't need to care much about garbage allocation / performance!
 
 ## Versions and Platforms
 
@@ -19,7 +21,7 @@ Releases are checked for compatability with the latest release of these versions
 - **2018.4.x** (LTS)
 - **2019.x** (Official release)
 
-Builds are only tested on Windows & Mac right now, but it should work on any platform where you can use `System.Net.Sockets` & pointers.
+Builds are only tested on **Windows** & **MacOS** right now, but it should work on any platform where you can use `System.Net.Sockets` & pointers.
 
 ## Installation
 
@@ -45,13 +47,13 @@ There are several different kinds of method that can be registered with a server
 
 ###### Single method
 
-You can register a single callback, to be executed on the server's background thread immediately when a message is received, by calling `TryAddMethod`.
+You can register a single callback, to be executed on the server's background thread immediately when a message is received, by calling `oscServer.TryAddMethod`.
 
 If you have no need to queue a method to be called on the main thread, you probably want this one.
 ```csharp
 class SingleCallbackExample
 {
-  OscServer Server { get; set; }      // get the server instance from the OscReceiver component
+  OscServer Server { get; set; }      // get the server instance from the OscReceiver component or your own code
 
   void ReadValues(OscMessageValues values)
   {
@@ -60,15 +62,15 @@ class SingleCallbackExample
 
   public SingleCallbackExample()
   {
-    // add a single callback that reads messsage values at `/layers/1/opacity`
-    Server.TryAddMethod(ReadValues);
+    // add a single callback that reads message values at `/layers/1/opacity`
+    Server.TryAddMethod("/layers/1/opacity", ReadValues);
   }
 }
 ```
 
 ###### Method pair
 
-You can register a pair of methods to an address.
+You can register a pair of methods to an address by calling `oscServer.TryAddMethodPair`.
 
 An `OscActionPair` consists of two methods, with the main thread one being optional.
 
@@ -76,7 +78,7 @@ An `OscActionPair` consists of two methods, with the main thread one being optio
 2) Runs on main thread, queued on the next frame
 
 This is useful for invoking UnityEvents on the main thread, or any other use case that needs a main thread api.
-Read the message values in the first callback.
+_Read the message values in the first method._
 
 ```csharp
 class CallbackPairExample
@@ -98,9 +100,9 @@ class CallbackPairExample
 
   public CallbackPairExample()
   {
-    // create and add a pair of methods 
+    // create and add a pair of methods for the OSC address "/layers/2/color/red"
     ActionPair = new OscActionPair(ReadValues, MainThreadMethod);
-    Server.TryAddMethodPair(ActionPair);
+    Server.TryAddMethodPair("/layers/2/color/red", ActionPair);
   }
 }
 ```
@@ -165,6 +167,8 @@ Client.Send("/blobs", Blob, Blob.Length);
 // send a string
 Client.Send("/layers/3/name", "Textural");
 ```
+
+
 
 ## Protocol Support Details
 
