@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using BlobHandles;
 using UnityEditor;
-using UnityEngine;
 
 namespace OscCore
 {
@@ -24,14 +24,15 @@ namespace OscCore
         void OnEnable()
         {
             m_ActiveQueueBuffer = m_ToQueue;
-            m_Server = new OscServer(9000);
+            m_Server = OscServer.PortToServer.First().Value;
             m_Server.AddMonitorCallback(Monitor);
+            // start will do nothing if already started
             m_Server.Start();
         }
 
         void OnDisable()
         {
-            m_Server.Dispose();
+            m_Server.RemoveMonitorCallback(Monitor);
         }
 
         void Update()
@@ -114,7 +115,7 @@ namespace OscCore
             return k_Builder.ToString();
         }
 
-        [MenuItem("Window/Osc Core")]
+        [MenuItem("Window/OscCore/Monitor")]
         static void InitWindow()
         {
             ((MonitorWindow) GetWindow(typeof(MonitorWindow)))?.Show();

@@ -34,9 +34,9 @@ namespace OscCore
         
         public static readonly Dictionary<int, OscServer> PortToServer = new Dictionary<int, OscServer>();
 
-        public int Port { get; private set; }
+        public int Port { get; }
         public OscAddressSpace AddressSpace { get; private set; }
-        public OscParser Parser { get; private set; }
+        public OscParser Parser { get; }
         
         public OscServer(int port, int bufferSize = 4096)
         {
@@ -53,29 +53,21 @@ namespace OscCore
             m_BufferPtr = (byte*) m_BufferHandle.AddrOfPinnedObject();
             Parser = new OscParser(m_ReadBuffer);
 
-            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = 64 };
-            m_Thread = new Thread(Serve);
             Port = port;
+            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = int.MaxValue };
+            m_Thread = new Thread(Serve);
+            Start();
         }
 
         public void Start()
         {
             // make sure redundant calls don't do anything after the first
             if (m_Started) return;
-
-            m_Disposed = false;
-            if (!m_Socket.IsBound && !PortToServer.ContainsKey(Port))
-            {
-                try
-                {
-                    m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
-                }
-                catch (Exception e)
-                {
-                    Debug.LogException(e);
-                }
-            }
             
+            m_Disposed = false;
+            if (!m_Socket.IsBound)
+                m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
+
             m_Thread.Start();
             m_Started = true;
         }
@@ -162,43 +154,56 @@ namespace OscCore
             m_MainThreadCount = 0;
         }
 
-        unsafe void Serve()
+        void Serve()
         {
 #if OSCCORE_PROFILING && UNITY_EDITOR
             Profiler.BeginThreadProfiling("OscCore", "Server");
 #endif
-            var socket = m_Socket;
             var buffer = m_ReadBuffer;
             var bufferPtr = Parser.BufferPtr;
             var bufferLongPtr = Parser.BufferLongPtr;
             var parser = Parser;
             var addressToMethod = AddressSpace.AddressToMethod;
-
+            var socket = m_Socket;
+            
             while (!m_Disposed)
             {
                 try
                 {
                     // it's probably better to let Receive() block the thread than test socket.Available > 0 constantly
-                    int receivedByteCount = socket.Receive(buffer);
+                    int receivedByteCount = socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
                     if (receivedByteCount == 0) continue;
-#if OSCCORE_PROFILING
+
                     Profiler.BeginSample("Receive OSC");
-#endif
                     // determine if the message is a bundle or not 
                     if (*bufferLongPtr != Constant.BundlePrefixLong)
                     {
                         // address length here doesn't include the null terminator and alignment padding.
                         // this is so we can look up the address by only its content bytes.
                         var addressLength = parser.FindAddressLength();
-                        if (addressLength < 0) continue;                         // address didn't start with '/'
+                        if (addressLength < 0)
+                        {
+                            // address didn't start with '/'
+                            Profiler.EndSample();
+                            continue;
+                        }
+
                         var alignedAddressLength = (addressLength + 3) & ~3;
+                        // if the null terminator after the string comes at the beginning of a 4-byte block,
+                        // we need to add 4 bytes of padding
+                        if (alignedAddressLength == addressLength)
+                            alignedAddressLength += 4;
 
                         var tagCount = parser.ParseTags(buffer, alignedAddressLength);
-                        if (tagCount <= 0) continue;
-                        
+                        if (tagCount <= 0)
+                        {
+                            Profiler.EndSample();
+                            continue;
+                        }
+
                         var offset = alignedAddressLength + (tagCount + 4) & ~3;
                         parser.FindOffsets(offset);
-                        
+
                         // see if we have a method registered for this address
                         if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var methodPair))
                         {
@@ -207,31 +212,33 @@ namespace OscCore
                             // if there's a main thread method, queue it
                             if (methodPair.MainThreadQueued != null)
                             {
-                                if(m_MainThreadCount >= m_MainThreadQueue.Length)
+                                if (m_MainThreadCount >= m_MainThreadQueue.Length)
                                     Array.Resize(ref m_MainThreadQueue, m_MainThreadQueue.Length * 2);
-                                
+
                                 m_MainThreadQueue[m_MainThreadCount++] = methodPair.MainThreadQueued;
                             }
                         }
-                        else if(AddressSpace.PatternCount > 0)
+                        else if (AddressSpace.PatternCount > 0)
                         {
                             TryMatchPatterns(parser, bufferPtr, addressLength);
                         }
-#if OSCCORE_PROFILING
-                        Profiler.EndSample();
-#endif                        
-                        if (m_MonitorCallbacks.Count == 0) continue;
 
+                        Profiler.EndSample();
+
+                        if (m_MonitorCallbacks.Count == 0) continue;
+                        
+                        // handle monitor callbacks
                         var monitorAddressStr = new BlobString(bufferPtr, addressLength);
                         foreach (var callback in m_MonitorCallbacks)
                             callback(monitorAddressStr, parser.MessageValues);
 
                         continue;
                     }
-                    
+
                     // the message is a bundle, so we need to recursively scan the bundle elements
-                    int MessageOffset = 0;         
+                    int MessageOffset = 0;
                     bool recurse;
+                    // the outer do-while loop runs once for every #bundle encountered
                     do
                     {
                         // Timestamp isn't used yet, but it will be eventually
@@ -239,7 +246,8 @@ namespace OscCore
                         // '#bundle ' + timestamp = 16 bytes
                         MessageOffset += 16;
                         recurse = false;
-                        
+
+                        // the inner while loop runs once per bundle element
                         while (MessageOffset < receivedByteCount && !recurse)
                         {
                             var messageSize = (int) parser.MessageValues.ReadUIntIndex(MessageOffset);
@@ -280,9 +288,9 @@ namespace OscCore
                                 // if there's a main thread method, queue it
                                 if (bundleMethodPair.MainThreadQueued != null)
                                 {
-                                    if(m_MainThreadCount >= m_MainThreadQueue.Length)
+                                    if (m_MainThreadCount >= m_MainThreadQueue.Length)
                                         Array.Resize(ref m_MainThreadQueue, m_MainThreadQueue.Length * 2);
-                                
+
                                     m_MainThreadQueue[m_MainThreadCount++] = bundleMethodPair.MainThreadQueued;
                                 }
                             }
@@ -293,19 +301,20 @@ namespace OscCore
                             }
 
                             MessageOffset += messageSize + 4;
-                            
+
                             if (m_MonitorCallbacks.Count == 0) continue;
 
-                            // this doesn't actually allocate a string unless the monitor callback converts to string
                             var bundleMemberAddressStr = new BlobString(bufferPtr + contentIndex, bundleAddressLength);
-                            foreach (var callback in m_MonitorCallbacks) 
+                            foreach (var callback in m_MonitorCallbacks)
                                 callback(bundleMemberAddressStr, parser.MessageValues);
                         }
-                    } 
+                    }
                     // restart the outer while loop every time a bundle within a bundle is detected
                     while (recurse);
+                    Profiler.EndSample();
                 }
-                catch (SocketException) {}
+                // a read timeout can result in a socket exception, should just be ok to ignore
+                catch (SocketException) { }
                 catch (ThreadAbortException) {}
                 catch (Exception e)
                 {
@@ -313,9 +322,8 @@ namespace OscCore
                     break;
                 }
             }
-#if OSCCORE_PROFILING  
+            
             Profiler.EndThreadProfiling();
-#endif
         }
         
         void TryMatchPatterns(OscParser parser, byte* bufferPtr, int addressLength)
@@ -367,19 +375,19 @@ namespace OscCore
             if (m_Disposed) return;
             m_Disposed = true;
 
+            PortToServer.Remove(Port);
+
             if(m_BufferHandle.IsAllocated) m_BufferHandle.Free();
             if (disposing)
             {
                 AddressSpace.AddressToMethod.Dispose();
                 AddressSpace = null;
-                if (m_Socket.IsBound)
-                {
-                    m_Socket.Close();
-                    m_Socket.Dispose();
-                }
 
                 if(m_Thread.ThreadState == ThreadState.Running)
                     m_Thread.Join();
+                
+                m_Socket.Close();
+                m_Socket.Dispose();
             }
         }
 

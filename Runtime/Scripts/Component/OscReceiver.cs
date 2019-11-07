@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace OscCore
 {
@@ -13,25 +14,22 @@ namespace OscCore
      
         void OnEnable()
         {
-            if (m_Server == null)
-            {
-                m_Server = new OscServer(m_Port, 1024 * 16);
-                m_Server.Start();
-            }
-            else
-            {
-                m_Server.Resume();
-            }
-        } 
+            m_Server = OscServer.GetOrCreate(m_Port);
+        }
 
-        void OnDisable()
+        void Update()
         {
-            m_Server?.Pause();
+            m_Server.Update();
         }
 
         void OnDestroy()
         {
-            m_Server.Dispose();
+            m_Server?.Dispose();
+        }
+
+        void OnApplicationQuit()
+        {
+            m_Server?.Dispose();
         }
     }
 }
