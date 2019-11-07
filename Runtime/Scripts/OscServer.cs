@@ -46,6 +46,7 @@ namespace OscCore
                 return;
             }
 
+            k_SingleCallbackToPair.Clear();
             AddressSpace = new OscAddressSpace();
             
             m_ReadBuffer = new byte[bufferSize];
@@ -103,23 +104,61 @@ namespace OscCore
             }
             return false;
         }
+        
+        // used to allow easy removal of single callbacks
+        static readonly Dictionary<Action<OscMessageValues>, OscActionPair> k_SingleCallbackToPair = 
+            new Dictionary<Action<OscMessageValues>, OscActionPair>();
+        
+        /// <summary>
+        /// Register a single background thread method for an OSC address
+        /// </summary>
+        /// <param name="address">The OSC address to handle messages for</param>
+        /// <param name="valueReadMethod">
+        /// The method to execute immediately on the worker thread that reads values from the message
+        /// </param>
+        /// <returns>True if the address was valid, false otherwise</returns>
+        public bool TryAddMethod(string address, Action<OscMessageValues> valueReadMethod)
+        {
+            var pair = new OscActionPair(valueReadMethod);
+            k_SingleCallbackToPair.Add(valueReadMethod, pair);
+            return AddressSpace.TryAddMethod(address, pair);
+        }
+        
+        /// <summary>
+        /// Remove a single background thread method from an OSC address
+        /// </summary>
+        /// <param name="address">The OSC address to handle messages for</param>
+        /// <param name="valueReadMethod">
+        /// The method to execute immediately on the worker thread that reads values from the message
+        /// </param>
+        /// <returns>True if the method was removed from this address, false otherwise</returns>
+        public bool RemoveMethod(string address, Action<OscMessageValues> valueReadMethod)
+        {
+            if (k_SingleCallbackToPair.TryGetValue(valueReadMethod, out var pair))
+            {
+                return AddressSpace.RemoveMethod(address, pair) && 
+                        k_SingleCallbackToPair.Remove(valueReadMethod);
+            }
+
+            return false;
+        }
 
         /// <summary>
-        /// Add methods associated with an OSC address.
+        /// Add a background thread read callback and main thread callback associated with an OSC address.
         /// </summary>
         /// <param name="address">The OSC address to associate a method with</param>
         /// <param name="actionPair">The pair of callbacks to add</param>
         /// <returns>True if the address was valid & methods associated with it, false otherwise</returns>
-        public bool TryAddMethod(string address, OscActionPair actionPair) => 
+        public bool TryAddMethodPair(string address, OscActionPair actionPair) => 
             AddressSpace.TryAddMethod(address, actionPair);
         
         /// <summary>
-        /// Remove methods associated with an OSC address.
+        /// Remove a background thread read callback and main thread callback associated with an OSC address.
         /// </summary>
         /// <param name="address">The OSC address to remove methods from</param>
         /// <param name="actionPair">The pair of callbacks to remove</param>
         /// <returns>True if successfully removed, false otherwise</returns>
-        public bool RemoveMethod(string address, OscActionPair actionPair)
+        public bool RemoveMethodPair(string address, OscActionPair actionPair)
         {
             // if the address space is null, this got called during cleanup / shutdown,
             // and effectively all addresses are removed by setting it to null
