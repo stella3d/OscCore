@@ -4,7 +4,8 @@ A **performance-oriented** OSC library for Unity
 #### Why Another OSC Library ?
 
 There are already at least 4 other OSC implementations for Unity:
-- [OscJack](https://github.com/keijiro/OscJack), [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
+- [OscJack](https://github.com/keijiro/OscJack), which i was using before and replaced with this
+- [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
 
 OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
 
@@ -40,6 +41,8 @@ Add a `OscReceiver` component to a GameObject somewhere.
 The `OscServer` instance attached to the component is what will actually handle incoming messages - the component is just a wrapper.
 
 The server must have its `Update()` method ticked to handle main thread queued callbacks. `OscReceiver`handles this for you. 
+
+`OscServer` implements IDisposable - just dispose it to close the underlying socket.
 
 ##### Adding address handlers
 
