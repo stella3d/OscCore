@@ -1,34 +1,22 @@
-﻿using System;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using BlobHandles;
-using UnityEngine;
+﻿using System.Runtime.CompilerServices;
 
 namespace OscCore
 {
-    public unsafe class OscParser : IDisposable
+    public unsafe class OscParser
     {
         // TODO - make these preferences options
         public const int MaxElementsPerMessage = 32;
         public const int MaxBlobSize = 1024 * 256;
 
         internal readonly byte[] Buffer;
-        readonly byte* BufferPtr;
-        
-        /// <summary>
-        /// Pointer to the first 8 bytes of the read buffer.
-        /// Used to determine if a message is a bundle in a single comparison
-        /// </summary>
+        internal readonly byte* BufferPtr;
         internal readonly long* BufferLongPtr;
 
         public readonly OscMessageValues MessageValues;
 
-        public int TagCount { get; private set; }
-
-        public OscAddressSpace AddressSpace { get; internal set; }
-
-        public OscParser(byte[] fixedBuffer, GCHandle bufferHandle)
+        /// <summary>Create a new parser.</summary>
+        /// <param name="fixedBuffer">The buffer to read messages from.  Must be fixed in memory !</param>
+        public OscParser(byte[] fixedBuffer)
         {
             Buffer = fixedBuffer;
             fixed (byte* ptr = fixedBuffer)
@@ -36,27 +24,7 @@ namespace OscCore
                 BufferPtr = ptr;
                 BufferLongPtr = (long*) ptr;
             }
-            MessageValues = new OscMessageValues(Buffer, bufferHandle, MaxElementsPerMessage);
-        }
-
-        public static void Parse(byte[] buffer, int length)
-        {
-            var addressLength = FindAddressLength(buffer, 0);
-            var debugStr = Encoding.ASCII.GetString(buffer, 0, addressLength);
-            Debug.Log($"parsed address: {debugStr}");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool AddressIsBundle()
-        {
-            return *BufferLongPtr == Constant.BundlePrefixLong;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T ReadPointer<T>(byte* bufferStartPtr, int offset)
-            where T: unmanaged
-        {
-            return *(T*) (bufferStartPtr + offset);
+            MessageValues = new OscMessageValues(Buffer, MaxElementsPerMessage);
         }
 
         internal static bool AddressIsValid(string address)
@@ -161,27 +129,7 @@ namespace OscCore
             MessageValues.ElementCount = outIndex;
             return outIndex;
         }
-        
-        public int ParseTags(int start = 0)
-        {
-            if (Buffer[start] != Constant.Comma) return 0;
-            
-            var tagIndex = start + 1;         // skip the starting ','
-            var outIndex = 0;
-            var tags = MessageValues.Tags;
-            while (true)
-            {
-                var tag = (TypeTag) Buffer[tagIndex];
-                if (!tag.IsSupported()) break;
-                tags[outIndex] = tag;
-                tagIndex++;
-                outIndex++; 
-            }
 
-            MessageValues.ElementCount = outIndex;
-            return outIndex;
-        }
-        
         public static int FindArrayLength(byte[] bytes, int offset = 0)
         {
             if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
@@ -202,33 +150,44 @@ namespace OscCore
             var index = offset + 1;
 
             byte b = bytes[index];
-            while (b != byte.MinValue && b != Constant.Comma)
+            while (b != byte.MinValue)
             {
                 b = bytes[index];
                 index++;
             }
 
             var length = index - offset;
-            return (length + 3) & ~3;            // align to 4 bytes
+            return length;
         }
         
-        public int FindAddressLength(int offset = 0)
+        public int FindAddressLength()
         {
-            var buffer = Buffer;
-            if (buffer[offset] != Constant.ForwardSlash)
+            if (BufferPtr[0] != Constant.ForwardSlash)
+                return -1;
+            
+            var index = 0;
+            do
+            {
+                index++;
+            } 
+            while (BufferPtr[index] != byte.MinValue);
+            return index;
+        }
+        
+        public int FindAddressLength(int offset)
+        {
+            if (BufferPtr[offset] != Constant.ForwardSlash)
                 return -1;
             
             var index = offset + 1;
-
-            byte b = buffer[index];
-            while (b != byte.MinValue && b != Constant.Comma)
+            do
             {
-                b = buffer[index];
                 index++;
-            }
+            } 
+            while (BufferPtr[index] != byte.MinValue);
 
             var length = index - offset;
-            return (length + 3) & ~3;            // align to 4 bytes
+            return length;
         }
 
         public int GetStringLength(int offset)
@@ -253,7 +212,7 @@ namespace OscCore
                 offsets[i] = offset;
                 switch (tags[i])
                 {
-                    // false, true, nil & infinitum tags add 0 to the offset
+                    // false, true, nil, infinitum & array[] tags add 0 to the offset
                     case TypeTag.Int32:
                     case TypeTag.Float32:
                     case TypeTag.Color32:    
@@ -282,31 +241,6 @@ namespace OscCore
         public bool IsBundleTagAtIndex(int index)
         {
             return *((long*) BufferPtr + index) == Constant.BundlePrefixLong;
-        }
-
-        public bool TryParseMessage()
-        {
-            var addressLength = FindAddressLength();
-            if (addressLength < 0) 
-                return false;
-
-            var tagCount = ParseTags(addressLength);
-            if (tagCount > 0)
-            {
-                // skip the ',' and align to 4 bytes
-                var tagByteLength = ((tagCount + 1) + 3) & ~3;            
-                FindOffsets(addressLength + tagByteLength);
-                return true;
-            }
-
-            return false;
-        }
-
-        
-        
-
-        public void Dispose()
-        {
         }
     }
 }

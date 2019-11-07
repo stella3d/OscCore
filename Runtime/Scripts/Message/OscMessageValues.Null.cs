@@ -13,11 +13,7 @@ namespace OscCore
         public bool ReadNilOrInfinitumElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             switch (Tags[index])
             {

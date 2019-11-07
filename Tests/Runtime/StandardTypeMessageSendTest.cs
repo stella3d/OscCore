@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -12,7 +10,9 @@ namespace OscCore.Tests
 
         [Range(4, 32)]
         [SerializeField]
+#pragma warning disable 649
         int m_RandomAddressCount;
+#pragma warning restore 649
 
         [SerializeField]
         int m_Port = 7000;
@@ -132,26 +132,6 @@ namespace OscCore.Tests
                 k_Builder.Append((byte) ' ');
                 m_StringElements[i] = k_Builder.ToString();
             }
-        }
-
-        string GenRandomAddress()
-        {
-            k_Builder.Clear();
-            var prefix = Random.Range(0f, 1f) > 0.75f ? "/layer/" : "/composition/";
-                
-            k_Builder.Append(prefix);
-            for (int j = 0; j < m_RandomCharCount; j++)
-            {
-                char randChar;
-                do
-                {
-                    randChar = (char) Random.Range(32, 255);
-                } while (!OscParser.CharacterIsValidInAddress(randChar));
-                k_Builder.Append((byte) randChar);
-            }
-
-            k_Builder.Append((byte) ' ');
-            return k_Builder.ToString();
         }
     }
 }

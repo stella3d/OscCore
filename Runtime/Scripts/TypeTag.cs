@@ -31,22 +31,26 @@ namespace OscCore
         {
             switch (tag)
             {
-                case TypeTag.False: return true;
-                case TypeTag.Infinitum: return true;
-                case TypeTag.Nil: return true;
-                case TypeTag.AltTypeString: return true;
-                case TypeTag.True: return true;
-                case TypeTag.Blob: return true;
-                case TypeTag.AsciiChar32: return true;
-                case TypeTag.Float64: return true;
-                case TypeTag.Float32: return true;
-                case TypeTag.Int64: return true;
-                case TypeTag.Int32: return true;
-                case TypeTag.MIDI: return true;
-                case TypeTag.Color32: return true;
-                case TypeTag.String: return true;
-                case TypeTag.TimeTag: return true;
-                default: return false;
+                case TypeTag.False:
+                case TypeTag.Infinitum:
+                case TypeTag.Nil:
+                case TypeTag.AltTypeString:
+                case TypeTag.True:
+                case TypeTag.Blob:
+                case TypeTag.AsciiChar32:
+                case TypeTag.Float64:
+                case TypeTag.Float32:
+                case TypeTag.Int64: 
+                case TypeTag.Int32: 
+                case TypeTag.MIDI: 
+                case TypeTag.Color32: 
+                case TypeTag.String: 
+                case TypeTag.TimeTag: 
+                case TypeTag.ArrayStart:
+                case TypeTag.ArrayEnd: 
+                    return true;
+                default: 
+                    return false;
             }
         }
     }

@@ -1,8 +1,9 @@
-#define OSCCORE_SAFETY_CHECKS
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 // allow tests to modify things as if in the same assembly
 [assembly:InternalsVisibleTo("OscCore.Tests.Editor")]
@@ -14,7 +15,6 @@ namespace OscCore
         // the buffer where we read messages from - usually provided + filled by a socket reader
         readonly byte[] m_SharedBuffer;
         readonly byte* SharedBufferPtr;
-        readonly GCHandle m_BufferHandle;
         // used to swap bytes for 32-bit numbers when reading
         readonly byte[] m_SwapBuffer32 = new byte[4];
         readonly float* SwapBuffer32Ptr;
@@ -59,48 +59,11 @@ namespace OscCore
             
             SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
         }
-        
-        internal OscMessageValues(byte[] buffer, GCHandle handle, int elementCapacity = 8)
-        {
-            try
-            {
-                m_BufferHandle = handle;
-                SharedBufferPtr = (byte*) handle.AddrOfPinnedObject();
-                fixed (byte* bufferPtr = &buffer[0])
-                {
-                    if (bufferPtr != SharedBufferPtr)
-                    {
-                        Debug.LogError("GCHandle passed to OscMessageValues must point to beginning of the buffer!");
-                        return;
-                    }
-                }
-            }
-            catch (InvalidOperationException)
-            {
-                Debug.LogError("GCHandle passed to OscMessageValues constructor must be Pinned!");
-                return;
-            }
-            
-            ElementCount = 0;
-            Tags = new TypeTag[elementCapacity];
-            Offsets = new int[elementCapacity];
-            m_SharedBuffer = buffer;
-
-            // pin swap buffers in place
-            m_Swap32Handle = GCHandle.Alloc(m_SwapBuffer32, GCHandleType.Pinned);
-            var swap32Ptr = m_Swap32Handle.AddrOfPinnedObject();
-            SwapBuffer32Ptr = (float*) swap32Ptr;
-            SwapBuffer32UintPtr = (uint*) swap32Ptr;
-            SwapBufferColor32Ptr = (Color32*) (byte*) swap32Ptr;
-            
-            SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
-        }
 
         ~OscMessageValues()
         {
             m_Swap32Handle.Free();
             m_Swap64Handle.Free();
-            if(m_BufferHandle.IsAllocated) m_BufferHandle.Free();
         }
 
         /// <summary>Execute a method for every element in the message</summary>
@@ -109,6 +72,18 @@ namespace OscCore
         {
             for (int i = 0; i < ElementCount; i++)
                 elementAction(i, Tags[i]);
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        bool OutOfBounds(int index)
+        {
+            if (index >= ElementCount)
+            {
+                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
+                return true;
+            }
+
+            return false;
         }
     }
 }

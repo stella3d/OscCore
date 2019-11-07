@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text;
-using UnityEngine;
 
 namespace OscCore
 {
@@ -17,11 +16,7 @@ namespace OscCore
         public string ReadStringElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             switch (Tags[index])
@@ -95,11 +90,7 @@ namespace OscCore
         public int ReadStringElementBytes(int index, byte[] copyTo)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             switch (Tags[index])
             {
@@ -130,11 +121,7 @@ namespace OscCore
         public int ReadStringElementBytes(int index, byte[] copyTo, int copyOffset)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             switch (Tags[index])
             {

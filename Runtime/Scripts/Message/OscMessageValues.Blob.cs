@@ -22,18 +22,13 @@ namespace OscCore
         public int ReadBlobElement(int index, ref byte[] copyTo, int copyOffset = 0)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             switch (Tags[index])
             {
                 case TypeTag.Blob:
                     var offset = Offsets[index];
-                    // var size = BitConverter.ToInt32(m_SharedBuffer, offset);
-                    int size = *(SharedBufferPtr + offset);
+                    var size = ReadIntIndex(offset);
                     var dataStart = offset + 4;    // skip the size int
                     if (copyTo.Length - copyOffset <= size)
                         Array.Resize(ref copyTo, size + copyOffset + k_ResizeByteHeadroom);
@@ -44,5 +39,6 @@ namespace OscCore
                     return default;
             }
         }
+
     }
 }

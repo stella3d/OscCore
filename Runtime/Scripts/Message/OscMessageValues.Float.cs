@@ -13,26 +13,22 @@ namespace OscCore
         public float ReadFloatElement(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
             switch (Tags[index])
             {
                 case TypeTag.Float32:
-                    m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
-                    m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
-                    m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
-                    m_SwapBuffer32[3] = m_SharedBuffer[offset];
+                    m_SwapBuffer32[0] = SharedBufferPtr[offset + 3];
+                    m_SwapBuffer32[1] = SharedBufferPtr[offset + 2];
+                    m_SwapBuffer32[2] = SharedBufferPtr[offset + 1];
+                    m_SwapBuffer32[3] = SharedBufferPtr[offset];
                     return *SwapBuffer32Ptr;
                 case TypeTag.Int32:
-                    return m_SharedBuffer[index    ] << 24 | 
-                           m_SharedBuffer[index + 1] << 16 |
-                           m_SharedBuffer[index + 2] <<  8 |
-                           m_SharedBuffer[index + 3];
+                    return SharedBufferPtr[index    ] << 24 | 
+                           SharedBufferPtr[index + 1] << 16 |
+                           SharedBufferPtr[index + 2] <<  8 |
+                           SharedBufferPtr[index + 3];
                 default:
                     return default;
             }
@@ -49,17 +45,13 @@ namespace OscCore
         public float ReadFloatElementUnchecked(int index)
         {
 #if OSCCORE_SAFETY_CHECKS
-            if (index >= ElementCount)
-            {
-                Debug.LogError($"Tried to read message element index {index}, but there are only {ElementCount} elements");
-                return default;
-            }
+            if (OutOfBounds(index)) return default;
 #endif
             var offset = Offsets[index];
-            m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
-            m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
-            m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
-            m_SwapBuffer32[3] = m_SharedBuffer[offset];
+            m_SwapBuffer32[0] = SharedBufferPtr[offset + 3];
+            m_SwapBuffer32[1] = SharedBufferPtr[offset + 2];
+            m_SwapBuffer32[2] = SharedBufferPtr[offset + 1];
+            m_SwapBuffer32[3] = SharedBufferPtr[offset];
             return *SwapBuffer32Ptr;
         }
     }

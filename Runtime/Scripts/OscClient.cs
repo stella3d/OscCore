@@ -47,31 +47,6 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
         
-        /// <summary>Send a message with 2 32-bit integer elements</summary>
-        public void Send(string address, int element1, int element2)
-        {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            const string typeTags = ",ii";
-            m_Writer.Write(typeTags);
-            m_Writer.Write(element1);
-            m_Writer.Write(element2);
-            m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
-        }
-        
-        /// <summary>Send a message with 3 32-bit integer elements</summary>
-        public void Send(string address, int element1, int element2, int element3)
-        {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            const string typeTags = ",iii";
-            m_Writer.Write(typeTags);
-            m_Writer.Write(element1);
-            m_Writer.Write(element2);
-            m_Writer.Write(element3);
-            m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
-        }
-        
         const uint k_Float32TypeTagBytes = 26156;    // ",f  " 
         
         /// <summary>Send a message with a single 32-bit float element</summary>
@@ -79,31 +54,6 @@ namespace OscCore
         {
             m_Writer.WriteAddressAndTags(address, k_Float32TypeTagBytes);
             m_Writer.Write(element);
-            m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
-        }
-        
-        /// <summary>Send a message with 2 32-bit float elements</summary>
-        public void Send(string address, float element1, float element2)
-        {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            const string typeTags = ",ff";
-            m_Writer.Write(typeTags);
-            m_Writer.Write(element1);
-            m_Writer.Write(element2);
-            m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
-        }
-        
-        /// <summary>Send a message with 3 32-bit float elements</summary>
-        public void Send(string address, float element1, float element2, float element3)
-        {
-            m_Writer.Reset();
-            m_Writer.Write(address);
-            const string typeTags = ",fff";
-            m_Writer.Write(typeTags);
-            m_Writer.Write(element1);
-            m_Writer.Write(element2);
-            m_Writer.Write(element3);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
@@ -141,6 +91,8 @@ namespace OscCore
             m_Writer.Write(element);
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
+
+        static readonly uint k_Float32x3TypeTags = GetAlignedAsciiBytes(",fff")[0];
         
         /// <summary>Send a message with a 3 32-bit float elements</summary>
         public void Send(string address, Vector3 element)

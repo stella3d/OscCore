@@ -11,8 +11,6 @@ namespace OscCore.Tests
 {
     public class OscWriterTests
     {
-        const string bpmAddress = "/composition/bpm";
-        
         readonly OscWriter m_Writer = new OscWriter();
 
         int m_WriterLengthBefore;
@@ -33,6 +31,7 @@ namespace OscCore.Tests
             Assert.AreEqual(m_WriterLengthBefore + 4, m_Writer.Length);
             // this tests both that it wrote to the right place in the buffer as well as that the value is right
             var convertedBack = BitConverter.ToInt32(m_Writer.Buffer, m_WriterLengthBefore).ReverseBytes();
+            
             Assert.AreEqual(value, convertedBack);
         }
         
@@ -67,6 +66,7 @@ namespace OscCore.Tests
         [TestCase("/composition/tempo")]
         [TestCase("/layers/1/opacity")]
         [TestCase("/composition/layers/2/video/blend")]
+        [TestCase("/composition/layers/2/video/mode")]
         public void WriteBlobString(string value)
         {
             BlobString.Encoding = Encoding.ASCII;
@@ -76,7 +76,8 @@ namespace OscCore.Tests
             blobStr.Dispose();
             var asciiByteCount = Encoding.ASCII.GetByteCount(value);
             var alignedByteCount = (asciiByteCount + 3) & ~3;
-            Assert.AreEqual(m_WriterLengthBefore + alignedByteCount, m_Writer.Length);
+            var expected = alignedByteCount == asciiByteCount ? asciiByteCount + 4 : alignedByteCount;
+            Assert.AreEqual(expected, m_Writer.Length);
             
             var convertedBack = Encoding.ASCII.GetString(m_Writer.Buffer, m_WriterLengthBefore, asciiByteCount);
             Assert.AreEqual(value, convertedBack);
