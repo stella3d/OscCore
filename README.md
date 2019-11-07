@@ -171,7 +171,9 @@ Client.Send("/blobs", Blob, Blob.Length);
 Client.Send("/layers/3/name", "Textural");
 ```
 
+#### Additional safety checks
 
+Define `OSCCORE_SAFETY_CHECKS` in your project to have reads of message elements be bounds-checked.  It amounts to making sure the element you asked for isn't beyond the number of elements in the message.  
 
 ## Protocol Support Details
 
