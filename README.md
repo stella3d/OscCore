@@ -8,19 +8,26 @@ There are already at least 4 other OSC implementations for Unity:
 
 OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details)
 
-## Version Compatibility
+OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
+
+The initial focus is on basic functionality. 
+Higher-level components like those found in previous libraries may come later or in a package built around this.
+
+## Versions and Platforms
 
 Releases are checked for compatability with the latest release of these versions, and should work with anything in between.
 - **2018.4.x** (LTS)
 - **2019.x** (Official release)
 
+Builds are only tested on Windows & Mac right now, but it should work on any platform where you can use `System.Net.Sockets` & pointers.
+
 ## Installation
 
 Download & import the .unitypackage for your platform from the [Releases](https://github.com/stella3d/OscCore/releases) page.
 
-Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.
+Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.  
 
-
+You can also install from git in the package manager or manually, but you will get tests you don't need/
 
 ## Usage
 
@@ -103,6 +110,37 @@ class CallbackPairExample
 IF you just want to inspect message, you can add a monitor callback to be able to inspect every invoming message.
 
 A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window](https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
+
+#### Reading Message Values
+
+Reading values from incoming messages is done on a per-element basis, using methods named like `Read<Type>Element(int elementIndex)`.  
+
+Your value-reading methods will probably look something like this.
+
+```csharp
+// these methods would be registered as background thread callbacks for an address
+int ReadSingleIntMessage(OscMessageValues values)
+{
+    return values.ReadIntElement(0);
+}
+
+int ReadTripleFloatMessage(OscMessageValues values)
+{
+    float x  = values.ReadFloatElement(0);
+    float y  = values.ReadFloatElement(1);
+    float z  = values.ReadFloatElement(2);
+}
+
+```
+
+Most data types offer an `Unchecked` version of the method that is slightly faster, and still safe to use if you know for sure what data type an element is.
+```csharp
+double ReadUncheckedDoubleMessage(OscMessageValues values)
+{
+    return values.ReadFloat64ElementUnchecked(0);
+}
+
+```
 
 
 #### For sending messages
