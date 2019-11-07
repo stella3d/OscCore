@@ -4,16 +4,19 @@ using System.Linq;
 using System.Text;
 using BlobHandles;
 using UnityEditor;
+using UnityEngine;
 
 namespace OscCore
 {
     public class MonitorWindow : EditorWindow
     {
+        const int showLinesCount = 32;
+        
         static readonly StringBuilder k_Builder = new StringBuilder();
         
         OscServer m_Server;
-
-        readonly Queue<string> m_LogMessages = new Queue<string>(32);
+        
+        readonly Queue<string> m_LogMessages = new Queue<string>(showLinesCount);
         readonly List<string> m_ToQueue = new List<string>(16);
         readonly List<string> m_ToQueueAlt = new List<string>(16);
         bool m_UseAlt;
@@ -26,8 +29,6 @@ namespace OscCore
             m_ActiveQueueBuffer = m_ToQueue;
             m_Server = OscServer.PortToServer.First().Value;
             m_Server.AddMonitorCallback(Monitor);
-            // start will do nothing if already started
-            m_Server.Start();
         }
 
         void OnDisable()
@@ -37,6 +38,9 @@ namespace OscCore
 
         void Update()
         {
+            // only run every 10 frames to reduce flickering
+            if (Time.frameCount % 10 != 0) return;
+            
             if(m_NeedsRepaint) Repaint();
         }
 
@@ -73,15 +77,16 @@ namespace OscCore
                 catch (InvalidOperationException) { }
             }
 
-            const int showCount = 50;
-            while (m_LogMessages.Count > showCount)
+            lock (m_LogMessages)
             {
-                m_LogMessages.Dequeue();
-            }
-
-            foreach (var line in m_LogMessages)
-            {
-                EditorGUILayout.LabelField(line);
+                while (m_LogMessages.Count > showLinesCount)
+                {
+                    m_LogMessages.Dequeue();
+                }
+                foreach (var line in m_LogMessages)
+                {
+                    EditorGUILayout.LabelField(line);
+                }
             }
         }
 
