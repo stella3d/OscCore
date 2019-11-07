@@ -37,7 +37,7 @@ The notable parts missing from [the spec](http://opensoundcontrol.org/spec-1_0) 
   and we get a message at `/layer/?/opacity`, we _should_ invoke both messages.
 
   Right now, we would not invoke either message.  We would only invoke messages received at exactly one of the two addresses.
-  This is the first thing that will be implemented after initial release. 
+  This is the first thing that i think will be implemented after initial release - some of the other packages also lack this feature, and you can get far without it.
 
 - **Syncing to a source of absolute time**
 
