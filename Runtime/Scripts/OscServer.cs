@@ -421,9 +421,6 @@ namespace OscCore
             {
                 AddressSpace.AddressToMethod.Dispose();
                 AddressSpace = null;
-
-                if(m_Thread.ThreadState == ThreadState.Running)
-                    m_Thread.Join();
                 
                 m_Socket.Close();
                 m_Socket.Dispose();
