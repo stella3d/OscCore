@@ -20,7 +20,7 @@ namespace OscCore
             if (Receiver == null)
                 Receiver = GetComponentInParent<OscReceiver>();
 
-            if (Receiver != null)
+            if (Receiver != null && Receiver.Server != null)
             {
                 m_ActionPair = new OscActionPair(ValueRead, InvokeEvent);
                 Receiver.Server.TryAddMethodPair(Address, m_ActionPair);
