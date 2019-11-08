@@ -26,7 +26,7 @@ Builds are only tested on **Windows** & **MacOS** right now, but it should work 
 
 ## Installation
 
-Download & import the .unitypackage for your platform from the [Releases](https://github.com/stella3d/OscCore/releases) page.
+Download & import the .unitypackage from the [Releases](https://github.com/stella3d/OscCore/releases) page.
 
 Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.  
 
