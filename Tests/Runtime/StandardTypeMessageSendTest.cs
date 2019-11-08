@@ -11,7 +11,7 @@ namespace OscCore.Tests
         [Range(4, 32)]
         [SerializeField]
 #pragma warning disable 649
-        int m_RandomAddressCount;
+        int m_RandomAddressCount = 16;
 #pragma warning restore 649
 
         [SerializeField]
