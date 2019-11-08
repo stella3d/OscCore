@@ -36,17 +36,26 @@ You can also install from git in the package manager or manually, but you will g
 
 #### For incoming messages
 
+##### The easy way
+
 Add a `OscReceiver` component to a GameObject somewhere. 
 
-The `OscServer` instance attached to the component is what will actually handle incoming messages - the component is just a wrapper.
+Then add some message handler components like `Osc Float Message Handler` to that object or any of its children, specify an address, and hook up the UnityEvent you see in the handler.  Message handler components exist for the most common types.
+
+Message handling components will automatically find references to an `OscReceiver` in its parent heirarchy and use that if the reference is not explicitly specified.
+
+You can see a hooked up example in the `Editor/Scenes/MessageReceiverExample` scene, "Osc Input" object.
+
+###### Under the hood
+
+The `OscServer` instance attached to the receiver component is what will actually handle incoming messages - the component is just a wrapper.  You can use `OscServer` directly in your own scripts. It implements IDisposable - just dispose it to close the underlying socket.
 
 The server must have its `Update()` method ticked to handle main thread queued callbacks. `OscReceiver`handles this for you. 
 
-`OscServer` implements IDisposable - just dispose it to close the underlying socket.
 
 ##### Adding address handlers
 
-There are several different kinds of method that can be registered with a server.
+There are several different kinds of method that can be registered with a server via script.
 
 ###### Single method
 
