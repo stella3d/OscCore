@@ -121,7 +121,7 @@ class CallbackPairExample
 
 ###### Monitor Callbacks
 
-IF you just want to inspect message, you can add a monitor callback to be able to inspect every invoming message.
+IF you just want to inspect message, you can add a monitor callback to be able to inspect every incoming message.
 
 A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window](https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
 
