@@ -1,5 +1,5 @@
 # OscCore
-A **performance-oriented** OSC library for Unity
+A **performance-oriented** OSC ([Open Sound Control](http://opensoundcontrol.org/spec-1_0)) library for Unity
 
 #### Why Another OSC Library ?
 
