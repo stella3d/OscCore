@@ -6,8 +6,7 @@ using UnityEngine.Serialization;
 namespace OscCore
 {
     [ExecuteInEditMode]
-    public abstract class OscMessageHandler<T, TUnityEvent> : MonoBehaviour
-        where TUnityEvent : UnityEvent<T>
+    public abstract class MessageHandlerBase : MonoBehaviour
     {
         [Tooltip("The receiver to handle messages from")]
         [FormerlySerializedAs("Receiver")]
@@ -20,11 +19,7 @@ namespace OscCore
         [SerializeField] 
         protected string m_Address = "/";
         public string Address => m_Address;
-    
-        [FormerlySerializedAs("Handler")]
-        public TUnityEvent OnMessageReceived;
         
-        protected T m_Value;
         protected OscActionPair m_ActionPair;
         protected bool m_Registered;
         
@@ -66,5 +61,16 @@ namespace OscCore
                 m_Address.Insert(0, "/");
         }
     }
+    
+    [ExecuteInEditMode]
+    public abstract class OscMessageHandler<T, TUnityEvent> : MessageHandlerBase
+        where TUnityEvent : UnityEvent<T>
+    {
+        [FormerlySerializedAs("Handler")]
+        public TUnityEvent OnMessageReceived;
+        
+        protected T m_Value;
+    }
+
 }
 

@@ -10,4 +10,6 @@ namespace OscCore
     [Serializable] public class DoubleUnityEvent : UnityEvent<double> { }
     [Serializable] public class StringUnityEvent : UnityEvent<string> { }
     [Serializable] public class ColorUnityEvent : UnityEvent<Color> { }
+    [Serializable] public class BlobUnityEvent : UnityEvent<byte[], int> { }
+
 }
