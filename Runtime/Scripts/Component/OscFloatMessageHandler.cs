@@ -2,6 +2,7 @@
 
 namespace OscCore
 {
+    [AddComponentMenu("OSC/Message Handler/Float")]
     public class OscFloatMessageHandler : OscMessageHandler<float, FloatUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

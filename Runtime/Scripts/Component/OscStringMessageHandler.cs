@@ -1,5 +1,8 @@
-﻿namespace OscCore
+﻿using UnityEngine;
+
+namespace OscCore
 {
+    [AddComponentMenu("OSC/Message Handler/String")]
     public class OscStringMessageHandler : OscMessageHandler<string, StringUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

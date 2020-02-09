@@ -55,7 +55,7 @@ namespace OscCore
         /// Parse a single non-bundle message
         /// </summary>
         /// <returns>The unaligned length of the message address</returns>
-        public int Parse(int startingByteOffset = 0)
+        public int Parse(int startingByteOffset)
         {
             // address length here doesn't include the null terminator and alignment padding.
             // this is so we can look up the address by only its content bytes.
@@ -190,25 +190,7 @@ namespace OscCore
 
             return index - offset;
         }
-        
-        public static int FindUnalignedAddressLength(byte[] bytes, int offset = 0)
-        {
-            if (bytes[offset] != Constant.ForwardSlash)
-                return -1;
-            
-            var index = offset + 1;
 
-            byte b = bytes[index];
-            while (b != byte.MinValue)
-            {
-                b = bytes[index];
-                index++;
-            }
-
-            var length = index - offset;
-            return length;
-        }
-        
         public int FindUnalignedAddressLength()
         {
             if (BufferPtr[0] != Constant.ForwardSlash)

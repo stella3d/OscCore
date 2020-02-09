@@ -1,9 +1,9 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace OscCore
 {
     /// <summary>Wraps an OscServer in a Unity Component</summary>
+    [AddComponentMenu("OSC/Receiver")]
     [ExecuteInEditMode]
     public class OscReceiver : MonoBehaviour
     {
