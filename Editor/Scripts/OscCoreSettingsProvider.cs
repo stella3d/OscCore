@@ -4,9 +4,15 @@ using UnityEngine;
 
 namespace OscCore
 {
+    static class EditorHelp
+    {
+        public const string PrefKey = "OscCore_ShowEditorHelp";
+
+        public static bool Show => EditorPrefs.GetBool(PrefKey, true);
+    }
+
     static class OscCoreSettingsIMGUIRegister
     {
-        const string k_HelpPrefKey = "OscCore_ShowEditorHelp";
         
         const string k_HelpTooltip = "If enabled, display tutorial & hint messages in the Editor";
         static readonly GUIContent k_HelpContent = new GUIContent("Show Help", k_HelpTooltip);
@@ -23,16 +29,16 @@ namespace OscCore
                 // Create the SettingsProvider and initialize its drawing (IMGUI) function in place:
                 guiHandler = (searchContext) =>
                 {
-                    if (EditorPrefs.HasKey(k_HelpPrefKey))
+                    if (EditorPrefs.HasKey(EditorHelp.PrefKey))
                     {
-                        var setting = EditorPrefs.GetBool(k_HelpPrefKey);
+                        var setting = EditorPrefs.GetBool(EditorHelp.PrefKey);
                         var afterSetting = EditorGUILayout.Toggle(k_HelpContent, setting);
                         if(afterSetting != setting)
-                            EditorPrefs.SetBool(k_HelpPrefKey, afterSetting);
+                            EditorPrefs.SetBool(EditorHelp.PrefKey, afterSetting);
                     }
                     else
                     {
-                        EditorPrefs.SetBool(k_HelpPrefKey, true);
+                        EditorPrefs.SetBool(EditorHelp.PrefKey, true);
                     }
                 },
 

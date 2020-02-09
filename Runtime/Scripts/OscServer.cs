@@ -414,5 +414,10 @@ namespace OscCore
         {
             Dispose(true);
         }
+
+        public int CountHandlers()
+        {
+            return AddressSpace.AddressToMethod.SourceToBlob.Count;
+        }
     }
 }
