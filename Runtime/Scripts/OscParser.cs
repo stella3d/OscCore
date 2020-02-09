@@ -50,6 +50,31 @@ namespace OscCore
             FindOffsets(offset);
             return addressLength;
         }
+        
+        /// <summary>
+        /// Parse a single non-bundle message
+        /// </summary>
+        /// <returns>The unaligned length of the message address</returns>
+        public int Parse(int startingByteOffset = 0)
+        {
+            // address length here doesn't include the null terminator and alignment padding.
+            // this is so we can look up the address by only its content bytes.
+            var addressLength = FindUnalignedAddressLength(startingByteOffset);
+            if (addressLength < 0)
+                return addressLength;    // address didn't start with '/'
+
+            var alignedAddressLength = (addressLength + 3) & ~3;
+            // if the null terminator after the string comes at the beginning of a 4-byte block,
+            // we need to add 4 bytes of padding
+            if (alignedAddressLength == addressLength)
+                alignedAddressLength += 4;
+
+            var startPlusAlignedLength = startingByteOffset + alignedAddressLength;
+            var tagCount = ParseTags(Buffer, startPlusAlignedLength);
+            var offset = startPlusAlignedLength + (tagCount + 4) & ~3;
+            FindOffsets(offset);
+            return addressLength;
+        }
 
         internal static bool AddressIsValid(string address)
         {
@@ -189,7 +214,7 @@ namespace OscCore
             if (BufferPtr[0] != Constant.ForwardSlash)
                 return -1;
             
-            var index = 0;
+            var index = 1;
             do
             {
                 index++;

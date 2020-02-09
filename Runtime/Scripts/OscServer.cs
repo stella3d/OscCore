@@ -238,7 +238,6 @@ namespace OscCore
 
         void ParseInternal(int byteLength)
         {
-            var buffer = m_ReadBuffer;
             var bufferPtr = Parser.BufferPtr;
             var bufferLongPtr = Parser.BufferLongPtr;
             var parser = Parser;
@@ -297,24 +296,13 @@ namespace OscCore
                         continue;
                     }
 
-                    var bundleAddressLength = parser.FindUnalignedAddressLength(contentIndex);
+                    var bundleAddressLength = parser.Parse(contentIndex);
                     if (bundleAddressLength <= 0)
                     {
                         // if an error occured parsing the address, skip this message entirely
                         MessageOffset += messageSize + 4;
                         continue;
                     }
-
-                    var bundleTagCount = parser.ParseTags(buffer, contentIndex + bundleAddressLength);
-                    if (bundleTagCount <= 0)
-                    {
-                        MessageOffset += messageSize + 4;
-                        continue;
-                    }
-
-                    // skip the ',' and align to 4 bytes
-                    var bundleOffset = (contentIndex + bundleAddressLength + bundleTagCount + 4) & ~3;
-                    parser.FindOffsets(bundleOffset);
 
                     if (addressToMethod.TryGetValueFromBytes(bufferPtr + contentIndex, bundleAddressLength,
                         out var bundleMethodPair))
