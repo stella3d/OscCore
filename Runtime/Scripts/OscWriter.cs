@@ -201,8 +201,7 @@ namespace OscCore
         public void WriteBundlePrefix()
         {
             const int size = 8;
-            // memory copy tested reliably faster than block copy for bytes under ~64 
-            System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
+            System.Buffer.BlockCopy(Constant.BundlePrefixBytes, 0, Buffer, m_Length, size);
             m_Length += size;
         }
                 
