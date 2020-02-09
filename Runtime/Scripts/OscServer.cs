@@ -142,6 +142,14 @@ namespace OscCore
 
             return false;
         }
+        
+        /// <summary>Remove an address and all its methods from the server's address space</summary>
+        /// <param name="address">The OSC address to handle messages for</param>
+        /// <returns>True if the method address was found and removed, false otherwise</returns>
+        public bool RemoveAddress(string address)
+        {
+            return AddressSpace.RemoveAddressMethod(address);
+        }
 
         /// <summary>
         /// Add a background thread read callback and main thread callback associated with an OSC address.
@@ -396,7 +404,7 @@ namespace OscCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void OverwriteAsciiString(string str, byte* bufferPtr)
         {
-            fixed (char* addressPtr = str)                    // done parsing this bundle message , wait for the next one
+            fixed (char* addressPtr = str)                   
             {
                 for (int i = 0; i < str.Length; i++)
                     addressPtr[i] = (char) bufferPtr[i];

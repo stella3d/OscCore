@@ -78,6 +78,20 @@ namespace OscCore
             }
         }
 
+        public bool RemoveAddressMethod(string address)
+        {
+            if (string.IsNullOrEmpty(address))
+                return false;
+
+            switch (OscParser.GetAddressType(address))
+            {
+                case AddressType.Address:
+                    return AddressToMethod.RemoveAddress(address);
+                default:
+                    return false;
+            }
+        }
+
         public bool RemoveMethod(string address, OscActionPair onReceived)
         {
             if (string.IsNullOrEmpty(address) || onReceived == null) 
