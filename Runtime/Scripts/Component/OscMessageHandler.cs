@@ -59,6 +59,8 @@ namespace OscCore
                 m_Address = "/";
             if(m_Address[0] != '/') m_Address = 
                 m_Address.Insert(0, "/");
+            if(m_Address.EndsWith(" "))
+                m_Address = m_Address.TrimEnd(' ');
         }
     }
     
