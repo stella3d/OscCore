@@ -23,6 +23,8 @@ namespace OscCore
             EditorGUILayout.Space();
             if (m_HandlerProp != null)
                 EditorGUILayout.PropertyField(m_HandlerProp);
+            
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }
