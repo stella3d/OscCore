@@ -29,10 +29,8 @@ namespace OscCore
             EditorGUILayout.PropertyField(m_PortProp);
             EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(true);
             var numContent = new GUIContent(CountHandlers().ToString());
             EditorGUILayout.LabelField(k_CountContent, numContent, EditorStyles.boldLabel);
-            EditorGUI.EndDisabledGroup();
             
             serializedObject.ApplyModifiedProperties();
             

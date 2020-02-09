@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using UnityEngine.Events;
 
 namespace OscCore
@@ -8,4 +9,5 @@ namespace OscCore
     [Serializable] public class FloatUnityEvent : UnityEvent<float> { }
     [Serializable] public class DoubleUnityEvent : UnityEvent<double> { }
     [Serializable] public class StringUnityEvent : UnityEvent<string> { }
+    [Serializable] public class ColorUnityEvent : UnityEvent<Color> { }
 }

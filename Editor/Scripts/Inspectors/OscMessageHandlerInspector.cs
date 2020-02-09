@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using UnityEngine;
 
 namespace OscCore
 {
@@ -7,13 +8,13 @@ namespace OscCore
     {
         SerializedProperty m_ReceiverProp;
         SerializedProperty m_AddressProp;
-        SerializedProperty m_HandlerProp;
-       
+        SerializedProperty m_OnReceivedProp;
+
         void OnEnable()
         {
             m_ReceiverProp = serializedObject.FindProperty("m_Receiver");
             m_AddressProp = serializedObject.FindProperty("m_Address");
-            m_HandlerProp = serializedObject.FindProperty("OnMessageReceived");
+            m_OnReceivedProp = serializedObject.FindProperty("OnMessageReceived");
         }
 
         public override void OnInspectorGUI()
@@ -21,8 +22,8 @@ namespace OscCore
             EditorGUILayout.PropertyField(m_ReceiverProp);
             EditorGUILayout.PropertyField(m_AddressProp);
             EditorGUILayout.Space();
-            if (m_HandlerProp != null)
-                EditorGUILayout.PropertyField(m_HandlerProp);
+            if (m_OnReceivedProp != null)
+                EditorGUILayout.PropertyField(m_OnReceivedProp);
             
             serializedObject.ApplyModifiedProperties();
         }
