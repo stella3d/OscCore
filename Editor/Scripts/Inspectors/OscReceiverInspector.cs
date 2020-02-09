@@ -8,6 +8,9 @@ namespace OscCore
     {
         OscReceiver m_Target;
         SerializedProperty m_PortProp;
+        
+        static readonly GUIContent k_CountContent = new GUIContent("Address Count",
+                "The number of unique OSC Addresses registered on this port");
 
         const string k_HelpText = "Handles receiving & parsing OSC messages on the given port.\n" +
                                   "Forwards messages to all event handler components that reference it.";
@@ -27,9 +30,10 @@ namespace OscCore
             EditorGUI.EndDisabledGroup();
 
             EditorGUI.BeginDisabledGroup(true);
-            var count = m_Target == null || m_Target.Server == null ? 0 : m_Target.Server.CountHandlers();
-            EditorGUILayout.LabelField("Address Handler Count", count.ToString(), EditorStyles.boldLabel);
+            var numContent = new GUIContent(CountHandlers().ToString());
+            EditorGUILayout.LabelField(k_CountContent, numContent, EditorStyles.boldLabel);
             EditorGUI.EndDisabledGroup();
+            
             serializedObject.ApplyModifiedProperties();
             
             if (EditorHelp.Show)
@@ -37,6 +41,11 @@ namespace OscCore
                 EditorGUILayout.Space();
                 EditorGUILayout.HelpBox(k_HelpText, MessageType.Info);
             }
+        }
+
+        int CountHandlers()
+        {
+            return m_Target == null || m_Target.Server == null ? 0 : m_Target.Server.CountHandlers();
         }
     }
 }
