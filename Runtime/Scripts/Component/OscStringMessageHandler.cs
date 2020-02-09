@@ -1,9 +1,7 @@
 ﻿namespace OscCore
 {
-    public class OscStringMessageHandler : OscMessageHandler<string>
+    public class OscStringMessageHandler : OscMessageHandler<string, StringUnityEvent>
     {
-        public StringUnityEvent Handler;
-
         protected override void ValueRead(OscMessageValues values)
         {
             m_Value = values.ReadStringElement(0);

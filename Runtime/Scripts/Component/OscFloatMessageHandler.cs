@@ -1,9 +1,9 @@
-﻿namespace OscCore
-{
-    public class OscFloatMessageHandler : OscMessageHandler<float>
-    {
-        public FloatUnityEvent Handler;
+﻿using UnityEngine;
 
+namespace OscCore
+{
+    public class OscFloatMessageHandler : OscMessageHandler<float, FloatUnityEvent>
+    {
         protected override void ValueRead(OscMessageValues values)
         {
             m_Value = values.ReadFloatElement(0);

@@ -1,9 +1,7 @@
 ﻿namespace OscCore
 {
-    public class OscFloat64MessageHandler : OscMessageHandler<double>
+    public class OscFloat64MessageHandler : OscMessageHandler<double, DoubleUnityEvent>
     {
-        public DoubleUnityEvent Handler;
-
         protected override void ValueRead(OscMessageValues values)
         {
             m_Value = values.ReadFloat64Element(0);
