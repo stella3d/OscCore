@@ -3,7 +3,7 @@
 namespace OscCore
 {
     [ExecuteInEditMode]
-    [AddComponentMenu("OSC/Input/Blob Message Handler")]
+    [AddComponentMenu("OSC/Input/Blob Input")]
     public class OscBlobMessageHandler : MessageHandlerBase
     {
         public BlobUnityEvent OnMessageReceived;

@@ -2,7 +2,7 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Input/Boolean Message Handler")]
+    [AddComponentMenu("OSC/Input/Boolean Input")]
     public class OscBooleanMessageHandler : OscMessageHandler<bool, BoolUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

@@ -2,7 +2,7 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Input/Vector3 Message Handler")]
+    [AddComponentMenu("OSC/Input/Vector3 Input")]
     public class OscVector3MessageHandler : OscMessageHandler<Vector3, Vector3UnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

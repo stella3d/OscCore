@@ -2,7 +2,7 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Input/String Message Handler")]
+    [AddComponentMenu("OSC/Input/String Input")]
     public class OscStringMessageHandler : OscMessageHandler<string, StringUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

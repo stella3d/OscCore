@@ -2,7 +2,7 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Input/Color Message Handler")]
+    [AddComponentMenu("OSC/Input/Color Input")]
     public class OscColorMessageHandler : OscMessageHandler<Color, ColorUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)
