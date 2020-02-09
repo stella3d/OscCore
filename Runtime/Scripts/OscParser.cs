@@ -27,86 +27,28 @@ namespace OscCore
             MessageValues = new OscMessageValues(Buffer, MaxElementsPerMessage);
         }
         
-        public int Parse(int byteLength)
+        /// <summary>
+        /// Parse a single non-bundle message that starts at the beginning of the buffer
+        /// </summary>
+        /// <returns>The unaligned length of the message address</returns>
+        public int Parse()
         {
-            var buffer = Buffer;
-            var bufferPtr = BufferPtr;
-            var bufferLongPtr = BufferLongPtr;
-            
-            // determine if the message is a bundle or not 
-            if (*bufferLongPtr != Constant.BundlePrefixLong)
-            {
-                // address length here doesn't include the null terminator and alignment padding.
-                // this is so we can look up the address by only its content bytes.
-                var addressLength = FindUnalignedAddressLength();
-                if (addressLength < 0)
-                    return addressLength;    // address didn't start with '/'
+            // address length here doesn't include the null terminator and alignment padding.
+            // this is so we can look up the address by only its content bytes.
+            var addressLength = FindUnalignedAddressLength();
+            if (addressLength < 0)
+                return addressLength;    // address didn't start with '/'
 
-                var alignedAddressLength = (addressLength + 3) & ~3;
-                // if the null terminator after the string comes at the beginning of a 4-byte block,
-                // we need to add 4 bytes of padding
-                if (alignedAddressLength == addressLength)
-                    alignedAddressLength += 4;
+            var alignedAddressLength = (addressLength + 3) & ~3;
+            // if the null terminator after the string comes at the beginning of a 4-byte block,
+            // we need to add 4 bytes of padding
+            if (alignedAddressLength == addressLength)
+                alignedAddressLength += 4;
 
-                var tagCount = ParseTags(buffer, alignedAddressLength);
-                var offset = alignedAddressLength + (tagCount + 4) & ~3;
-                FindOffsets(offset);
-                return addressLength;
-            }
-
-            // the message is a bundle, so we need to recursively scan the bundle elements
-            int MessageOffset = 0;
-            bool recurse;
-            // the outer do-while loop runs once for every #bundle encountered
-            do
-            {
-                // Timestamp isn't used yet, but it will be eventually
-                // var time = parser.MessageValues.ReadTimestampIndex(MessageOffset + 8);
-                // '#bundle ' + timestamp = 16 bytes
-                MessageOffset += 16;
-                recurse = false;
-
-                // the inner while loop runs once per bundle element
-                while (MessageOffset < byteLength && !recurse)
-                {
-                    var messageSize = (int) MessageValues.ReadUIntIndex(MessageOffset);
-                    var contentIndex = MessageOffset + 4;
-
-                    if (IsBundleTagAtIndex(contentIndex))
-                    {
-                        // this bundle element's contents are a bundle, break out to the outer loop to scan it
-                        MessageOffset = contentIndex;
-                        recurse = true;
-                        continue;
-                    }
-
-                    var bundleAddressLength = FindUnalignedAddressLength(contentIndex);
-                    if (bundleAddressLength <= 0)
-                    {
-                        // if an error occured parsing the address, skip this message entirely
-                        MessageOffset += messageSize + 4;
-                        continue;
-                    }
-
-                    var bundleTagCount = ParseTags(buffer, contentIndex + bundleAddressLength);
-                    if (bundleTagCount <= 0)
-                    {
-                        MessageOffset += messageSize + 4;
-                        continue;
-                    }
-
-                    // skip the ',' and align to 4 bytes
-                    var bundleOffset = (contentIndex + bundleAddressLength + bundleTagCount + 4) & ~3;
-                    FindOffsets(bundleOffset);
-
-                    MessageOffset += messageSize + 4;
-                }
-            }
-            // restart the outer while loop every time a bundle within a bundle is detected
-            while (recurse);
-
-            // TODO - maybe we can't put bundle and non-bundle in the same func ?  this isn't right to return
-            return MessageOffset;
+            var tagCount = ParseTags(Buffer, alignedAddressLength);
+            var offset = alignedAddressLength + (tagCount + 4) & ~3;
+            FindOffsets(offset);
+            return addressLength;
         }
 
         internal static bool AddressIsValid(string address)

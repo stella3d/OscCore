@@ -250,7 +250,7 @@ namespace OscCore
                 // address length here doesn't include the null terminator and alignment padding.
                 // this is so we can look up the address by only its content bytes.
                 // var addressLength = parser.FindUnalignedAddressLength();
-                var addressLength = parser.Parse(byteLength);
+                var addressLength = parser.Parse();
                 if (addressLength < 0)
                     return;    // address didn't start with '/'
 
