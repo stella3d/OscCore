@@ -304,8 +304,8 @@ namespace OscCore
                         continue;
                     }
 
-                    if (addressToMethod.TryGetValueFromBytes(bufferPtr + contentIndex, bundleAddressLength,
-                        out var bundleMethodPair))
+                    var contentPtr = bufferPtr + contentIndex;
+                    if (addressToMethod.TryGetValueFromBytes(contentPtr, bundleAddressLength, out var bundleMethodPair))
                     {
                         HandleCallbacks(bundleMethodPair, parser.MessageValues);
                     }
@@ -318,7 +318,7 @@ namespace OscCore
                     MessageOffset += messageSize + 4;
 
                     if (m_MonitorCallbacks.Count > 0) 
-                        HandleMonitorCallbacks(bufferPtr + contentIndex, bundleAddressLength, parser);
+                        HandleMonitorCallbacks(contentPtr, bundleAddressLength, parser);
                 }
             }
             // restart the outer while loop every time a bundle within a bundle is detected
