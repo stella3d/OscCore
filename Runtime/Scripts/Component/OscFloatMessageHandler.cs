@@ -11,7 +11,7 @@ namespace OscCore
         
         protected override void InvokeEvent()
         {
-            Handler.Invoke(m_Value);
+            OnMessageReceived.Invoke(m_Value);
         }
     }
 }

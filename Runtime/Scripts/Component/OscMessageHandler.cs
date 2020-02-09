@@ -21,7 +21,8 @@ namespace OscCore
         protected string m_Address;
         public string Address => m_Address;
     
-        public TUnityEvent Handler;
+        [FormerlySerializedAs("Handler")]
+        public TUnityEvent OnMessageReceived;
         
         protected T m_Value;
         protected OscActionPair m_ActionPair;

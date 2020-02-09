@@ -13,7 +13,7 @@ namespace OscCore
         {
             m_ReceiverProp = serializedObject.FindProperty("m_Receiver");
             m_AddressProp = serializedObject.FindProperty("m_Address");
-            m_HandlerProp = serializedObject.FindProperty("Handler");
+            m_HandlerProp = serializedObject.FindProperty("OnMessageReceived");
         }
 
         public override void OnInspectorGUI()
