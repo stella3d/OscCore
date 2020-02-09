@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
@@ -14,11 +15,10 @@ namespace OscCore
         protected OscReceiver m_Receiver;
         public OscReceiver Receiver => m_Receiver;
     
-        // TODO - add check for this address being valid in inspector ?
         [Tooltip("The OSC address to associate with this event.  Must start with /")]
         [FormerlySerializedAs("Address")]
         [SerializeField] 
-        protected string m_Address;
+        protected string m_Address = "/";
         public string Address => m_Address;
     
         [FormerlySerializedAs("Handler")]
@@ -57,6 +57,14 @@ namespace OscCore
 
         // Empty update method here so the component gets an enable checkbox
         protected virtual void Update() { }
+
+        void OnValidate()
+        {
+            if(string.IsNullOrEmpty(m_Address)) 
+                m_Address = "/";
+            if(m_Address[0] != '/') m_Address = 
+                m_Address.Insert(0, "/");
+        }
     }
 }
 
