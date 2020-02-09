@@ -4,13 +4,6 @@ using UnityEngine;
 
 namespace OscCore
 {
-    static class EditorHelp
-    {
-        public const string PrefKey = "OscCore_ShowEditorHelp";
-
-        public static bool Show => EditorPrefs.GetBool(PrefKey, true);
-    }
-
     static class OscCoreSettingsIMGUIRegister
     {
         
