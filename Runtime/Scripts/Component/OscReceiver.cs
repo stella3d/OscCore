@@ -22,7 +22,7 @@ namespace OscCore
             m_Server = OscServer.GetOrCreate(m_Port);
             m_Started = true;
         }
-
+        
         void Update()
         { 
             m_Server?.Update();

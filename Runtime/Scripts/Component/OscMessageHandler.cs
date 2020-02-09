@@ -2,10 +2,12 @@
 
 namespace OscCore
 {
+    [ExecuteInEditMode]
     public abstract class OscMessageHandler<T> : MonoBehaviour
     {
         public OscReceiver Receiver;
     
+        // TODO - add check for this address being valid in inspector ?
         public string Address;
     
         protected T m_Value;
@@ -14,11 +16,11 @@ namespace OscCore
         
         void OnEnable()
         {
-            if (m_Registered || string.IsNullOrEmpty(Address))
-                return;
-        
             if (Receiver == null)
                 Receiver = GetComponentInParent<OscReceiver>();
+            
+            if (m_Registered || string.IsNullOrEmpty(Address))
+                return;
 
             if (Receiver != null && Receiver.Server != null)
             {
@@ -32,7 +34,7 @@ namespace OscCore
         {
             m_Registered = false;
             if (Receiver != null)
-                Receiver.Server.RemoveMethodPair(Address, m_ActionPair);
+                Receiver.Server?.RemoveMethodPair(Address, m_ActionPair);
         }
 
         protected abstract void InvokeEvent();
