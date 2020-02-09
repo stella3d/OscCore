@@ -207,10 +207,6 @@ namespace OscCore
             Profiler.BeginThreadProfiling("OscCore", "Server");
 #endif
             var buffer = m_ReadBuffer;
-            var bufferPtr = Parser.BufferPtr;
-            var bufferLongPtr = Parser.BufferLongPtr;
-            var parser = Parser;
-            var addressToMethod = AddressSpace.AddressToMethod;
             var socket = m_Socket;
             
             while (!m_Disposed)
@@ -253,29 +249,10 @@ namespace OscCore
             {
                 // address length here doesn't include the null terminator and alignment padding.
                 // this is so we can look up the address by only its content bytes.
-                var addressLength = parser.FindAddressLength();
+                // var addressLength = parser.FindUnalignedAddressLength();
+                var addressLength = parser.Parse(byteLength);
                 if (addressLength < 0)
-                {
-                    // address didn't start with '/'
-                    Profiler.EndSample();
-                    return;
-                }
-
-                var alignedAddressLength = (addressLength + 3) & ~3;
-                // if the null terminator after the string comes at the beginning of a 4-byte block,
-                // we need to add 4 bytes of padding
-                if (alignedAddressLength == addressLength)
-                    alignedAddressLength += 4;
-
-                var tagCount = parser.ParseTags(buffer, alignedAddressLength);
-                if (tagCount <= 0)
-                {
-                    Profiler.EndSample();
-                    return;
-                }
-
-                var offset = alignedAddressLength + (tagCount + 4) & ~3;
-                parser.FindOffsets(offset);
+                    return;    // address didn't start with '/'
 
                 // see if we have a method registered for this address
                 if (addressToMethod.TryGetValueFromBytes(bufferPtr, addressLength, out var methodPair))
@@ -288,13 +265,8 @@ namespace OscCore
                 }
 
                 Profiler.EndSample();
-
-                if (m_MonitorCallbacks.Count == 0) return;
-                
-                // handle monitor callbacks
-                var monitorAddressStr = new BlobString(bufferPtr, addressLength);
-                foreach (var callback in m_MonitorCallbacks)
-                    callback(monitorAddressStr, parser.MessageValues);
+                if (m_MonitorCallbacks.Count > 0)
+                    HandleMonitorCallbacks(bufferPtr, addressLength, parser);
 
                 return;
             }
@@ -325,7 +297,7 @@ namespace OscCore
                         continue;
                     }
 
-                    var bundleAddressLength = parser.FindAddressLength(contentIndex);
+                    var bundleAddressLength = parser.FindUnalignedAddressLength(contentIndex);
                     if (bundleAddressLength <= 0)
                     {
                         // if an error occured parsing the address, skip this message entirely
@@ -357,11 +329,8 @@ namespace OscCore
 
                     MessageOffset += messageSize + 4;
 
-                    if (m_MonitorCallbacks.Count == 0) continue;
-
-                    var bundleMemberAddressStr = new BlobString(bufferPtr + contentIndex, bundleAddressLength);
-                    foreach (var callback in m_MonitorCallbacks)
-                        callback(bundleMemberAddressStr, parser.MessageValues);
+                    if (m_MonitorCallbacks.Count > 0) 
+                        HandleMonitorCallbacks(bufferPtr + contentIndex, bundleAddressLength, parser);
                 }
             }
             // restart the outer while loop every time a bundle within a bundle is detected
@@ -381,6 +350,14 @@ namespace OscCore
 
                 m_MainThreadQueue[m_MainThreadCount++] = pair.MainThreadQueued;
             }
+        }
+
+        void HandleMonitorCallbacks(byte* bufferPtr, int addressLength, OscParser parser)
+        {
+            // handle monitor callbacks
+            var monitorAddressStr = new BlobString(bufferPtr, addressLength);
+            foreach (var callback in m_MonitorCallbacks)
+                callback(monitorAddressStr, parser.MessageValues);
         }
 
         void TryMatchPatterns(OscParser parser, byte* bufferPtr, int addressLength)
