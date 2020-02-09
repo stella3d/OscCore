@@ -1,5 +1,8 @@
-﻿namespace OscCore
+﻿using UnityEngine;
+
+namespace OscCore
 {
+    [AddComponentMenu("OSC/Input/Long Message Handler")]
     public class OscInt64MessageHandler : OscMessageHandler<long, LongUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

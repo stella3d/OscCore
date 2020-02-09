@@ -2,7 +2,7 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Message Handler/Integer")]
+    [AddComponentMenu("OSC/Input/Integer Message Handler")]
     public class OscIntMessageHandler : OscMessageHandler<int, IntUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)

@@ -2,12 +2,12 @@
 
 namespace OscCore
 {
-    [AddComponentMenu("OSC/Input/Color Message Handler")]
-    public class OscColorMessageHandler : OscMessageHandler<Color, ColorUnityEvent>
+    [AddComponentMenu("OSC/Input/Boolean Message Handler")]
+    public class OscBooleanMessageHandler : OscMessageHandler<bool, BoolUnityEvent>
     {
         protected override void ValueRead(OscMessageValues values)
         {
-            m_Value = values.ReadColor32Element(0);
+            m_Value = values.ReadBooleanElement(0);
         }
         
         protected override void InvokeEvent()
