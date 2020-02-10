@@ -92,8 +92,6 @@ namespace OscCore
             m_Socket.Send(m_Writer.Buffer, m_Writer.Length, SocketFlags.None);
         }
 
-        static readonly uint k_Float32x3TypeTags = GetAlignedAsciiBytes(",fff")[0];
-        
         /// <summary>Send a message with a 3 32-bit float elements</summary>
         public void Send(string address, Vector3 element)
         {

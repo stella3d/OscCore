@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 
@@ -45,6 +44,11 @@ namespace OscCore
             if (m_Receiver != null)
                 m_Receiver.Server?.RemoveMethodPair(Address, m_ActionPair);
         }
+        
+        void OnValidate()
+        {
+            m_Address = Utils.ValidateAddress(m_Address);
+        }
 
         protected abstract void InvokeEvent();
     
@@ -52,22 +56,6 @@ namespace OscCore
 
         // Empty update method here so the component gets an enable checkbox
         protected virtual void Update() { }
-
-        void OnValidate()
-        {
-            m_Address = Utils.ValidateAddress(m_Address);
-        }
-        
-        public static string ValidateAddress(string address)
-        {
-            if(string.IsNullOrEmpty(address)) 
-                address = "/";
-            if(address[0] != '/') address = 
-                address.Insert(0, "/");
-            if(address.EndsWith(" "))
-                address = address.TrimEnd(' ');
-            return address;
-        }
     }
     
     [ExecuteInEditMode]
