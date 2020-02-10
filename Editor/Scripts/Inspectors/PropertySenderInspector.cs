@@ -29,8 +29,8 @@ namespace OscCore
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
-            "System.Single", "System.Int32", "System.String", "UnityEngine.Vector3", 
-            "UnityEngine.Color", "UnityEngine.Color32"
+            "System.Single", "System.Int32", "System.Int64", "System.String", 
+            "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
         };
         
         PropertySender m_Target;
@@ -48,8 +48,19 @@ namespace OscCore
             m_CachedComponents = m_Target.GetObjectComponents();
             m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
             
+            var sourceCompRef = m_SourceComponentProp.objectReferenceValue;
+            m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
             GetComponentProperties();
-            //m_ReceiverProp = serializedObject.FindProperty("m_Receiver");
+
+            if (sourceCompRef != null)
+            {
+                m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
+
+                var serializedPropName = m_PropertyNameProp.stringValue;
+                m_PropertyIndex = Array.IndexOf(m_PropertyNames, serializedPropName);
+                
+                //Debug.Log($"serialized prop name : {serializedPropName} @ index {m_PropertyIndex}");
+            }
         }
 
         public override void OnInspectorGUI()
@@ -61,8 +72,17 @@ namespace OscCore
             EditorGUILayout.PropertyField(m_AddressProp);
             
             EditorGUILayout.LabelField("Property Source", EditorStyles.boldLabel);
-            EditorGUILayout.PropertyField(m_ObjectProp);
             
+            EditorGUI.BeginChangeCheck();
+            EditorGUILayout.PropertyField(m_ObjectProp);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Debug.Log("object change");
+                serializedObject.ApplyModifiedProperties();
+                m_CachedComponents = m_Target.GetObjectComponents();
+                m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
+            }
+
             ComponentDropdown();
             PropertyDropdown();
 

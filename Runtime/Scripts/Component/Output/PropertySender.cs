@@ -8,40 +8,30 @@ namespace OscCore
     public class PropertySender : MonoBehaviour
     {
 #pragma warning disable 649
-        //[Header("OSC Destination")]
         [SerializeField] OscSender m_Sender;
-        
         [SerializeField] string m_Address = "";
         
-        //[Header("Property Source")]
         [SerializeField] GameObject m_Object;
-        
-        [SerializeField] [HideInInspector]
-        Component m_SourceComponent;
-        
-        [SerializeField] [HideInInspector] 
-        string m_PropertyName;
-        
-        [SerializeField] [HideInInspector]
-        string m_PropertyTypeName;
+        [SerializeField] Component m_SourceComponent;
+        [SerializeField] string m_PropertyName;
+        [SerializeField] string m_PropertyTypeName;
 #pragma warning restore 649
 
         string[] m_PropertyList;
     
         Type m_PropertyType;
 
-        int m_PreviousIntValue;
-        float m_PreviousFloatValue;
+        long m_PreviousLongValue;
+        double m_PreviousDoubleValue;
+        string m_PreviousStringValue;
+        Color m_PreviousColorValue;
+        Vector3 m_PreviousVec3Value;
 
         public PropertyInfo PropertyInfo { get; set; }
 
         void OnEnable()
         {
             if (m_Object == null) m_Object = gameObject;
-        }
-
-        void RefreshPropertyInfo()
-        {
         }
 
         void Update()
@@ -57,28 +47,52 @@ namespace OscCore
             {
                 case "Int32":
                     var intVal = (int) value;
-                    if (intVal != m_PreviousIntValue)
+                    if (intVal != m_PreviousLongValue)
                     {
-                        m_PreviousIntValue = intVal;
+                        m_PreviousLongValue = intVal;
                         m_Sender.Client.Send(m_Address, intVal);
+                    }
+                    break;
+                case "Int64":
+                    var longVal = (long) value;
+                    if (longVal != m_PreviousLongValue)
+                    {
+                        m_PreviousLongValue = longVal;
+                        m_Sender.Client.Send(m_Address, longVal);
                     }
                     break;
                 case "Single":
                     var floatVal = (float) value;
-                    if (floatVal != m_PreviousFloatValue)
+                    if (floatVal != m_PreviousDoubleValue)
                     {
-                        m_PreviousFloatValue = floatVal;
+                        m_PreviousDoubleValue = floatVal;
                         m_Sender.Client.Send(m_Address, floatVal);
                     }
                     break;
                 case "String":
-                    m_Sender.Client.Send(m_Address, (string) value);
+                    var stringVal = (string) value;
+                    if (stringVal != m_PreviousStringValue)
+                    {
+                        m_PreviousStringValue = stringVal;
+                        m_Sender.Client.Send(m_Address, stringVal);
+                    }
                     break;
                 case "Color":
-                    m_Sender.Client.Send(m_Address, (Color) value);
+                case "Color32":
+                    var colorVal = (Color) value;
+                    if (colorVal != m_PreviousColorValue)
+                    {
+                        m_PreviousColorValue = colorVal;
+                        m_Sender.Client.Send(m_Address, colorVal);
+                    }
                     break;
                 case "Vector3":
-                    m_Sender.Client.Send(m_Address, (Vector3) value);
+                    var vec3Val = (Vector3) value;
+                    if (vec3Val != m_PreviousVec3Value)
+                    {
+                        m_PreviousVec3Value = vec3Val;
+                        m_Sender.Client.Send(m_Address, vec3Val);
+                    }
                     break;
             }
         }

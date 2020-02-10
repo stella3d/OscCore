@@ -1,6 +1,4 @@
-﻿using System;
-using System.Reflection;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace OscCore
 {
@@ -12,6 +10,16 @@ namespace OscCore
         public OscClient Client { get; protected set; }
         
         void OnEnable()
+        {
+            Setup();
+        }
+
+        void Awake()
+        {
+            Setup();
+        }
+
+        void Setup()
         {
             if(Client == null)
                 Client = new OscClient(m_IpAddress, m_Port);
