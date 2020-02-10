@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace OscCore
 {
-    [CustomEditor(typeof(PropertySender), true)]
+    [CustomEditor(typeof(PropertyOutput), true)]
     public class PropertySenderInspector : Editor
     {
         SerializedProperty m_AddressProp;
@@ -28,15 +28,15 @@ namespace OscCore
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
-            "System.Single", "System.Int32", "System.Int64", "System.String", 
-            "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
+            "System.Single", "System.Double", "System.Int32", "System.Int64", "System.String", 
+            "UnityEngine.Vector2", "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
         };
         
-        PropertySender m_Target;
+        PropertyOutput m_Target;
         
         void OnEnable()
         {
-            m_Target = target as PropertySender;
+            m_Target = target as PropertyOutput;
             m_AddressProp = serializedObject.FindProperty("m_Address");
             m_SenderProp = serializedObject.FindProperty("m_Sender");
             m_ObjectProp = serializedObject.FindProperty("m_Object");
@@ -44,10 +44,14 @@ namespace OscCore
             m_PropertyNameProp = serializedObject.FindProperty("m_PropertyName");
             m_PropertyTypeNameProp = serializedObject.FindProperty("m_PropertyTypeName");
 
+            if (m_Target == null) return;
             m_CachedComponents = m_Target.GetObjectComponents();
             m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
             
             var sourceCompRef = m_SourceComponentProp.objectReferenceValue;
+            if (sourceCompRef == null) 
+                sourceCompRef = m_SourceComponentProp.objectReferenceValue = m_Target.gameObject;
+            
             m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
             GetComponentProperties();
 
@@ -57,7 +61,6 @@ namespace OscCore
 
                 var serializedPropName = m_PropertyNameProp.stringValue;
                 m_PropertyIndex = Array.IndexOf(m_PropertyNames, serializedPropName);
-                
                 //Debug.Log($"serialized prop name : {serializedPropName} @ index {m_PropertyIndex}");
             }
         }

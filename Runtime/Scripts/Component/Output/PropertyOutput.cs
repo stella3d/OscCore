@@ -4,7 +4,8 @@ using UnityEngine;
 namespace OscCore
 {
     [ExecuteInEditMode]
-    public class PropertySender : MonoBehaviour
+    [AddComponentMenu("OSC/Property Output", int.MaxValue)]
+    public class PropertyOutput : MonoBehaviour
     {
 #pragma warning disable 649
         [Tooltip("Component that handles sending outgoing OSC messages")]
@@ -25,6 +26,7 @@ namespace OscCore
         double m_PreviousDoubleValue;
         string m_PreviousStringValue;
         Color m_PreviousColorValue;
+        Vector2 m_PreviousVec2Value;
         Vector3 m_PreviousVec3Value;
 
         public PropertyInfo PropertyInfo { get; set; }
@@ -36,9 +38,7 @@ namespace OscCore
         
         void Update()
         {
-            if (string.IsNullOrEmpty(m_PropertyTypeName) || PropertyInfo == null) 
-                return;
-            if (m_Sender == null || m_Sender.Client == null) 
+            if (PropertyInfo == null || m_Sender == null || m_Sender.Client == null) 
                 return;
             
             var value = PropertyInfo.GetValue(m_SourceComponent);
@@ -69,6 +69,14 @@ namespace OscCore
                         m_Sender.Client.Send(m_Address, floatVal);
                     }
                     break;
+                case "Double":
+                    var doubleVal = (double) value;
+                    if (doubleVal != m_PreviousDoubleValue)
+                    {
+                        m_PreviousDoubleValue = doubleVal;
+                        m_Sender.Client.Send(m_Address, doubleVal);
+                    }
+                    break;
                 case "String":
                     var stringVal = (string) value;
                     if (stringVal != m_PreviousStringValue)
@@ -84,6 +92,14 @@ namespace OscCore
                     {
                         m_PreviousColorValue = colorVal;
                         m_Sender.Client.Send(m_Address, colorVal);
+                    }
+                    break;
+                case "Vector2":
+                    var vec2Val = (Vector2) value;
+                    if (vec2Val != m_PreviousVec2Value)
+                    {
+                        m_PreviousVec2Value = vec2Val;
+                        m_Sender.Client.Send(m_Address, vec2Val);
                     }
                     break;
                 case "Vector3":

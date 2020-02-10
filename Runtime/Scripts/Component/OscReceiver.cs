@@ -3,7 +3,7 @@
 namespace OscCore
 {
     /// <summary>Wraps an OscServer in a Unity Component</summary>
-    [AddComponentMenu("OSC/Receiver")]
+    [AddComponentMenu("OSC/OSC Receiver", int.MinValue)]
     [ExecuteInEditMode]
     public class OscReceiver : MonoBehaviour
     {
