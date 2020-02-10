@@ -29,6 +29,8 @@ namespace OscCore
 
         public int HandlerCount => AddressToMethod.HandleToValue.Count;
 
+        public IEnumerable<string> Addresses => AddressToMethod.SourceToBlob.Keys;
+
         public OscAddressSpace(int startingCapacity = k_DefaultCapacity)
         {
             AddressToMethod = new OscAddressMethods(startingCapacity);

@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 namespace OscCore
@@ -6,19 +7,25 @@ namespace OscCore
     [CustomEditor(typeof(OscReceiver))]
     public class OscReceiverInspector : Editor
     {
-        OscReceiver m_Target;
-        SerializedProperty m_PortProp;
-        
         static readonly GUIContent k_CountContent = new GUIContent("Address Count",
                 "The number of unique OSC Addresses registered on this port");
 
         const string k_HelpText = "Handles receiving & parsing OSC messages on the given port.\n" +
                                   "Forwards messages to all event handler components that reference it.";
+        
+        static readonly List<string> k_SortedAddresses = new List<string>();
 
+        OscReceiver m_Target;
+        SerializedProperty m_PortProp;
+        
+        bool m_ShowAddressFoldout = true;
+        
         void OnEnable()
         {
             m_Target = (OscReceiver) target;
             m_PortProp = serializedObject.FindProperty("m_Port");
+            
+            SortAddresses();
         }
 
         public override void OnInspectorGUI()
@@ -29,9 +36,16 @@ namespace OscCore
             EditorGUILayout.PropertyField(m_PortProp);
             EditorGUI.EndDisabledGroup();
 
-            var numContent = new GUIContent(CountHandlers().ToString());
-            EditorGUILayout.LabelField(k_CountContent, numContent, EditorStyles.boldLabel);
+            var count = CountHandlers();
+            var prefix = m_ShowAddressFoldout ? "Hide" : "Show";
+            m_ShowAddressFoldout = EditorGUILayout.Foldout(m_ShowAddressFoldout, $"{prefix} {count} Listening Addresses", true);
             
+            if (m_ShowAddressFoldout)
+            {
+                foreach (var addr in k_SortedAddresses)
+                    EditorGUILayout.LabelField(addr, EditorStyles.miniBoldLabel);
+            }
+
             serializedObject.ApplyModifiedProperties();
             
             if (EditorHelp.Show)
@@ -44,6 +58,16 @@ namespace OscCore
         int CountHandlers()
         {
             return m_Target == null || m_Target.Server == null ? 0 : m_Target.Server.CountHandlers();
+        }
+
+        void SortAddresses()
+        {
+            if (m_Target == null || m_Target.Server == null) 
+                return;
+            
+            k_SortedAddresses.Clear();
+            k_SortedAddresses.AddRange(m_Target.Server.AddressSpace.Addresses);
+            k_SortedAddresses.Sort();
         }
     }
 }
