@@ -7,6 +7,8 @@ using UnityEngine;
 
 namespace OscCore
 {
+
+
     public sealed unsafe class OscWriter : IDisposable
     {
         public readonly byte[] Buffer;
@@ -27,7 +29,8 @@ namespace OscCore
         readonly GCHandle m_Color32SwapHandle;
 
         int m_Length;
-
+        
+        /// <summary>The number of bytes currently written to the buffer</summary>
         public int Length => m_Length;
         
         public OscWriter(int capacity = 4096)
@@ -35,12 +38,12 @@ namespace OscCore
             Buffer = new byte[capacity];
 
             // Even though Unity's GC does not move objects around, pin them to be safe.
-            m_BufferPtr = PtrUtil.Pin<byte, byte>(Buffer, out m_BufferHandle);
+            m_BufferPtr = Utils.PinPtr<byte, byte>(Buffer, out m_BufferHandle);
             m_BufferMidiPtr = (MidiMessage*) m_BufferPtr;
 
-            m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
-            m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
-            m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
+            m_FloatSwapPtr = Utils.PinPtr<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
+            m_DoubleSwapPtr = Utils.PinPtr<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
+            m_Color32SwapPtr = Utils.PinPtr<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
         }
 
         ~OscWriter() { Dispose(); }

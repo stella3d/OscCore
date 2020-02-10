@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace OscCore
 {
     static class Utils
@@ -11,6 +13,14 @@ namespace OscCore
             if(address.EndsWith(" "))
                 address = address.TrimEnd(' ');
             return address;
+        }
+        
+        public static unsafe TPtr* PinPtr<TData, TPtr>(TData[] array, out GCHandle handle) 
+            where TData: unmanaged
+            where TPtr : unmanaged
+        {
+            handle = GCHandle.Alloc(array, GCHandleType.Pinned);
+            return (TPtr*) handle.AddrOfPinnedObject();
         }
     }
 }

@@ -59,7 +59,7 @@ namespace OscCore
             SwapBuffer32UintPtr = (uint*) swap32Ptr;
             SwapBufferColor32Ptr = (Color32*) (byte*) swap32Ptr;
             
-            SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
+            SwapBuffer64Ptr = Utils.PinPtr<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
         }
 
         ~OscMessageValues()
