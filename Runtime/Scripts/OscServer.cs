@@ -14,6 +14,10 @@ namespace OscCore
 {
     public sealed unsafe class OscServer : IDisposable
     {
+        // used to allow easy removal of single callbacks
+        static readonly Dictionary<Action<OscMessageValues>, OscActionPair> k_SingleCallbackToPair = 
+            new Dictionary<Action<OscMessageValues>, OscActionPair>();
+        
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
@@ -94,6 +98,9 @@ namespace OscCore
             return server;
         }
         
+        /// <summary>Dispose of an OSC Server</summary>
+        /// <param name="port">The port associated with the server</param>
+        /// <returns>True if the server was found and disposed of, false otherwise</returns>
         public static bool Remove(int port)
         {
             OscServer server;
@@ -104,10 +111,6 @@ namespace OscCore
             }
             return false;
         }
-        
-        // used to allow easy removal of single callbacks
-        static readonly Dictionary<Action<OscMessageValues>, OscActionPair> k_SingleCallbackToPair = 
-            new Dictionary<Action<OscMessageValues>, OscActionPair>();
         
         /// <summary>
         /// Register a single background thread method for an OSC address
@@ -296,10 +299,11 @@ namespace OscCore
                         continue;
                     }
 
+                    // parse the actual contents of this bundle element just like a non-bundled message
                     var bundleAddressLength = parser.Parse(contentIndex);
                     if (bundleAddressLength <= 0)
                     {
-                        // if an error occured parsing the address, skip this message entirely
+                        // if an error occured parsing the content, skip this messagse entirely
                         MessageOffset += messageSize + 4;
                         continue;
                     }
