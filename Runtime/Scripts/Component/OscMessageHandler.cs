@@ -55,12 +55,18 @@ namespace OscCore
 
         void OnValidate()
         {
-            if(string.IsNullOrEmpty(m_Address)) 
-                m_Address = "/";
-            if(m_Address[0] != '/') m_Address = 
-                m_Address.Insert(0, "/");
-            if(m_Address.EndsWith(" "))
-                m_Address = m_Address.TrimEnd(' ');
+            m_Address = Utils.ValidateAddress(m_Address);
+        }
+        
+        public static string ValidateAddress(string address)
+        {
+            if(string.IsNullOrEmpty(address)) 
+                address = "/";
+            if(address[0] != '/') address = 
+                address.Insert(0, "/");
+            if(address.EndsWith(" "))
+                address = address.TrimEnd(' ');
+            return address;
         }
     }
     

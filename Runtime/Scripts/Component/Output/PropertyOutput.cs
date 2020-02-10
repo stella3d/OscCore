@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace OscCore
@@ -35,7 +36,12 @@ namespace OscCore
         {
             if (m_Object == null) m_Object = gameObject;
         }
-        
+
+        void OnValidate()
+        {
+            m_Address = Utils.ValidateAddress(m_Address);
+        }
+
         void Update()
         {
             if (PropertyInfo == null || m_Sender == null || m_Sender.Client == null) 

@@ -94,8 +94,9 @@ LightmapSettings:
     m_PVRFilteringAtrousPositionSigmaDirect: 0.5
     m_PVRFilteringAtrousPositionSigmaIndirect: 2
     m_PVRFilteringAtrousPositionSigmaAO: 1
-    m_ShowResolutionOverlay: 1
     m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 0}
   m_UseShadowmask: 1
 --- !u!196 &4
@@ -152,9 +153,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b5beabcbc17443892c70f197665a627, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Receiver: {fileID: 318832824}
-  Address: /composition/layers/1/name
-  Handler:
+  m_Receiver: {fileID: 318832824}
+  m_Address: /composition/layers/1/name
+  OnMessageReceived:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 318832820}
@@ -168,8 +169,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: OscCore.StringUnityEvent, OscCore.Runtime, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
 --- !u!114 &318832822
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -182,9 +181,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a5ae5bb5d1704c35aa20277630960b18, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Receiver: {fileID: 318832824}
-  Address: /composition/layers/1/video/opacity
-  Handler:
+  m_Receiver: {fileID: 318832824}
+  m_Address: /composition/layers/1/video/opacity
+  OnMessageReceived:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1453025610}
@@ -198,8 +197,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: OscCore.FloatUnityEvent, OscCore.Runtime, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
 --- !u!114 &318832823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -212,9 +209,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f98b8931f42473c86594c4d60823231, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Receiver: {fileID: 318832824}
-  Address: /composition/layers/1/video/mixer/blendmode
-  Handler:
+  m_Receiver: {fileID: 318832824}
+  m_Address: /composition/layers/1/video/mixer/blendmode
+  OnMessageReceived:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1453025610}
@@ -228,8 +225,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 1
-    m_TypeName: OscCore.IntUnityEvent, OscCore.Runtime, Version=0.0.0.0, Culture=neutral,
-      PublicKeyToken=null
 --- !u!114 &318832824
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -365,8 +360,9 @@ Light:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1453025609}
   m_Enabled: 1
-  serializedVersion: 9
+  serializedVersion: 10
   m_Type: 1
+  m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
   m_Intensity: 1
   m_Range: 10
