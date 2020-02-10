@@ -6,7 +6,6 @@ namespace OscCore
 {
     static class OscCoreSettingsIMGUIRegister
     {
-        
         const string k_HelpTooltip = "If enabled, display tutorial & hint messages in the Editor";
         static readonly GUIContent k_HelpContent = new GUIContent("Show Help", k_HelpTooltip);
         
@@ -43,5 +42,3 @@ namespace OscCore
         }
     }
 }
-
-

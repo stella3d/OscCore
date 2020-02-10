@@ -11,7 +11,7 @@ namespace OscCore
             return (self + 3) & ~3;
         }
 
-        public static void SafeFree(this GCHandle handle)
+        internal static void SafeFree(this GCHandle handle)
         {
             if(handle.IsAllocated) handle.Free();
         }

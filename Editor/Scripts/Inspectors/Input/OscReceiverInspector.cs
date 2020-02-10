@@ -15,7 +15,7 @@ namespace OscCore
         OscReceiver m_Target;
         SerializedProperty m_PortProp;
         
-        bool m_ShowAddressFoldout = true;
+        bool m_ShowAddressFoldout;
         
         void OnEnable()
         {
@@ -68,5 +68,3 @@ namespace OscCore
         }
     }
 }
-
-
