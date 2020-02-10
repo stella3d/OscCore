@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OscCore;
+using BlobHandles;
 using Unity.IL2CPP.CompilerServices;
 
-namespace BlobHandles
+namespace OscCore
 {
     internal sealed unsafe class OscAddressMethods: IDisposable
     {
