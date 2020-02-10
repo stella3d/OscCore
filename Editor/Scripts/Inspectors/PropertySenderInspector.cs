@@ -62,11 +62,13 @@ namespace OscCore
             }
         }
 
+
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
             
             EditorGUILayout.LabelField("OSC Destination", EditorStyles.boldLabel);
+
             EditorGUILayout.PropertyField(m_SenderProp);
             EditorGUILayout.PropertyField(m_AddressProp);
             

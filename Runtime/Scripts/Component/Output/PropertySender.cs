@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using UnityEngine;
 
 namespace OscCore
@@ -8,18 +7,19 @@ namespace OscCore
     public class PropertySender : MonoBehaviour
     {
 #pragma warning disable 649
+        [Tooltip("Component that handles sending outgoing OSC messages")]
         [SerializeField] OscSender m_Sender;
+        
+        [Tooltip("The OSC address to send to at the destination")]
         [SerializeField] string m_Address = "";
         
+        [Tooltip("The object host of the component where the property lives")]
         [SerializeField] GameObject m_Object;
         [SerializeField] Component m_SourceComponent;
+        
         [SerializeField] string m_PropertyName;
         [SerializeField] string m_PropertyTypeName;
 #pragma warning restore 649
-
-        string[] m_PropertyList;
-    
-        Type m_PropertyType;
 
         long m_PreviousLongValue;
         double m_PreviousDoubleValue;
@@ -33,7 +33,7 @@ namespace OscCore
         {
             if (m_Object == null) m_Object = gameObject;
         }
-
+        
         void Update()
         {
             if (string.IsNullOrEmpty(m_PropertyTypeName) || PropertyInfo == null) 
@@ -96,7 +96,7 @@ namespace OscCore
                     break;
             }
         }
-        
+
         public Component[] GetObjectComponents()
         {
             return m_Object == null ? null : m_Object.GetComponents<Component>();

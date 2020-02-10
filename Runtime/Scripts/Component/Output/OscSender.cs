@@ -18,6 +18,11 @@ namespace OscCore
         {
             Setup();
         }
+        
+        void OnValidate()
+        {
+            m_Port = m_Port.ClampPort();
+        }
 
         void Setup()
         {
