@@ -12,10 +12,5 @@ namespace OscCore
             var z = values.ReadFloatElement(2);
             m_Value = new Vector3(x, y, z);
         }
-        
-        protected override void InvokeEvent()
-        {
-            OnMessageReceived.Invoke(m_Value);
-        }
     }
 }

@@ -66,6 +66,11 @@ namespace OscCore
         public TUnityEvent OnMessageReceived;
         
         protected T m_Value;
+        
+        protected override void InvokeEvent()
+        {
+            OnMessageReceived.Invoke(m_Value);
+        }
     }
 
 }

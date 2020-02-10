@@ -9,10 +9,5 @@ namespace OscCore
         {
             m_Value = values.ReadFloatElement(0);
         }
-        
-        protected override void InvokeEvent()
-        {
-            OnMessageReceived.Invoke(m_Value);
-        }
     }
 }
