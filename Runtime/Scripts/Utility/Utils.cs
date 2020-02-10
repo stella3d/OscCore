@@ -1,24 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace OscCore
 {
     static class Utils
     {
-        // TODO - enforce ASCII / no special chars 
-        public static string ValidateAddress(string address)
-        {
-            if(string.IsNullOrEmpty(address)) 
-                address = "/";
-            if(address[0] != '/') address = 
-                address.Insert(0, "/");
-            if(address.EndsWith(" "))
-                address = address.TrimEnd(' ');
-            return address;
-        }
-        
+        static readonly List<char> k_TempChars = new List<char>();
+
         public static bool ValidateAddress(ref string address)
         {
             if(string.IsNullOrEmpty(address)) 
@@ -31,8 +20,6 @@ namespace OscCore
             address = ReplaceInvalidAddressCharacters(address);
             return true;
         }
-
-        static readonly List<char> k_TempChars = new List<char>();
         
         internal static string ReplaceInvalidAddressCharacters(string address)
         {
