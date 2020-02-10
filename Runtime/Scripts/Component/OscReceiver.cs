@@ -27,8 +27,7 @@ namespace OscCore
 
         void OnValidate()
         {
-            if (m_Port < 1024) m_Port = 1024;
-            if (m_Port >= 65535) m_Port = 65535;
+            m_Port = m_Port.ClampPort();
         }
 
         void Update()

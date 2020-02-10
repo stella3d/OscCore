@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -10,6 +9,9 @@ using Debug = UnityEngine.Debug;
 
 namespace OscCore
 {
+    /// <summary>
+    /// Represents the tags and values associated with a received OSC message
+    /// </summary>
     public sealed unsafe partial class OscMessageValues
     {
         // the buffer where we read messages from - usually provided + filled by a socket reader
