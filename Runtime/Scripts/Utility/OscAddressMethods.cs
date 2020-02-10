@@ -6,11 +6,19 @@ using Unity.IL2CPP.CompilerServices;
 
 namespace OscCore
 {
+    /// <summary>Maps from OSC address to the delegates associated with it</summary>
     internal sealed unsafe class OscAddressMethods: IDisposable
     {
         const int defaultSize = 16;
         
+        /// <summary>
+        /// Map from the unmanaged representation of an OSC address to the delegates associated with it
+        /// </summary>
         public readonly Dictionary<BlobHandle, OscActionPair> HandleToValue;
+        
+        /// <summary>
+        /// Map from the source string of an OSC address to the unmanaged representation
+        /// </summary>
         internal readonly Dictionary<string, BlobString> SourceToBlob;
 
         public OscAddressMethods(int initialCapacity = defaultSize)
