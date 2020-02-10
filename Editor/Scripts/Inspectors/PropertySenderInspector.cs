@@ -24,7 +24,6 @@ namespace OscCore
 
         PropertyInfo[] m_Properties;
         string[] m_PropertyNames;
-        string[] m_FieldNames;
         int m_PropertyIndex;
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
@@ -77,7 +76,6 @@ namespace OscCore
             EditorGUILayout.PropertyField(m_ObjectProp);
             if (EditorGUI.EndChangeCheck())
             {
-                Debug.Log("object change");
                 serializedObject.ApplyModifiedProperties();
                 m_CachedComponents = m_Target.GetObjectComponents();
                 m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
