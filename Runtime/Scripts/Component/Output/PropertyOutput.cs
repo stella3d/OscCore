@@ -39,7 +39,8 @@ namespace OscCore
 
         void OnValidate()
         {
-            m_Address = Utils.ValidateAddress(m_Address);
+            Utils.ValidateAddress(ref m_Address);
+            if (m_Sender == null) m_Sender = gameObject.GetComponentInParent<OscSender>();
         }
 
         void Update()

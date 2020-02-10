@@ -47,7 +47,7 @@ namespace OscCore
         
         void OnValidate()
         {
-            m_Address = Utils.ValidateAddress(m_Address);
+            Utils.ValidateAddress(ref m_Address);
         }
 
         protected abstract void InvokeEvent();
