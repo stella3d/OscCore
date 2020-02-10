@@ -65,7 +65,6 @@ namespace OscCore
             }
         }
 
-
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
@@ -89,7 +88,7 @@ namespace OscCore
             ComponentDropdown();
             PropertyDropdown();
 
-            using (var indentScope = new EditorGUI.IndentLevelScope())
+            using (new EditorGUI.IndentLevelScope())
             {
                 EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
             }
@@ -130,7 +129,6 @@ namespace OscCore
         void GetComponentProperties()
         {
             var comp = m_CachedComponents[m_ComponentIndex];
-
             var properties = comp.GetType().GetProperties();
             m_Properties = properties.Where(p => k_SupportedTypes.Contains(p.PropertyType.FullName)).ToArray();
             m_PropertyNames = m_Properties.Select(m => m.Name).ToArray();
