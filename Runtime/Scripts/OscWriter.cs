@@ -7,8 +7,6 @@ using UnityEngine;
 
 namespace OscCore
 {
-
-
     public sealed unsafe class OscWriter : IDisposable
     {
         public readonly byte[] Buffer;
