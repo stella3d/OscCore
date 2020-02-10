@@ -1,21 +1,6 @@
 # OscCore
 A **performance-oriented** OSC ([Open Sound Control](http://opensoundcontrol.org/spec-1_0)) library for Unity
 
-#### Why Another OSC Library ?
-
-There are already at least 4 other OSC implementations for Unity:
-- [OscJack](https://github.com/keijiro/OscJack), which i was using before and replaced with this
-- [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
-
-OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
-
-OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
-
-The initial focus is on basic functionality. 
-Higher-level components like those found in previous libraries may come later or in a package built around this.  
-
-One of the existing libraries may satisfy your needs if you don't need to care much about garbage allocation / performance!
-
 ## Versions and Platforms
 
 Releases are checked for compatability with the latest release of these versions, and should work with anything in between.
@@ -24,19 +9,29 @@ Releases are checked for compatability with the latest release of these versions
 
 Builds are only tested on **Windows** & **MacOS** right now, but it should work on any platform where you can use `System.Net.Sockets` & pointers.
 
+#### Why Another OSC Library ?
+
+There are at least 4 other OSC implementations for Unity:
+- [OscJack](https://github.com/keijiro/OscJack), which i was using before
+- [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
+
+OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
+
+OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
+
+One of the existing libraries may satisfy your needs if you don't need to care much about garbage allocation / performance!
+
 ## Installation
 
 Download & import the .unitypackage from the [Releases](https://github.com/stella3d/OscCore/releases) page.
 
 Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.  
 
-You can also install from git in the package manager or manually, but you will get tests you don't need/
-
 ## Usage
 
-#### For incoming messages
+### Receiving messages
 
-##### The easy way
+#### Using Components
 
 Add a `OscReceiver` component to a GameObject somewhere. 
 
@@ -157,7 +152,17 @@ double ReadUncheckedDoubleMessage(OscMessageValues values)
 ```
 
 
-#### For sending messages
+### Sending Messages
+
+#### Using Components
+
+Add an `OscSender` component to a GameObject somewhere via the `Add Component` menu, `OSC/OSC Sender`. 
+
+Then add a `Property Output` component via the `Add Component` menu, `OSC/Property Output`, and assign the "Sender" reference on it.
+
+This component lets you pick any public property of a Unity object and automatically send an OSC message with its value when it changes.
+
+#### Using Code
 
 [OscWriter](https://github.com/stella3d/OscCore/blob/master/Runtime/Scripts/OscWriter.cs) handles serialization of individual message elements.
 
