@@ -8,7 +8,7 @@ using UnityEngine;
 namespace OscCore
 {
     [CustomEditor(typeof(PropertyOutput), true)]
-    public class PropertySenderInspector : Editor
+    public class PropertyOutputInspector : Editor
     {
         SerializedProperty m_AddressProp;
         SerializedProperty m_SenderProp;
@@ -28,7 +28,7 @@ namespace OscCore
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
-            "System.Single", "System.Double", "System.Int32", "System.Int64", "System.String", 
+            "System.Single", "System.Double", "System.Int32", "System.Int64", "System.String", "System.Boolean",
             "UnityEngine.Vector2", "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
         };
         
@@ -98,6 +98,7 @@ namespace OscCore
 
         void ComponentDropdown()
         {
+            // TODO - tooltips here
             var newIndex = EditorGUILayout.Popup("Component", m_ComponentIndex, m_CachedComponentNames);
             if (newIndex != m_ComponentIndex)
             {
@@ -113,6 +114,7 @@ namespace OscCore
         
         void PropertyDropdown()
         {
+            // TODO - tooltips here
             var newIndex = EditorGUILayout.Popup("Property", m_PropertyIndex, m_PropertyNames);
             if (newIndex != m_PropertyIndex)
             {

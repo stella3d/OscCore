@@ -22,6 +22,7 @@ namespace OscCore
         [SerializeField] string m_PropertyTypeName;
 #pragma warning restore 649
 
+        bool m_PreviousBooleanValue;
         long m_PreviousLongValue;
         double m_PreviousDoubleValue;
         string m_PreviousStringValue;
@@ -113,6 +114,14 @@ namespace OscCore
                     {
                         m_PreviousVec3Value = vec3Val;
                         m_Sender.Client.Send(m_Address, vec3Val);
+                    }
+                    break;
+                case "Boolean":
+                    var boolVal = (bool) value;
+                    if (boolVal != m_PreviousBooleanValue)
+                    {
+                        m_PreviousBooleanValue = boolVal;
+                        m_Sender.Client.Send(m_Address, boolVal);
                     }
                     break;
             }
