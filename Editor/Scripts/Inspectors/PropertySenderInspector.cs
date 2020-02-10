@@ -86,6 +86,11 @@ namespace OscCore
             ComponentDropdown();
             PropertyDropdown();
 
+            using (var indentScope = new EditorGUI.IndentLevelScope())
+            {
+                EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+            }
+
             serializedObject.ApplyModifiedProperties();
         }
 

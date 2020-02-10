@@ -5,6 +5,9 @@ namespace OscCore
     [CustomEditor(typeof(OscSender))]
     public class OscSenderInspector : Editor
     {
+        const string k_HelpText = "Handles serializing & sending OSC messages to the given IP address and port.\n" +
+                                  "Forwards messages from all property sender components that reference it.";
+        
         SerializedProperty m_IpAddressProp;
         SerializedProperty m_PortProp;
 
@@ -20,6 +23,9 @@ namespace OscCore
 
             EditorGUILayout.PropertyField(m_IpAddressProp);
             EditorGUILayout.PropertyField(m_PortProp);
+
+            EditorGUILayout.Space();
+            EditorHelp.DrawBox(k_HelpText);
 
             serializedObject.ApplyModifiedProperties();
         }
