@@ -5,7 +5,7 @@ using UnityEngine;
 namespace OscCore
 {
     [CustomEditor(typeof(OscReceiver))]
-    public class OscReceiverInspector : Editor
+    class OscReceiverInspector : Editor
     {
         const string k_HelpText = "Handles receiving & parsing OSC messages on the given port.\n" +
                                   "Forwards messages to all event handler components that reference it.";

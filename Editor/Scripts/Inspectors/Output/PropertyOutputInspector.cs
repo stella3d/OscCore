@@ -8,7 +8,7 @@ using UnityEngine;
 namespace OscCore
 {
     [CustomEditor(typeof(PropertyOutput), true)]
-    public class PropertyOutputInspector : Editor
+    class PropertyOutputInspector : Editor
     {
         SerializedProperty m_AddressProp;
         SerializedProperty m_SenderProp;

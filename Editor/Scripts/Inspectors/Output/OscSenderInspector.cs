@@ -3,7 +3,7 @@
 namespace OscCore
 {
     [CustomEditor(typeof(OscSender))]
-    public class OscSenderInspector : Editor
+    class OscSenderInspector : Editor
     {
         const string k_HelpText = "Handles serializing & sending OSC messages to the given IP address and port.\n" +
                                   "Forwards messages from all property sender components that reference it.";

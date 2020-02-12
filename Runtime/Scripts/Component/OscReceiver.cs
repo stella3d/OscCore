@@ -67,7 +67,7 @@ namespace OscCore
                 oldServer?.Dispose();
             }
             // if creating a new server throws for any reason, make sure to keep old settings
-            catch (Exception e)
+            catch (Exception)
             {
                 m_Port = oldValue;
                 Server = oldServer;

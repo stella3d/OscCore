@@ -3,7 +3,7 @@
 namespace OscCore
 {
     [CustomEditor(typeof(OscBlobMessageHandler))]
-    public class OscBlobMessageHandlerInspector : Editor
+    class OscBlobMessageHandlerInspector : Editor
     {
         SerializedProperty m_ReceiverProp;
         SerializedProperty m_AddressProp;
@@ -18,6 +18,7 @@ namespace OscCore
 
         public override void OnInspectorGUI()
         {
+            serializedObject.Update();
             EditorGUILayout.PropertyField(m_ReceiverProp);
             EditorGUILayout.PropertyField(m_AddressProp);
             EditorGUILayout.Space();
