@@ -7,21 +7,23 @@ namespace OscCore
     [ExecuteInEditMode]
     public class OscReceiver : MonoBehaviour
     {
-        [Tooltip("The port to listen for incoming OSC messages on")]
+        [Tooltip("The local port to listen for incoming messages on")]
         [SerializeField] int m_Port = 9000;
 
-        OscServer m_Server;
-        
+        /// <summary>The local post to listen to incoming messages on</summary>
+        public int Port => m_Port;
+
+        /// <summary>True if this receiver is bound to its port and listening, false otherwise</summary>
         public bool Running { get; private set; }
 
-        /// <summary>The underlying server that handles message receiving.  </summary>
-        public OscServer Server => m_Server;
-     
+        /// <summary>The underlying server that handles message receiving.</summary>
+        public OscServer Server { get; private set; }
+
         void OnEnable()
         {
             // OnEnable gets called twice when you enter play mode, but we just want one server instance
             if (Running) return;
-            m_Server = OscServer.GetOrCreate(m_Port);
+            Server = OscServer.GetOrCreate(m_Port);
             Running = true;
         }
 
@@ -32,18 +34,17 @@ namespace OscCore
 
         void Update()
         { 
-            m_Server?.Update();
+            Server?.Update();
         }
 
         void OnDestroy()
         {
-            m_Server?.Dispose();
+            Server?.Dispose();
         }
 
         void OnApplicationQuit()
         {
-            m_Server?.Dispose();
+            Server?.Dispose();
         }
     }
 }
-
