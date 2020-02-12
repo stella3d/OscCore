@@ -31,7 +31,6 @@ namespace OscCore
         Vector2 m_PreviousVec2Value;
         Vector3 m_PreviousVec3Value;
 
-
         /// <summary>
         /// The Unity component that has the property to send.  Must be a type that has the current Property
         /// </summary>
@@ -128,4 +127,3 @@ namespace OscCore
         }
     }
 }
-
