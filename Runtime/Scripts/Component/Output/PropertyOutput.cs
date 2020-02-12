@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using UnityEngine;
 
 namespace OscCore
@@ -53,82 +54,58 @@ namespace OscCore
             switch (m_PropertyTypeName)
             {
                 case "Int32":
-                    var intVal = (int) value;
-                    if (intVal != m_PreviousLongValue)
-                    {
-                        m_PreviousLongValue = intVal;
+                    if(ValueChanged(ref m_PreviousLongValue, value, out var intVal))
                         m_Sender.Client.Send(m_Address, intVal);
-                    }
                     break;
                 case "Int64":
-                    var longVal = (long) value;
-                    if (longVal != m_PreviousLongValue)
-                    {
-                        m_PreviousLongValue = longVal;
+                    if(ValueChanged(ref m_PreviousLongValue, value, out var longVal))
                         m_Sender.Client.Send(m_Address, longVal);
-                    }
                     break;
                 case "Single":
-                    var floatVal = (float) value;
-                    if (floatVal != m_PreviousDoubleValue)
-                    {
-                        m_PreviousDoubleValue = floatVal;
+                    if(ValueChanged(ref m_PreviousDoubleValue, value, out var floatVal))
                         m_Sender.Client.Send(m_Address, floatVal);
-                    }
                     break;
                 case "Double":
-                    var doubleVal = (double) value;
-                    if (doubleVal != m_PreviousDoubleValue)
-                    {
-                        m_PreviousDoubleValue = doubleVal;
+                    if(ValueChanged(ref m_PreviousDoubleValue, value, out var doubleVal))
                         m_Sender.Client.Send(m_Address, doubleVal);
-                    }
                     break;
                 case "String":
-                    var stringVal = (string) value;
-                    if (stringVal != m_PreviousStringValue)
-                    {
-                        m_PreviousStringValue = stringVal;
+                    if(ValueChanged(ref m_PreviousStringValue, value, out var stringVal))
                         m_Sender.Client.Send(m_Address, stringVal);
-                    }
                     break;
                 case "Color":
                 case "Color32":
-                    var colorVal = (Color) value;
-                    if (colorVal != m_PreviousColorValue)
-                    {
-                        m_PreviousColorValue = colorVal;
+                    if(ValueChanged(ref m_PreviousColorValue, value, out var colorVal))
                         m_Sender.Client.Send(m_Address, colorVal);
-                    }
                     break;
                 case "Vector2":
-                    var vec2Val = (Vector2) value;
-                    if (vec2Val != m_PreviousVec2Value)
-                    {
-                        m_PreviousVec2Value = vec2Val;
+                    if(ValueChanged(ref m_PreviousVec2Value, value, out var vec2Val))
                         m_Sender.Client.Send(m_Address, vec2Val);
-                    }
                     break;
                 case "Vector3":
-                    var vec3Val = (Vector3) value;
-                    if (vec3Val != m_PreviousVec3Value)
-                    {
-                        m_PreviousVec3Value = vec3Val;
+                    if(ValueChanged(ref m_PreviousVec3Value, value, out var vec3Val))
                         m_Sender.Client.Send(m_Address, vec3Val);
-                    }
                     break;
                 case "Boolean":
-                    var boolVal = (bool) value;
-                    if (boolVal != m_PreviousBooleanValue)
-                    {
-                        m_PreviousBooleanValue = boolVal;
+                    if(ValueChanged(ref m_PreviousBooleanValue, value, out var boolVal))
                         m_Sender.Client.Send(m_Address, boolVal);
-                    }
                     break;
             }
         }
 
-        public Component[] GetObjectComponents()
+        static bool ValueChanged<T>(ref T previousValue, object value, out T castValue) where T: IEquatable<T>
+        {
+            castValue = (T) value;
+            if (!castValue.Equals(previousValue))
+            {
+                previousValue = castValue;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal Component[] GetObjectComponents()
         {
             return m_Object == null ? null : m_Object.GetComponents<Component>();
         }
