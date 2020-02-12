@@ -10,6 +10,8 @@ using BlobHandles;
 using UnityEngine;
 using UnityEngine.Profiling;
 
+[assembly:InternalsVisibleTo("OscCore.Editor")]
+
 namespace OscCore
 {
     public sealed unsafe class OscServer : IDisposable
