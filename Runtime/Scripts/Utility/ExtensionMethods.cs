@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace OscCore
 {
-    public static class ExtensionMethods
+    static class ExtensionMethods
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Align4(this int self)
