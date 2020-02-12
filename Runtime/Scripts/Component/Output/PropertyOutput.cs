@@ -66,7 +66,10 @@ namespace OscCore
             
             switch (m_PropertyTypeName)
             {
+                case "Byte":
+                case "SByte": 
                 case "Int16":
+                case "UInt16":    
                 case "Int32":
                     if(ValueChanged(ref m_PreviousLongValue, value, out var intVal))
                         m_Sender.Client.Send(m_Address, intVal);

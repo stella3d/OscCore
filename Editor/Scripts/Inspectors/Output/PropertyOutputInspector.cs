@@ -28,7 +28,8 @@ namespace OscCore
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
-            "System.Single", "System.Double", "System.Int32", "System.Int64", "System.String", "System.Boolean",
+            "System.SByte", "System.Byte", "System.Int16", "System.UInt16", "System.Int32", "System.Int64",
+            "System.Single", "System.Double", "System.String", "System.Boolean",
             "UnityEngine.Vector2", "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
         };
         
