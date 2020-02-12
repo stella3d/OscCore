@@ -124,7 +124,7 @@ namespace OscCore
                 var info = m_Properties[m_PropertyIndex];
                 var type = info.PropertyType;
                 m_PropertyTypeNameProp.stringValue = type.Name;
-                m_Target.PropertyInfo = info;
+                m_Target.Property = info;
             }
         }
 
