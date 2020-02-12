@@ -179,7 +179,7 @@ namespace OscCore
         public void Write(MidiMessage data)
         {
             var midiWritePtr = (MidiMessage*) (m_BufferPtr + m_Length);
-            midiWritePtr[0] = data;
+            *midiWritePtr = data;
             m_Length += 4;
         }
 
