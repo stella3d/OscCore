@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace OscCore
 {
@@ -8,10 +7,19 @@ namespace OscCore
     {
         [Tooltip("The IP address to send to")]
         [SerializeField] string m_IpAddress = "127.0.0.1";
-
-        [Tooltip("The port to send to")]
-        [SerializeField] int m_Port = 7000;
         
+        [Tooltip("The port on the remote IP to send to")]
+        [SerializeField] int m_Port = 7000;
+
+        /// <summary>The IP address to send to</summary>
+        public string IpAddress => m_IpAddress;
+        
+        /// <summary>The port on the remote IP to send to</summary>
+        public int Port => m_Port;
+        
+        /// <summary>
+        /// Handles serializing and sending messages - OscSender is mostly a wrapper around this
+        /// </summary>
         public OscClient Client { get; protected set; }
         
         void OnEnable()
