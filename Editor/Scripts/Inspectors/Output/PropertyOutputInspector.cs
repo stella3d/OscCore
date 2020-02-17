@@ -11,6 +11,7 @@ namespace OscCore
     class PropertyOutputInspector : Editor
     {
         static readonly GUIContent k_EmptyContent = new GUIContent();
+        static readonly GUIContent k_PropTypeContent = new GUIContent("Type", "The type of the selected property");
         static readonly GUIContent k_ComponentContent = new GUIContent("Component", 
             "The component on the game object that has the property you want");
         static readonly GUIContent k_PropertyContent = new GUIContent("Property", 
@@ -65,8 +66,9 @@ namespace OscCore
             m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
             m_SendVector3ElementsProp = serializedObject.FindProperty("m_SendVector3Elements");
 
-            s_SendVec2ElementsContent = new GUIContent("Send Elements", m_SendVector2ElementsProp.tooltip);
-            s_SendVec3ElementsContent = new GUIContent("Send Elements", m_SendVector3ElementsProp.tooltip);
+            const string sendElements = "Send Elements";
+            s_SendVec2ElementsContent = new GUIContent(sendElements, "Which elements of this Vector2 to send");
+            s_SendVec3ElementsContent = new GUIContent(sendElements, "Which elements of this Vector3 to send");
             
             var propTypeName = m_PropertyTypeNameProp.stringValue;
             if (propTypeName != null)
@@ -104,7 +106,6 @@ namespace OscCore
                 var serializedPropName = m_PropertyNameProp.stringValue;
                 if(m_PropertyNames != null)
                     m_PropertyIndex = Array.IndexOf(m_PropertyNames, serializedPropName);
-                //Debug.Log($"serialized prop name : {serializedPropName} @ index {m_PropertyIndex}");
             }
         }
 
@@ -196,7 +197,7 @@ namespace OscCore
                 {
                     using (new EditorGUILayout.HorizontalScope())
                     {
-                        EditorGUILayout.LabelField("Type");
+                        EditorGUILayout.LabelField(k_PropTypeContent);
                         EditorGUILayout.LabelField(m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
                     }
                     
@@ -207,6 +208,7 @@ namespace OscCore
                 }
             }
         }
+
 
         void DrawVector3ElementFilter()
         {
