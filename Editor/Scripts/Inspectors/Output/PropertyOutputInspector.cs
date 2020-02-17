@@ -127,14 +127,6 @@ namespace OscCore
             ComponentDropdown();
             PropertyDropdown();
 
-            if (m_PropertyIndex >= 0)
-            {
-                using (new EditorGUI.IndentLevelScope())
-                {
-                    EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
-                }
-            }
-
             if (m_DrawVector3Filter)
                 DrawVector3ElementFilter();
             else if (m_DrawVector2Filter)
@@ -188,6 +180,14 @@ namespace OscCore
                 m_DrawVector3Filter = type == typeof(Vector3);
                 m_DrawVector2Filter = type == typeof(Vector2);
             }
+            
+            if (newIndex >= 0)
+            {
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+                }
+            }
         }
 
         Vector3ElementFilter m_PreviousVec3FilterEnumValue;
@@ -203,18 +203,19 @@ namespace OscCore
             {
                 if (enumValueIndex != m_PreviousVec3FilterEnumValue)
                 {
-                    var filterStr = enumValueIndex.ToString().ToLower();
+                    var propName = m_PropertyNames[m_PropertyIndex];
+                    var filterStr = $"{propName}.{enumValueIndex.ToString().ToLower()}";
                     switch (enumValueIndex)
                     {
                         case Vector3ElementFilter.XY:
                         case Vector3ElementFilter.XZ:
                         case Vector3ElementFilter.YZ:
-                            m_FilterHelpLabel = $"sending a Vector2 composed of vector.{filterStr}";
+                            m_FilterHelpLabel = $"sending a Vector2 composed of {filterStr}";
                             break;
                         case Vector3ElementFilter.X:
                         case Vector3ElementFilter.Y:
                         case Vector3ElementFilter.Z:
-                            m_FilterHelpLabel = $"sending a float composed of vector.{filterStr}";
+                            m_FilterHelpLabel = $"sending a float composed of {filterStr}";
                             break;
                     }
                 }
@@ -234,12 +235,13 @@ namespace OscCore
             {
                 if (enumValueIndex != m_PreviousVec2FilterEnumValue)
                 {
-                    var filterStr = enumValueIndex.ToString().ToLower();
+                    var propName = m_PropertyNames[m_PropertyIndex];
+                    var filterStr = $"{propName}.{enumValueIndex.ToString().ToLower()}";
                     switch (enumValueIndex)
                     {
                         case Vector2ElementFilter.X:
                         case Vector2ElementFilter.Y:
-                            m_FilterHelpLabel = $"sending a float composed of vector.{filterStr}";
+                            m_FilterHelpLabel = $"sending a float composed of {filterStr}";
                             break;
                     }
                 }

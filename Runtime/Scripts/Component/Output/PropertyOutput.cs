@@ -126,8 +126,8 @@ namespace OscCore
                         SendVector2(vec2Val);
                     break;
                 case "Vector3":
-                    if (!ValueChanged(ref m_PreviousVec3Value, value, out var vec))
-                        SendVector3(vec);
+                    if (ValueChanged(ref m_PreviousVec3Value, value, out var vec3Val))
+                        SendVector3(vec3Val);
                     break;
                 case "Boolean":
                     if(ValueChanged(ref m_PreviousBooleanValue, value, out var boolVal))
