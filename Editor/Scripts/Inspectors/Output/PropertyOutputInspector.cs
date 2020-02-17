@@ -34,6 +34,7 @@ namespace OscCore
         };
         
         PropertyOutput m_Target;
+        bool m_ObjectPreviouslyNotNull;
         
         void OnEnable()
         {
@@ -46,7 +47,10 @@ namespace OscCore
             m_PropertyTypeNameProp = serializedObject.FindProperty("m_PropertyTypeName");
 
             if (m_Target == null) return;
+
             m_CachedComponents = m_Target.GetObjectComponents();
+            if (m_CachedComponents == null) return;
+            
             m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
             
             var sourceCompRef = m_SourceComponentProp.objectReferenceValue;
@@ -54,14 +58,16 @@ namespace OscCore
                 sourceCompRef = m_SourceComponentProp.objectReferenceValue = m_Target.gameObject;
             
             m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
-            GetComponentProperties();
+            if(m_ComponentIndex >= 0)
+                GetComponentProperties();
 
             if (sourceCompRef != null)
             {
                 m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
 
                 var serializedPropName = m_PropertyNameProp.stringValue;
-                m_PropertyIndex = Array.IndexOf(m_PropertyNames, serializedPropName);
+                if(m_PropertyNames != null)
+                    m_PropertyIndex = Array.IndexOf(m_PropertyNames, serializedPropName);
                 //Debug.Log($"serialized prop name : {serializedPropName} @ index {m_PropertyIndex}");
             }
         }
@@ -82,16 +88,30 @@ namespace OscCore
             if (EditorGUI.EndChangeCheck())
             {
                 serializedObject.ApplyModifiedProperties();
+
+                var objValue = m_ObjectProp.objectReferenceValue;
+                if (objValue == null)
+                {
+                    CleanComponents();
+                    return;
+                }
+
+                m_PropertyIndex = -1;
+                m_ComponentIndex = -1;
                 m_CachedComponents = m_Target.GetObjectComponents();
-                m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
+                if (m_CachedComponents != null)
+                    m_CachedComponentNames = m_CachedComponents.Select(c => c.GetType().Name).ToArray();
             }
 
             ComponentDropdown();
             PropertyDropdown();
 
-            using (new EditorGUI.IndentLevelScope())
+            if (m_PropertyIndex >= 0)
             {
-                EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+                using (new EditorGUI.IndentLevelScope())
+                {
+                    EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+                }
             }
 
             serializedObject.ApplyModifiedProperties();
@@ -99,6 +119,7 @@ namespace OscCore
 
         void ComponentDropdown()
         {
+            if (m_CachedComponentNames == null) return;
             // TODO - tooltips here
             var newIndex = EditorGUILayout.Popup("Component", m_ComponentIndex, m_CachedComponentNames);
             if (newIndex != m_ComponentIndex)
@@ -108,7 +129,9 @@ namespace OscCore
                 if (compName != m_PreviousComponentName)
                     GetComponentProperties();
 
+                m_PropertyIndex = -1;
                 m_PreviousComponentName = compName;
+                m_PropertyTypeNameProp.stringValue = null;
                 m_SourceComponentProp.objectReferenceValue = m_CachedComponents[newIndex];
             }
         }
@@ -116,6 +139,8 @@ namespace OscCore
         void PropertyDropdown()
         {
             // TODO - tooltips here
+            if (m_PropertyNames == null) return;
+            
             var newIndex = EditorGUILayout.Popup("Property", m_PropertyIndex, m_PropertyNames);
             if (newIndex != m_PropertyIndex)
             {
@@ -135,6 +160,19 @@ namespace OscCore
             var properties = comp.GetType().GetProperties();
             m_Properties = properties.Where(p => k_SupportedTypes.Contains(p.PropertyType.FullName)).ToArray();
             m_PropertyNames = m_Properties.Select(m => m.Name).ToArray();
+        }
+
+        void CleanComponents()
+        {
+            m_CachedComponents = null;
+            m_CachedComponentNames = null;
+            m_Properties = null;
+            m_PropertyNames = null;
+            m_ComponentIndex = -1;
+            m_PropertyIndex = -1;
+            m_PreviousComponentName = null;
+            m_PropertyTypeNameProp.stringValue = null;
+            serializedObject.ApplyModifiedProperties();
         }
     }
 }
