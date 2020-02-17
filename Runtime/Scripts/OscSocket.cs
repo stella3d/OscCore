@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Unity.Profiling;
 using UnityEngine;
 using UnityEngine.Profiling;
 
@@ -9,6 +10,9 @@ namespace OscCore
 {
     sealed class OscSocket : IDisposable
     {
+#if UNITY_EDITOR
+        static readonly ProfilerMarker k_ProfilerMarker = new ProfilerMarker("Receive OSC");
+#endif
         readonly Socket m_Socket;
         readonly Thread m_Thread;
         bool m_Disposed;
@@ -49,7 +53,7 @@ namespace OscCore
         
         void Serve()
         {
-#if OSCCORE_PROFILING && UNITY_EDITOR
+#if UNITY_EDITOR
             Profiler.BeginThreadProfiling("OscCore", "Server");
 #endif
             var buffer = Server.Parser.Buffer;
@@ -62,11 +66,13 @@ namespace OscCore
                     // it's probably better to let Receive() block the thread than test socket.Available > 0 constantly
                     int receivedByteCount = socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
                     if (receivedByteCount == 0) continue;
-
-                    Profiler.BeginSample("Receive OSC");
-                    
+#if UNITY_EDITOR
+                    k_ProfilerMarker.Begin();
                     Server.ParseBuffer(receivedByteCount);
-                    
+                    k_ProfilerMarker.End();
+#else
+                    Server.ParseBuffer(receivedByteCount);
+#endif
                     Profiler.EndSample();
                 }
                 // a read timeout can result in a socket exception, should just be ok to ignore
