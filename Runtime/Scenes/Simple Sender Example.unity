@@ -333,8 +333,8 @@ MonoBehaviour:
   m_SourceComponent: {fileID: 170076734}
   m_PropertyName: intensity
   m_PropertyTypeName: Single
-  m_SendVector3Elements: 0
   m_SendVector2Elements: 0
+  m_SendVector3Elements: 0
 --- !u!4 &1670121832
 Transform:
   m_ObjectHideFlags: 0
@@ -381,5 +381,5 @@ MonoBehaviour:
   m_SourceComponent: {fileID: 170076734}
   m_PropertyName: areaSize
   m_PropertyTypeName: Vector2
+  m_SendVector2Elements: 2
   m_SendVector3Elements: 0
-  m_SendVector2Elements: 0
