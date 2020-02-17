@@ -117,12 +117,10 @@ namespace OscCore
                         m_Sender.Client.Send(m_Address, colorVal);
                     break;
                 case "Vector2":
-                    if(ValueChanged(ref m_PreviousVec2Value, value, out var vec2Val))
-                        SendVector2(vec2Val);
+                    SendVector2(value);
                     break;
                 case "Vector3":
-                    if (ValueChanged(ref m_PreviousVec3Value, value, out var vec3Val))
-                        SendVector3(vec3Val);
+                    SendVector3(value);
                     break;
                 case "Boolean":
                     if(ValueChanged(ref m_PreviousBooleanValue, value, out var boolVal))
@@ -131,46 +129,86 @@ namespace OscCore
             }
         }
         
-        void SendVector2(Vector2 vec)
+        void SendVector2(object obj)
         {
+            var vec = (Vector2) obj;
             switch (m_SendVector2Elements)
             {
                 case Vector2ElementFilter.XY:
-                    m_Sender.Client.Send(m_Address, vec);
+                    if (!m_PreviousVec2Value.Equals(vec))
+                    {
+                        m_PreviousVec2Value = vec;
+                        m_Sender.Client.Send(m_Address, vec);
+                    }
                     break;
                 case Vector2ElementFilter.X:
-                    m_Sender.Client.Send(m_Address, vec.x);
+                    if (!m_PreviousSingleValue.Equals(vec.x))
+                    {
+                        m_PreviousSingleValue = vec.x;
+                        m_Sender.Client.Send(m_Address, vec.x);
+                    }
                     break;
                 case Vector2ElementFilter.Y:
-                    m_Sender.Client.Send(m_Address, vec.y);
+                    if (!m_PreviousSingleValue.Equals(vec.y))
+                    {
+                        m_PreviousSingleValue = vec.y;
+                        m_Sender.Client.Send(m_Address, vec.y);
+                    }
                     break;
             }
         }
 
-        void SendVector3(Vector3 vec)
+        void SendVector3(object value)
         {
+            var vec = (Vector3) value;
+
             switch (m_SendVector3Elements)
             {
                 case Vector3ElementFilter.XYZ:
-                    m_Sender.Client.Send(m_Address, vec);
+                    if(!m_PreviousVec3Value.Equals(vec))
+                        m_Sender.Client.Send(m_Address, vec);
                     break;
                 case Vector3ElementFilter.X:
-                    m_Sender.Client.Send(m_Address, vec.x);
+                    if (!m_PreviousSingleValue.Equals(vec.x))
+                    {
+                        m_PreviousSingleValue = vec.x;
+                        m_Sender.Client.Send(m_Address, vec.x);
+                    }
                     break;
                 case Vector3ElementFilter.Y:
-                    m_Sender.Client.Send(m_Address, vec.y);
+                    if (!m_PreviousSingleValue.Equals(vec.y))
+                    {
+                        m_PreviousSingleValue = vec.y;
+                        m_Sender.Client.Send(m_Address, vec.y);
+                    }
                     break;
                 case Vector3ElementFilter.Z:
-                    m_Sender.Client.Send(m_Address, vec.z);
+                    if (!m_PreviousSingleValue.Equals(vec.z))
+                    {
+                        m_PreviousSingleValue = vec.z;
+                        m_Sender.Client.Send(m_Address, vec.z);
+                    }
                     break;
                 case Vector3ElementFilter.XY:
-                    m_Sender.Client.Send(m_Address, new Vector2(vec.x, vec.y));
+                    var xy = new Vector2(vec.x, vec.y);
+                    if (!m_PreviousVec2Value.Equals(xy))
+                    {
+                        m_PreviousVec2Value = xy;
+                        m_Sender.Client.Send(m_Address, xy);
+                    }
                     break;
                 case Vector3ElementFilter.XZ:
-                    m_Sender.Client.Send(m_Address, new Vector2(vec.x, vec.z));
+                    var xz = new Vector2(vec.x, vec.y);
+                    if (!m_PreviousVec2Value.Equals(xz))
+                    {
+                        m_PreviousVec2Value = xz;
+                        m_Sender.Client.Send(m_Address, xz);
+                    }
                     break;
                 case Vector3ElementFilter.YZ:
-                    m_Sender.Client.Send(m_Address, new Vector2(vec.y, vec.z));
+                    var yz = new Vector2(vec.y, vec.z);
+                    if(!m_PreviousVec2Value.Equals(yz))
+                        m_Sender.Client.Send(m_Address, yz);
                     break;
             }
         }
