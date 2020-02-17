@@ -10,12 +10,19 @@ namespace OscCore
     [CustomEditor(typeof(PropertyOutput), true)]
     class PropertyOutputInspector : Editor
     {
+        static readonly GUIContent k_EmptyContent = new GUIContent();
         static readonly GUIContent k_ComponentContent = new GUIContent("Component", 
             "The component on the game object that has the property you want");
-
         static readonly GUIContent k_PropertyContent = new GUIContent("Property", 
             "The component property to get the value of");
 
+        static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
+        {
+            "System.SByte", "System.Byte", "System.Int16", "System.UInt16", "System.Int32", "System.Int64",
+            "System.Single", "System.Double", "System.String", "System.Boolean",
+            "UnityEngine.Vector2", "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
+        };
+        
         static GUIContent s_SendVec2ElementsContent;
         static GUIContent s_SendVec3ElementsContent;
         
@@ -42,13 +49,6 @@ namespace OscCore
         Vector3ElementFilter m_PreviousVec3FilterEnumValue;
         Vector2ElementFilter m_PreviousVec2FilterEnumValue;
         string m_FilterHelpLabel;
-
-        static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
-        {
-            "System.SByte", "System.Byte", "System.Int16", "System.UInt16", "System.Int32", "System.Int64",
-            "System.Single", "System.Double", "System.String", "System.Boolean",
-            "UnityEngine.Vector2", "UnityEngine.Vector3", "UnityEngine.Color", "UnityEngine.Color32"
-        };
         
         PropertyOutput m_Target;
         bool m_ObjectPreviouslyNotNull;
@@ -149,8 +149,9 @@ namespace OscCore
 
         void ComponentDropdown()
         {
-            if (m_CachedComponentNames == null) return;
-            // TODO - tooltips here
+            if (m_CachedComponentNames == null) 
+                return;
+            
             var newIndex = EditorGUILayout.Popup(k_ComponentContent, m_ComponentIndex, m_CachedComponentNames);
             if (newIndex != m_ComponentIndex)
             {
@@ -171,8 +172,8 @@ namespace OscCore
 
         void PropertyDropdown()
         {
-            // TODO - tooltips here
-            if (m_PropertyNames == null) return;
+            if (m_PropertyNames == null) 
+                return;
             
             var newIndex = EditorGUILayout.Popup(k_PropertyContent, m_PropertyIndex, m_PropertyNames);
             if (newIndex != m_PropertyIndex)
@@ -242,8 +243,6 @@ namespace OscCore
             
             m_PreviousVec3FilterEnumValue = enumValueIndex;
         }
-
-        GUIContent k_EmptyContent = new GUIContent();
         
         void DrawVector2ElementFilter()
         {
