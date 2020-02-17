@@ -191,7 +191,7 @@ Light:
   m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
-  m_AreaSize: {x: 0.67, y: 0.72}
+  m_AreaSize: {x: 0.52, y: 0.22}
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
@@ -382,4 +382,4 @@ MonoBehaviour:
   m_PropertyName: areaSize
   m_PropertyTypeName: Vector2
   m_SendVector3Elements: 0
-  m_SendVector2Elements: 2
+  m_SendVector2Elements: 0

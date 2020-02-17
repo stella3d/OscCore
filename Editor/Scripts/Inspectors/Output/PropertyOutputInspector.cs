@@ -53,9 +53,20 @@ namespace OscCore
             m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
             m_SendVector3ElementsProp = serializedObject.FindProperty("m_SendVector3Elements");
 
-            m_DrawVector3Filter = m_SendVector3ElementsProp.enumValueIndex != 0;
-            m_DrawVector2Filter = m_SendVector2ElementsProp.enumValueIndex != 0;
-            
+            var propTypeName = m_PropertyTypeNameProp.stringValue;
+            if (propTypeName != null)
+            {
+                switch (propTypeName)
+                {
+                    case "Vector2":
+                        m_DrawVector2Filter = true;
+                        break;
+                    case "Vector3":
+                        m_DrawVector3Filter = true;
+                        break;
+                }
+            }
+
             if (m_Target == null) return;
 
             m_CachedComponents = m_Target.GetObjectComponents();
