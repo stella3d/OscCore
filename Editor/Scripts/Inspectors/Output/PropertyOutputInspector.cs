@@ -238,7 +238,7 @@ namespace OscCore
                     }
                 }
 
-                EditorGUILayout.HelpBox(m_FilterHelpLabel, MessageType.Info);
+                EditorHelp.DrawBox(m_FilterHelpLabel);
             }
             
             m_PreviousVec3FilterEnumValue = enumValueIndex;
@@ -268,7 +268,7 @@ namespace OscCore
                     }
                 }
 
-                EditorGUILayout.HelpBox(m_FilterHelpLabel, MessageType.Info);
+                EditorHelp.DrawBox(m_FilterHelpLabel);
             }
             
             m_PreviousVec2FilterEnumValue = enumValueIndex;
