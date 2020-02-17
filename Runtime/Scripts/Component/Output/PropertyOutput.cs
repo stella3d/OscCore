@@ -44,20 +44,17 @@ namespace OscCore
         public OscSender Sender
         {
             get => m_Sender;
-            set
-            {
-                if(value != null) 
-                    m_Sender = value;
-            }
+            set => m_Sender = value == null ? m_Sender : value;
         }
 
         /// <summary>
-        /// The Unity component that has the property to send.  Must be a type that has the current Property
+        /// The Unity component that has the property to send.
+        /// Must be a non-null type that has the current property
         /// </summary>
         public Component SourceComponent
         {
             get => m_SourceComponent;
-            set => m_SourceComponent = value;
+            set => m_SourceComponent = value == null ? m_SourceComponent : value;
         }
 
         /// <summary>
