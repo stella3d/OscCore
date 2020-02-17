@@ -1,28 +1,9 @@
 ﻿using System;
 using System.Reflection;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace OscCore
 {
-    enum Vector3ElementFilter : byte
-    {
-        XYZ = 0,        // 0 instead of 7 (the combo of flags) so it defaults to this
-        X = 1,
-        Y = 2,
-        Z = 3,
-        XY = 4,
-        XZ = 5,
-        YZ = 6
-    }
-    
-    enum Vector2ElementFilter : byte
-    {
-        XY = 0,        
-        X = 1,
-        Y = 2,
-    }
-
     [ExecuteInEditMode]
     [AddComponentMenu("OSC/Property Output", int.MaxValue)]
     public class PropertyOutput : MonoBehaviour
@@ -42,10 +23,8 @@ namespace OscCore
         [SerializeField] string m_PropertyTypeName;
         
         // controls which elements of a Vector3 are sent
-        [SerializeField] 
-        Vector3ElementFilter m_SendVector3Elements = Vector3ElementFilter.XYZ;
-        [SerializeField] 
-        Vector2ElementFilter m_SendVector2Elements = Vector2ElementFilter.XY;
+        [SerializeField] Vector3ElementFilter m_SendVector3Elements;
+        [SerializeField] Vector2ElementFilter m_SendVector2Elements;
 #pragma warning restore 649
 
         bool m_PreviousBooleanValue;

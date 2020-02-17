@@ -52,7 +52,7 @@ namespace OscCore
         }
         
         /// <summary>
-        /// Parse a single non-bundle message
+        /// Parse a single non-bundle message that starts at the given byte offset from the start of the buffer
         /// </summary>
         /// <returns>The unaligned length of the message address</returns>
         public int Parse(int startingByteOffset)
@@ -76,6 +76,9 @@ namespace OscCore
             return addressLength;
         }
 
+        /// <summary>Test if a given ASCII string is a valid OSC Address</summary>
+        /// <param name="address">The string to test</param>
+        /// <returns>True if valid, false otherwise</returns>
         internal static bool AddressIsValid(string address)
         {
             if (address[0] != '/') return false;
@@ -100,6 +103,12 @@ namespace OscCore
             return true;
         }
         
+        /// <summary>
+        /// Test if a given ASCII character is valid in an OSC address.
+        /// Non-ASCII characters are not tested for, as addresses must be ASCII.
+        /// </summary>
+        /// <param name="c">The character to test</param>
+        /// <returns>True if valid, false otherwise</returns>
         public static bool CharacterIsValidInAddress(char c)
         {
             switch (c)
@@ -179,18 +188,6 @@ namespace OscCore
             return outIndex;
         }
 
-        public static int FindArrayLength(byte[] bytes, int offset = 0)
-        {
-            if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
-                return -1;
-            
-            var index = offset + 1;
-            while (bytes[index] != (byte) TypeTag.ArrayEnd)
-                index++;
-
-            return index - offset;
-        }
-
         public int FindUnalignedAddressLength()
         {
             if (BufferPtr[0] != Constant.ForwardSlash)
@@ -234,6 +231,8 @@ namespace OscCore
             return (length + 3) & ~3;            // align to 4 bytes
         }
 
+        /// <summary>Find the byte offsets for each element of the message</summary>
+        /// <param name="offset">The byte index of the first value</param>
         public void FindOffsets(int offset)
         {
             var tags = MessageValues.Tags;
@@ -268,10 +267,27 @@ namespace OscCore
             }
         }
 
+        /// <summary>
+        /// Test if '#bundle ' is present at a given index in the buffer 
+        /// </summary>
+        /// <param name="index">The index in the buffer to test</param>
+        /// <returns>True if present, false otherwise</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsBundleTagAtIndex(int index)
         {
             return *((long*) BufferPtr + index) == Constant.BundlePrefixLong;
+        }
+        
+        public static int FindArrayLength(byte[] bytes, int offset = 0)
+        {
+            if ((TypeTag) bytes[offset] != TypeTag.ArrayStart)
+                return -1;
+            
+            var index = offset + 1;
+            while (bytes[index] != (byte) TypeTag.ArrayEnd)
+                index++;
+
+            return index - offset;
         }
     }
 }
