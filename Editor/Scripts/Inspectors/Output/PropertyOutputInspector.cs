@@ -10,6 +10,15 @@ namespace OscCore
     [CustomEditor(typeof(PropertyOutput), true)]
     class PropertyOutputInspector : Editor
     {
+        static readonly GUIContent k_ComponentContent = new GUIContent("Component", 
+            "The component on the game object that has the property you want");
+
+        static readonly GUIContent k_PropertyContent = new GUIContent("Property", 
+            "The component property to get the value of");
+
+        static GUIContent s_SendVec2ElementsContent;
+        static GUIContent s_SendVec3ElementsContent;
+        
         SerializedProperty m_AddressProp;
         SerializedProperty m_SenderProp;
         SerializedProperty m_ObjectProp;
@@ -30,6 +39,9 @@ namespace OscCore
         
         bool m_DrawVector2Filter;
         bool m_DrawVector3Filter;
+        Vector3ElementFilter m_PreviousVec3FilterEnumValue;
+        Vector2ElementFilter m_PreviousVec2FilterEnumValue;
+        string m_FilterHelpLabel;
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
@@ -53,6 +65,9 @@ namespace OscCore
             m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
             m_SendVector3ElementsProp = serializedObject.FindProperty("m_SendVector3Elements");
 
+            s_SendVec2ElementsContent = new GUIContent("Send Elements", m_SendVector2ElementsProp.tooltip);
+            s_SendVec3ElementsContent = new GUIContent("Send Elements", m_SendVector3ElementsProp.tooltip);
+            
             var propTypeName = m_PropertyTypeNameProp.stringValue;
             if (propTypeName != null)
             {
@@ -127,16 +142,10 @@ namespace OscCore
             ComponentDropdown();
             PropertyDropdown();
 
-            if (m_DrawVector3Filter)
-                DrawVector3ElementFilter();
-            else if (m_DrawVector2Filter)
-                DrawVector2ElementFilter();
 
             serializedObject.ApplyModifiedProperties();
         }
-        
-        static readonly GUIContent k_ComponentContent = new GUIContent("Component", 
-            "The component on the game object that has the property you want");
+
 
         void ComponentDropdown()
         {
@@ -145,7 +154,6 @@ namespace OscCore
             var newIndex = EditorGUILayout.Popup(k_ComponentContent, m_ComponentIndex, m_CachedComponentNames);
             if (newIndex != m_ComponentIndex)
             {
-                Debug.Log("component change");
                 m_ComponentIndex = newIndex;
                 var compName = m_CachedComponentNames[newIndex];
                 if (compName != m_PreviousComponentName)
@@ -166,7 +174,7 @@ namespace OscCore
             // TODO - tooltips here
             if (m_PropertyNames == null) return;
             
-            var newIndex = EditorGUILayout.Popup("Property", m_PropertyIndex, m_PropertyNames);
+            var newIndex = EditorGUILayout.Popup(k_PropertyContent, m_PropertyIndex, m_PropertyNames);
             if (newIndex != m_PropertyIndex)
             {
                 m_PropertyIndex = newIndex;
@@ -185,18 +193,27 @@ namespace OscCore
             {
                 using (new EditorGUI.IndentLevelScope())
                 {
-                    EditorGUILayout.LabelField("Type", m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+                    using (new EditorGUILayout.HorizontalScope())
+                    {
+                        EditorGUILayout.LabelField("Type");
+                        EditorGUILayout.LabelField(m_PropertyTypeNameProp.stringValue, EditorStyles.whiteLabel);
+                    }
+                    
+                    if (m_DrawVector3Filter)
+                        DrawVector3ElementFilter();
+                    else if (m_DrawVector2Filter)
+                        DrawVector2ElementFilter();
                 }
             }
         }
 
-        Vector3ElementFilter m_PreviousVec3FilterEnumValue;
-        Vector2ElementFilter m_PreviousVec2FilterEnumValue;
-        string m_FilterHelpLabel;
-
         void DrawVector3ElementFilter()
         {
-            EditorGUILayout.PropertyField(m_SendVector3ElementsProp);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(s_SendVec3ElementsContent);
+                EditorGUILayout.PropertyField(m_SendVector3ElementsProp, k_EmptyContent);
+            }
 
             var enumValueIndex = (Vector3ElementFilter) m_SendVector3ElementsProp.enumValueIndex;
             if (enumValueIndex != Vector3ElementFilter.XYZ)
@@ -210,12 +227,12 @@ namespace OscCore
                         case Vector3ElementFilter.XY:
                         case Vector3ElementFilter.XZ:
                         case Vector3ElementFilter.YZ:
-                            m_FilterHelpLabel = $"sending a Vector2 composed of {filterStr}";
+                            m_FilterHelpLabel = $"sending {filterStr} as a Vector2";
                             break;
                         case Vector3ElementFilter.X:
                         case Vector3ElementFilter.Y:
                         case Vector3ElementFilter.Z:
-                            m_FilterHelpLabel = $"sending a float composed of {filterStr}";
+                            m_FilterHelpLabel = $"sending {filterStr} as a float";
                             break;
                     }
                 }
@@ -225,10 +242,16 @@ namespace OscCore
             
             m_PreviousVec3FilterEnumValue = enumValueIndex;
         }
+
+        GUIContent k_EmptyContent = new GUIContent();
         
         void DrawVector2ElementFilter()
         {
-            EditorGUILayout.PropertyField(m_SendVector2ElementsProp);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUILayout.LabelField(s_SendVec2ElementsContent);
+                EditorGUILayout.PropertyField(m_SendVector2ElementsProp, k_EmptyContent);
+            }
 
             var enumValueIndex = (Vector2ElementFilter) m_SendVector2ElementsProp.enumValueIndex;
             if (enumValueIndex != Vector2ElementFilter.XY)
@@ -241,7 +264,7 @@ namespace OscCore
                     {
                         case Vector2ElementFilter.X:
                         case Vector2ElementFilter.Y:
-                            m_FilterHelpLabel = $"sending a float composed of {filterStr}";
+                            m_FilterHelpLabel = $"sending {filterStr} as a float";
                             break;
                     }
                 }
