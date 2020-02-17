@@ -32,6 +32,8 @@ namespace OscCore
         Color m_PreviousColorValue;
         Vector2 m_PreviousVec2Value;
         Vector3 m_PreviousVec3Value;
+
+        bool m_HasSender;
         
         /// <summary>
         /// The OscCore component that handles serializing and sending messages. Cannot be null
@@ -63,6 +65,7 @@ namespace OscCore
         void OnEnable()
         {
             if (m_Object == null) m_Object = gameObject;
+            m_HasSender = m_Sender != null;
             SetPropertyFromSerialized();
         }
 
@@ -70,11 +73,12 @@ namespace OscCore
         {
             Utils.ValidateAddress(ref m_Address);
             if (m_Sender == null) m_Sender = gameObject.GetComponentInParent<OscSender>();
+            m_HasSender = m_Sender != null;
         }
 
         void Update()
         {
-            if (Property == null || m_Sender == null || m_Sender.Client == null) 
+            if (Property == null || m_HasSender || m_Sender.Client == null) 
                 return;
             
             var value = Property.GetValue(m_SourceComponent);
