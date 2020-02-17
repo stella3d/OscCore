@@ -22,9 +22,10 @@ namespace OscCore
         [SerializeField] string m_PropertyName;
         [SerializeField] string m_PropertyTypeName;
         
-        // controls which elements of a Vector3 are sent
-        [SerializeField] Vector3ElementFilter m_SendVector3Elements;
+        [Tooltip("Which elements of this Vector2 to send")]
         [SerializeField] Vector2ElementFilter m_SendVector2Elements;
+        [Tooltip("Which elements of this Vector3 to send")]
+        [SerializeField] Vector3ElementFilter m_SendVector3Elements;
 #pragma warning restore 649
 
         bool m_PreviousBooleanValue;
