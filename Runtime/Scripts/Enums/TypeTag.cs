@@ -2,7 +2,9 @@
 
 namespace OscCore
 {
-    // type tags from http://opensoundcontrol.org/spec-1_0 
+    /// <summary>
+    /// type tags from http://opensoundcontrol.org/spec-1_0 
+    /// </summary>
     public enum TypeTag : byte
     {
         False = 70,                     // F, non-standard
