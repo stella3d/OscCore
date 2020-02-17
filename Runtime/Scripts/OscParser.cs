@@ -1,5 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 
+[assembly:InternalsVisibleTo("OscCore.Tests.Editor")]
+[assembly:InternalsVisibleTo("OscCore.Tests.Runtime")]
+
 namespace OscCore
 {
     public unsafe class OscParser
@@ -76,9 +79,6 @@ namespace OscCore
             return addressLength;
         }
 
-        /// <summary>Test if a given ASCII string is a valid OSC Address</summary>
-        /// <param name="address">The string to test</param>
-        /// <returns>True if valid, false otherwise</returns>
         internal static bool AddressIsValid(string address)
         {
             if (address[0] != '/') return false;
@@ -103,13 +103,7 @@ namespace OscCore
             return true;
         }
         
-        /// <summary>
-        /// Test if a given ASCII character is valid in an OSC address.
-        /// Non-ASCII characters are not tested for, as addresses must be ASCII.
-        /// </summary>
-        /// <param name="c">The character to test</param>
-        /// <returns>True if valid, false otherwise</returns>
-        public static bool CharacterIsValidInAddress(char c)
+        internal static bool CharacterIsValidInAddress(char c)
         {
             switch (c)
             {
@@ -167,8 +161,8 @@ namespace OscCore
 
             return AddressType.Pattern;
         }
-        
-        public int ParseTags(byte[] bytes, int start = 0)
+
+        internal int ParseTags(byte[] bytes, int start = 0)
         {
             if (bytes[start] != Constant.Comma) return 0;
             
