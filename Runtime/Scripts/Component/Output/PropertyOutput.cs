@@ -1,9 +1,28 @@
 ﻿using System;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace OscCore
 {
+    enum Vector3ElementFilter : byte
+    {
+        XYZ = 0,        // 0 instead of 7 (the combo of flags) so it defaults to this
+        X = 1,
+        Y = 2,
+        Z = 3,
+        XY = 4,
+        XZ = 5,
+        YZ = 6
+    }
+    
+    enum Vector2ElementFilter : byte
+    {
+        XY = 0,        
+        X = 1,
+        Y = 2,
+    }
+
     [ExecuteInEditMode]
     [AddComponentMenu("OSC/Property Output", int.MaxValue)]
     public class PropertyOutput : MonoBehaviour
@@ -21,6 +40,12 @@ namespace OscCore
         
         [SerializeField] string m_PropertyName;
         [SerializeField] string m_PropertyTypeName;
+        
+        // controls which elements of a Vector3 are sent
+        [SerializeField] 
+        Vector3ElementFilter m_SendVector3Elements = Vector3ElementFilter.XYZ;
+        [SerializeField] 
+        Vector2ElementFilter m_SendVector2Elements = Vector2ElementFilter.XY;
 #pragma warning restore 649
 
         bool m_PreviousBooleanValue;
@@ -78,7 +103,7 @@ namespace OscCore
 
         void Update()
         {
-            if (Property == null || m_HasSender || m_Sender.Client == null) 
+            if (Property == null || !m_HasSender || m_Sender.Client == null) 
                 return;
             
             var value = Property.GetValue(m_SourceComponent);
@@ -118,11 +143,11 @@ namespace OscCore
                     break;
                 case "Vector2":
                     if(ValueChanged(ref m_PreviousVec2Value, value, out var vec2Val))
-                        m_Sender.Client.Send(m_Address, vec2Val);
+                        SendVector2(vec2Val);
                     break;
                 case "Vector3":
-                    if(ValueChanged(ref m_PreviousVec3Value, value, out var vec3Val))
-                        m_Sender.Client.Send(m_Address, vec3Val);
+                    if (!ValueChanged(ref m_PreviousVec3Value, value, out var vec))
+                        SendVector3(vec);
                     break;
                 case "Boolean":
                     if(ValueChanged(ref m_PreviousBooleanValue, value, out var boolVal))
@@ -130,19 +155,54 @@ namespace OscCore
                     break;
             }
         }
+        
+        void SendVector2(Vector2 vec)
+        {
+            switch (m_SendVector2Elements)
+            {
+                case Vector2ElementFilter.XY:
+                    m_Sender.Client.Send(m_Address, vec);
+                    break;
+                case Vector2ElementFilter.X:
+                    m_Sender.Client.Send(m_Address, vec.x);
+                    break;
+                case Vector2ElementFilter.Y:
+                    m_Sender.Client.Send(m_Address, vec.y);
+                    break;
+            }
+        }
+
+        void SendVector3(Vector3 vec)
+        {
+            switch (m_SendVector3Elements)
+            {
+                case Vector3ElementFilter.XYZ:
+                    m_Sender.Client.Send(m_Address, vec);
+                    break;
+                case Vector3ElementFilter.X:
+                    m_Sender.Client.Send(m_Address, vec.x);
+                    break;
+                case Vector3ElementFilter.Y:
+                    m_Sender.Client.Send(m_Address, vec.y);
+                    break;
+                case Vector3ElementFilter.Z:
+                    m_Sender.Client.Send(m_Address, vec.z);
+                    break;
+                case Vector3ElementFilter.XY:
+                    m_Sender.Client.Send(m_Address, new Vector2(vec.x, vec.y));
+                    break;
+                case Vector3ElementFilter.XZ:
+                    m_Sender.Client.Send(m_Address, new Vector2(vec.x, vec.z));
+                    break;
+                case Vector3ElementFilter.YZ:
+                    m_Sender.Client.Send(m_Address, new Vector2(vec.y, vec.z));
+                    break;
+            }
+        }
 
         static bool ValueChanged<T>(ref T previousValue, object value, out T castValue) where T: IEquatable<T>
         {
-            //try
-            //{
-                castValue = (T) value;
-            //}
-            //catch (InvalidCastException)
-            //{
-            //    castValue = default;
-            //    return false;
-            //}
-            
+            castValue = (T) value;
             if (!castValue.Equals(previousValue))
             {
                 previousValue = castValue;

@@ -150,7 +150,7 @@ Light:
   m_Type: 1
   m_Shape: 0
   m_Color: {r: 1, g: 0.95686275, b: 0.8392157, a: 1}
-  m_Intensity: 4.03
+  m_Intensity: 0.03
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -189,7 +189,7 @@ Light:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingLayerMask: 1
-  m_Lightmapping: 1
+  m_Lightmapping: 4
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
@@ -337,6 +337,7 @@ GameObject:
   - component: {fileID: 1670121832}
   - component: {fileID: 1670121833}
   - component: {fileID: 1670121831}
+  - component: {fileID: 1670121834}
   m_Layer: 0
   m_Name: OSC Sender
   m_TagString: Untagged
@@ -357,7 +358,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Sender: {fileID: 1670121833}
-  m_Address: /layer/1/opacity
+  m_Address: /composition/layers/1/video/opacity
   m_Object: {fileID: 170076733}
   m_SourceComponent: {fileID: 170076734}
   m_PropertyName: intensity
@@ -391,3 +392,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_IpAddress: 127.0.0.1
   m_Port: 7000
+--- !u!114 &1670121834
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1670121830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31b433bc4acd2c848a34f71ebc0f3e17, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Sender: {fileID: 1670121833}
+  m_Address: /composition/layers/2/video/opacity
+  m_Object: {fileID: 170076733}
+  m_SourceComponent: {fileID: 170076734}
+  m_PropertyName: bounceIntensity
+  m_PropertyTypeName: Single

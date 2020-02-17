@@ -16,6 +16,8 @@ namespace OscCore
         SerializedProperty m_PropertyNameProp;
         SerializedProperty m_PropertyTypeNameProp;
         SerializedProperty m_SourceComponentProp;
+        SerializedProperty m_SendVector2ElementsProp;
+        SerializedProperty m_SendVector3ElementsProp;
 
         Component[] m_CachedComponents;
         string[] m_CachedComponentNames;
@@ -25,6 +27,9 @@ namespace OscCore
         PropertyInfo[] m_Properties;
         string[] m_PropertyNames;
         int m_PropertyIndex;
+        
+        bool m_DrawVector2Filter;
+        bool m_DrawVector3Filter;
 
         static readonly HashSet<string> k_SupportedTypes = new HashSet<string>()
         {
@@ -45,6 +50,8 @@ namespace OscCore
             m_SourceComponentProp = serializedObject.FindProperty("m_SourceComponent");
             m_PropertyNameProp = serializedObject.FindProperty("m_PropertyName");
             m_PropertyTypeNameProp = serializedObject.FindProperty("m_PropertyTypeName");
+            m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
+            m_SendVector3ElementsProp = serializedObject.FindProperty("m_SendVector3Elements");
 
             if (m_Target == null) return;
 
@@ -114,6 +121,11 @@ namespace OscCore
                 }
             }
 
+            if (m_DrawVector3Filter)
+                DrawVector3ElementFilter();
+            else if (m_DrawVector2Filter)
+                DrawVector2ElementFilter();
+
             serializedObject.ApplyModifiedProperties();
         }
         
@@ -142,7 +154,7 @@ namespace OscCore
                 m_Target.SetPropertyFromSerialized();
             }
         }
-        
+
         void PropertyDropdown()
         {
             // TODO - tooltips here
@@ -158,7 +170,70 @@ namespace OscCore
                 var type = info.PropertyType;
                 m_PropertyTypeNameProp.stringValue = type.Name;
                 m_Target.Property = info;
+
+                m_DrawVector3Filter = type == typeof(Vector3);
+                m_DrawVector2Filter = type == typeof(Vector2);
             }
+        }
+
+        Vector3ElementFilter m_PreviousVec3FilterEnumValue;
+        Vector2ElementFilter m_PreviousVec2FilterEnumValue;
+        string m_FilterHelpLabel;
+
+        void DrawVector3ElementFilter()
+        {
+            EditorGUILayout.PropertyField(m_SendVector3ElementsProp);
+
+            var enumValueIndex = (Vector3ElementFilter) m_SendVector3ElementsProp.enumValueIndex;
+            if (enumValueIndex != Vector3ElementFilter.XYZ)
+            {
+                if (enumValueIndex != m_PreviousVec3FilterEnumValue)
+                {
+                    var filterStr = enumValueIndex.ToString().ToLower();
+                    switch (enumValueIndex)
+                    {
+                        case Vector3ElementFilter.XY:
+                        case Vector3ElementFilter.XZ:
+                        case Vector3ElementFilter.YZ:
+                            m_FilterHelpLabel = $"sending a Vector2 composed of vector.{filterStr}";
+                            break;
+                        case Vector3ElementFilter.X:
+                        case Vector3ElementFilter.Y:
+                        case Vector3ElementFilter.Z:
+                            m_FilterHelpLabel = $"sending a float composed of vector.{filterStr}";
+                            break;
+                    }
+                }
+
+                EditorGUILayout.HelpBox(m_FilterHelpLabel, MessageType.Info);
+            }
+            
+            m_PreviousVec3FilterEnumValue = enumValueIndex;
+        }
+        
+        void DrawVector2ElementFilter()
+        {
+            EditorGUILayout.PropertyField(m_SendVector2ElementsProp);
+
+            var enumValueIndex = (Vector2ElementFilter) m_SendVector2ElementsProp.enumValueIndex;
+            if (enumValueIndex != Vector2ElementFilter.XY)
+            {
+                if (enumValueIndex != m_PreviousVec2FilterEnumValue)
+                {
+                    var filterStr = enumValueIndex.ToString().ToLower();
+                    switch (enumValueIndex)
+                    {
+                        case Vector2ElementFilter.X:
+                        case Vector2ElementFilter.Y:
+                            m_FilterHelpLabel = $"sending a float composed of vector.{filterStr}";
+                            break;
+                    }
+                }
+
+                EditorGUILayout.HelpBox(m_FilterHelpLabel, MessageType.Info);
+            }
+            
+            m_PreviousVec2FilterEnumValue = enumValueIndex;
         }
 
         void GetComponentProperties()
