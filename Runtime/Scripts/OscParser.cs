@@ -15,6 +15,9 @@ namespace OscCore
         internal readonly byte* BufferPtr;
         internal readonly long* BufferLongPtr;
 
+        /// <summary>
+        /// Holds all parsed values.  After calling Parse(), this should have data available to read
+        /// </summary>
         public readonly OscMessageValues MessageValues;
 
         /// <summary>Create a new parser.</summary>
