@@ -1,17 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using BlobHandles;
 
 namespace OscCore
 {
-    enum AddressType
-    {
-        Invalid,
-        Pattern,
-        Address
-    }
-
     public sealed class OscAddressSpace
     {
         const int k_DefaultPatternCapacity = 8;
