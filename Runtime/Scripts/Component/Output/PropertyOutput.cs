@@ -24,12 +24,27 @@ namespace OscCore
 #pragma warning restore 649
 
         bool m_PreviousBooleanValue;
+        int m_PreviousIntValue;
         long m_PreviousLongValue;
         double m_PreviousDoubleValue;
+        float m_PreviousSingleValue;
         string m_PreviousStringValue;
         Color m_PreviousColorValue;
         Vector2 m_PreviousVec2Value;
         Vector3 m_PreviousVec3Value;
+        
+        /// <summary>
+        /// The OscCore component that handles serializing and sending messages. Cannot be null
+        /// </summary>
+        public OscSender Sender
+        {
+            get => m_Sender;
+            set
+            {
+                if(value != null) 
+                    m_Sender = value;
+            }
+        }
 
         /// <summary>
         /// The Unity component that has the property to send.  Must be a type that has the current Property
@@ -48,6 +63,7 @@ namespace OscCore
         void OnEnable()
         {
             if (m_Object == null) m_Object = gameObject;
+            SetPropertyFromSerialized();
         }
 
         void OnValidate()
@@ -62,6 +78,8 @@ namespace OscCore
                 return;
             
             var value = Property.GetValue(m_SourceComponent);
+            if (value == null)
+                return;
             
             switch (m_PropertyTypeName)
             {
@@ -70,7 +88,7 @@ namespace OscCore
                 case "Int16":
                 case "UInt16":    
                 case "Int32":
-                    if(ValueChanged(ref m_PreviousLongValue, value, out var intVal))
+                    if(ValueChanged(ref m_PreviousIntValue, value, out var intVal))
                         m_Sender.Client.Send(m_Address, intVal);
                     break;
                 case "Int64":
@@ -78,7 +96,7 @@ namespace OscCore
                         m_Sender.Client.Send(m_Address, longVal);
                     break;
                 case "Single":
-                    if(ValueChanged(ref m_PreviousDoubleValue, value, out var floatVal))
+                    if(ValueChanged(ref m_PreviousSingleValue, value, out var floatVal))
                         m_Sender.Client.Send(m_Address, floatVal);
                     break;
                 case "Double":
@@ -111,7 +129,16 @@ namespace OscCore
 
         static bool ValueChanged<T>(ref T previousValue, object value, out T castValue) where T: IEquatable<T>
         {
-            castValue = (T) value;
+            //try
+            //{
+                castValue = (T) value;
+            //}
+            //catch (InvalidCastException)
+            //{
+            //    castValue = default;
+            //    return false;
+            //}
+            
             if (!castValue.Equals(previousValue))
             {
                 previousValue = castValue;
@@ -124,6 +151,15 @@ namespace OscCore
         internal Component[] GetObjectComponents()
         {
             return m_Object == null ? null : m_Object.GetComponents<Component>();
+        }
+
+        internal void SetPropertyFromSerialized()
+        {
+            if (m_SourceComponent == null) 
+                return;
+            
+            var type = m_SourceComponent.GetType();
+            Property = type.GetProperty(m_PropertyName);
         }
     }
 }

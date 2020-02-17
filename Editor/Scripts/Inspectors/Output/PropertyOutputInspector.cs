@@ -116,14 +116,18 @@ namespace OscCore
 
             serializedObject.ApplyModifiedProperties();
         }
+        
+        static readonly GUIContent k_ComponentContent = new GUIContent("Component", 
+            "The component on the game object that has the property you want");
 
         void ComponentDropdown()
         {
             if (m_CachedComponentNames == null) return;
             // TODO - tooltips here
-            var newIndex = EditorGUILayout.Popup("Component", m_ComponentIndex, m_CachedComponentNames);
+            var newIndex = EditorGUILayout.Popup(k_ComponentContent, m_ComponentIndex, m_CachedComponentNames);
             if (newIndex != m_ComponentIndex)
             {
+                Debug.Log("component change");
                 m_ComponentIndex = newIndex;
                 var compName = m_CachedComponentNames[newIndex];
                 if (compName != m_PreviousComponentName)
@@ -131,8 +135,11 @@ namespace OscCore
 
                 m_PropertyIndex = -1;
                 m_PreviousComponentName = compName;
+                m_PropertyNameProp.stringValue = null;
                 m_PropertyTypeNameProp.stringValue = null;
                 m_SourceComponentProp.objectReferenceValue = m_CachedComponents[newIndex];
+                serializedObject.ApplyModifiedProperties();
+                m_Target.SetPropertyFromSerialized();
             }
         }
         
