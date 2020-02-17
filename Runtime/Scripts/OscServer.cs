@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading;
 using BlobHandles;
 using UnityEngine;
 using UnityEngine.Profiling;
@@ -19,9 +16,8 @@ namespace OscCore
         // used to allow easy removal of single callbacks
         static readonly Dictionary<Action<OscMessageValues>, OscActionPair> k_SingleCallbackToPair = 
             new Dictionary<Action<OscMessageValues>, OscActionPair>();
-        
-        readonly Socket m_Socket;
-        readonly Thread m_Thread;
+
+        readonly OscSocket m_Socket;
         bool m_Disposed;
         bool m_Started;
 
@@ -38,6 +34,9 @@ namespace OscCore
         
         readonly List<OscActionPair> m_PatternMatchedMethods = new List<OscActionPair>();
         
+        /// <summary>
+        /// Map from port number to the server that handles incoming messages for it
+        /// </summary>
         public static readonly Dictionary<int, OscServer> PortToServer = new Dictionary<int, OscServer>();
 
         public int Port { get; }
@@ -61,8 +60,7 @@ namespace OscCore
             Parser = new OscParser(m_ReadBuffer);
 
             Port = port;
-            m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp) { ReceiveTimeout = int.MaxValue };
-            m_Thread = new Thread(Serve);
+            m_Socket = new OscSocket(port) { Server = this };
             Start();
         }
 
@@ -71,24 +69,17 @@ namespace OscCore
             // make sure redundant calls don't do anything after the first
             if (m_Started) return;
             
+            m_Socket.Start();
+            
             m_Disposed = false;
-            if (!m_Socket.IsBound)
-                m_Socket.Bind(new IPEndPoint(IPAddress.Any, Port));
-
-            m_Thread.Start();
             m_Started = true;
         }
-        
-        public void Pause()
-        {
-            m_Disposed = true;
-        }
-        
-        public void Resume()
-        {
-            m_Disposed = false;
-        }
-        
+
+        /// <summary>
+        /// Get an existing OSC server on the given port, or create one if it doesn't exist.
+        /// </summary>
+        /// <param name="port">The port to listen for incoming message on</param>
+        /// <returns></returns>
         public static OscServer GetOrCreate(int port)
         {
             OscServer server;
@@ -206,42 +197,12 @@ namespace OscCore
             m_MainThreadCount = 0;
         }
 
-        void Serve()
-        {
-#if OSCCORE_PROFILING && UNITY_EDITOR
-            Profiler.BeginThreadProfiling("OscCore", "Server");
-#endif
-            var buffer = m_ReadBuffer;
-            var socket = m_Socket;
-            
-            while (!m_Disposed)
-            {
-                try
-                {
-                    // it's probably better to let Receive() block the thread than test socket.Available > 0 constantly
-                    int receivedByteCount = socket.Receive(buffer, 0, buffer.Length, SocketFlags.None);
-                    if (receivedByteCount == 0) continue;
-
-                    Profiler.BeginSample("Receive OSC");
-                    
-                    ParseInternal(receivedByteCount);
-                    
-                    Profiler.EndSample();
-                }
-                // a read timeout can result in a socket exception, should just be ok to ignore
-                catch (SocketException) { }
-                catch (ThreadAbortException) {}
-                catch (Exception e)
-                {
-                    if (!m_Disposed) Debug.LogException(e); 
-                    break;
-                }
-            }
-            
-            Profiler.EndThreadProfiling();
-        }
-
-        void ParseInternal(int byteLength)
+        /// <summary>
+        /// Parse a single OSC message that's been copied into the start of the buffer.
+        /// Bundled messages can contain multiple elements
+        /// </summary>
+        /// <param name="byteLength">The length of the received message</param>
+        public void ParseBuffer(int byteLength)
         {
             var bufferPtr = Parser.BufferPtr;
             var bufferLongPtr = Parser.BufferLongPtr;
@@ -410,8 +371,6 @@ namespace OscCore
             {
                 AddressSpace.AddressToMethod.Dispose();
                 AddressSpace = null;
-                
-                m_Socket.Close();
                 m_Socket.Dispose();
             }
         }

@@ -202,6 +202,7 @@ namespace OscCore
         public void WriteBundlePrefix()
         {
             const int size = 8;
+            // TODO replace with dereferencing the long  version ?
             System.Buffer.BlockCopy(Constant.BundlePrefixBytes, 0, Buffer, m_Length, size);
             m_Length += size;
         }
@@ -210,7 +211,7 @@ namespace OscCore
         /// Combines Reset(), Write(address), and Write(tags) in a single function to reduce call overhead
         /// </summary>
         /// <param name="address">The OSC address to send to</param>
-        /// <param name="tags">4 bytes that represent type tags</param>
+        /// <param name="tags">4 bytes that represent up to 3 type tags</param>
         public void WriteAddressAndTags(string address, uint tags)
         {
             m_Length = 0;
