@@ -11,8 +11,10 @@ namespace OscCore
         [Tooltip("The local port to listen for incoming messages on")]
         [SerializeField] int m_Port = 9000;
 
-        // TODO - add setter here and support port switching
-        /// <summary>The local port to listen to incoming messages on</summary>
+        /// <summary>
+        /// The local port to listen to incoming messages on.
+        /// Setting this will destroy any existing server and create a new one on the new port
+        /// </summary>
         public int Port
         {
             get => m_Port;
@@ -67,8 +69,9 @@ namespace OscCore
                 oldServer?.Dispose();
             }
             // if creating a new server throws for any reason, make sure to keep old settings
-            catch (Exception)
+            catch (Exception e)
             {
+                Debug.LogException(e, this);
                 m_Port = oldValue;
                 Server = oldServer;
             }

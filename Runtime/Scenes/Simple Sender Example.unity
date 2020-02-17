@@ -378,8 +378,8 @@ MonoBehaviour:
   m_Sender: {fileID: 1670121833}
   m_Address: /composition/layers/2/video/opacity
   m_Object: {fileID: 170076733}
-  m_SourceComponent: {fileID: 170076734}
-  m_PropertyName: areaSize
-  m_PropertyTypeName: Vector2
-  m_SendVector2Elements: 2
+  m_SourceComponent: {fileID: 170076735}
+  m_PropertyName: localPosition
+  m_PropertyTypeName: Vector3
+  m_SendVector2Elements: 0
   m_SendVector3Elements: 0
