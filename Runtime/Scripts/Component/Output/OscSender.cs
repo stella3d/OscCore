@@ -2,6 +2,7 @@
 
 namespace OscCore
 {
+    [ExecuteInEditMode]
     [AddComponentMenu("OSC/OSC Sender", int.MaxValue - 10)]
     public class OscSender : MonoBehaviour
     {
@@ -18,7 +19,7 @@ namespace OscCore
         public int Port => m_Port;
         
         /// <summary>
-        /// Handles serializing and sending messages - OscSender is mostly a wrapper around this
+        /// Handles serializing and sending messages.  Use methods on this to send messages to the endpoint.
         /// </summary>
         public OscClient Client { get; protected set; }
         

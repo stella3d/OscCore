@@ -53,6 +53,9 @@ namespace OscCore
             m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
             m_SendVector3ElementsProp = serializedObject.FindProperty("m_SendVector3Elements");
 
+            m_DrawVector3Filter = m_SendVector3ElementsProp.enumValueIndex != 0;
+            m_DrawVector2Filter = m_SendVector2ElementsProp.enumValueIndex != 0;
+            
             if (m_Target == null) return;
 
             m_CachedComponents = m_Target.GetObjectComponents();
