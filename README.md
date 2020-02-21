@@ -1,5 +1,5 @@
 # OscCore
-A **performance-oriented** OSC ([Open Sound Control](http://opensoundcontrol.org/spec-1_0)) library for Unity
+A performance-oriented OSC ([Open Sound Control](http://opensoundcontrol.org/spec-1_0)) library for Unity
 
 ## Versions and Platforms
 
@@ -27,32 +27,37 @@ Download & import the .unitypackage from the [Releases](https://github.com/stell
 
 Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.  
 
-## Usage
+# Usage
 
-### Receiving messages
+## Receiving messages
 
-#### Using Components
+### Using Components
+
+For a completely set up example, please see the scene `Message Receiving Example`, "Osc Input" object.
 
 Add a `OscReceiver` component to a GameObject somewhere. 
 
-Then add some message handler components like `Osc Float Message Handler` to that object or any of its children, specify an address, and hook up the UnityEvent you see in the handler.  Message handler components exist for the most common types.
+Then add a message handler components  `Osc Float Message Handler` to that object or any of its children, specify an [OSC address](http://opensoundcontrol.org/spec-1_0) to receive at, and hook up the [UnityEvent](https://docs.unity3d.com/Manual/UnityEvents.html) you see in the handler.  There are different components for each type of message, all found under `Add Component -> OSC -> Input`.  Message handler components exist for the most common types.
+
+Here's what a receiver and a message handler for a float message look like set up.
+![OSC Receiver Component](https://raw.githubusercontent.com/stella3d/osccore-doc-images/master/oscreceiver_withfloathandler.png)
+
 
 Message handling components will automatically find references to an `OscReceiver` in its parent heirarchy and use that if the reference is not explicitly specified.
 
-You can see a hooked up example in the `Editor/Scenes/MessageReceiverExample` scene, "Osc Input" object.
-
 ###### Under the hood
 
-The `OscServer` instance attached to the receiver component is what will actually handle incoming messages - the component is just a wrapper.  You can use `OscServer` directly in your own scripts. It implements IDisposable - just dispose it to close the underlying socket.
+The `OscServer` instance attached to the receiver component is what will actually handle incoming messages - the component is just a wrapper.  You can use `OscServer` directly in your own scripts. It implements `IDisposable` - just `Dispose()` it to close the underlying socket.
 
 The server must have its `Update()` method ticked to handle main thread queued callbacks. `OscReceiver`handles this for you. 
 
+### Using Code
 
 ##### Adding address handlers
 
 There are several different kinds of method that can be registered with a server via script.
 
-###### Single method
+##### Single method
 
 You can register a single callback, to be executed on the server's background thread immediately when a message is received, by calling `oscServer.TryAddMethod`.
 
@@ -107,20 +112,13 @@ class CallbackPairExample
 
   public CallbackPairExample()
   {
-    // create and add a pair of methods for the OSC address "/layers/2/color/red"
-    ActionPair = new OscActionPair(ReadValues, MainThreadMethod);
-    Server.TryAddMethodPair("/layers/2/color/red", ActionPair);
+    // add a pair of methods for the OSC address "/layers/2/color/red"
+    Server.TryAddMethodPair("/layers/2/color/red", ReadValues, MainThreadMethod);
   }
 }
 ```
 
-###### Monitor Callbacks
-
-IF you just want to inspect message, you can add a monitor callback to be able to inspect every incoming message.
-
-A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window](https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
-
-#### Reading Message Values
+### Reading Message Values
 
 Reading values from incoming messages is done on a per-element basis, using methods named like `Read<Type>Element(int elementIndex)`.  
 
@@ -151,18 +149,42 @@ double ReadUncheckedDoubleMessage(OscMessageValues values)
 
 ```
 
+##### Monitor Callbacks
 
-### Sending Messages
+IF you just want to inspect message, you can add a monitor callback to be able to inspect every incoming message.
 
-#### Using Components
+A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window](https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
 
-Add an `OscSender` component to a GameObject somewhere via the `Add Component` menu, `OSC/OSC Sender`. 
+## Sending Messages
 
-Then add a `Property Output` component via the `Add Component` menu, `OSC/Property Output`, and assign the "Sender" reference on it.
+### Using Components
+
+For a completely set up example, please see the scene `Property Sender Example`.
+
+Add an `OscSender` component to a GameObject somewhere via the `Add Component` menu, `OSC/OSC Sender`.   
+This component handles the connection to a single OSC endpoint (IP address + port).
+
+Then add a `Property Output` component via the `Add Component` menu, `OSC/Property Output`.  If you create it as a sibling or child of the `OscSender` component, it will automatically detect it.  If not, assign the "Sender" reference on it.
 
 This component lets you pick any public property of a Unity object and automatically send an OSC message with its value when it changes.
+To do so:
 
-#### Using Code
+1. Assign the GameObject that holds the component you want to get a value from
+2. Pick the component via dropdown
+3. Pick the property via dropdown
+
+It will look like this filled out.
+
+![Property Output Commponent UI](https://raw.githubusercontent.com/stella3d/osccore-doc-images/master/propertyoutput_filled_single.png)
+
+
+There is special support for sending a subset of the elements of a _Vector2_ or _Vector3_.  
+Select from the "Vector elements" dropdown to send other combinations of x,y, & z.
+
+![Vector Element Dropdown](https://raw.githubusercontent.com/stella3d/osccore-doc-images/master/propertyoutput_floatfromvector.png)
+
+
+### Using Code
 
 [OscWriter](https://github.com/stella3d/OscCore/blob/master/Runtime/Scripts/OscWriter.cs) handles serialization of individual message elements.
 
@@ -239,49 +261,3 @@ Incoming message's addresses are matched directly against their unmanaged ascii 
 This has two benefits 
 - no memory is allocated when a message is received
 - takes less CPU time to parse a message
-
-##### 'Unsafe' Casting
-
-OscCore uses unsafe code in order to achieve the fastest conversion from bytes to C# types possible.  
-
-Let's look at the process of reading a float as an example. It works like this in safe code:
-```csharp
-byte[] m_SharedBuffer = new byte[1024];
-byte[] m_SwapBuffer32 = new byte[4];
-
-public float ReadFloatElement(int index)
-{
-    var offset = Offsets[index];
-    m_SwapBuffer32[0] = m_SharedBuffer[offset + 3];
-    m_SwapBuffer32[1] = m_SharedBuffer[offset + 2];
-    m_SwapBuffer32[2] = m_SharedBuffer[offset + 1];
-    m_SwapBuffer32[3] = m_SharedBuffer[offset];
-    return BitConverter.ToSingle(m_SwapBuffer32, 0);
-}
-```
-
-but in OscCore, we use pointer indexing to both the socket read buffer and the 4-byte swap array we use to convert big-endian floats to little-endian.  Using pointer indexing means no array bounds checking, guaranteed.
-
-We also create these pointers on startup so it's not necessary to add extra instructions with a `fixed` statement each time.
-
-```csharp
-byte[] m_SharedBuffer = new byte[1024];
-byte* SharedBufferPtr;                    
-byte[] m_SwapBuffer32 = new byte[4];
-byte* SwapBuffer32Ptr;
-
-public float ReadFloatElement(int index)
-{
-    var offset = Offsets[index];
-    SwapBuffer32Ptr[0] = SharedBufferPtr[offset + 3];
-    SwapBuffer32Ptr[1] = SharedBufferPtr[offset + 2];
-    SwapBuffer32Ptr[2] = SharedBufferPtr[offset + 1];
-    SwapBuffer32Ptr[3] = SharedBufferPtr[offset];
-    // interpret the 4 bytes in the swap buffer as a 32-bit float
-    return *SwapBuffer32Ptr;
-}
-```
-
-This method of reading is just as reliable and tested to be more than 3 times faster under Mono. 
-
-
