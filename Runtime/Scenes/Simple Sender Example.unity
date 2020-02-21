@@ -343,7 +343,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1670121830}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.470308, y: -1.0904007, z: -14.62713}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -377,9 +377,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Sender: {fileID: 1670121833}
   m_Address: /composition/layers/2/video/opacity
-  m_Object: {fileID: 170076733}
-  m_SourceComponent: {fileID: 170076735}
-  m_PropertyName: localPosition
+  m_Object: {fileID: 1670121830}
+  m_SourceComponent: {fileID: 1670121832}
+  m_PropertyName: position
   m_PropertyTypeName: Vector3
   m_SendVector2Elements: 0
-  m_SendVector3Elements: 0
+  m_SendVector3Elements: 1
