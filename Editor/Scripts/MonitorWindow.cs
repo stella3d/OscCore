@@ -44,17 +44,17 @@ namespace OscCore
         {
             if (m_PreviousServerCount == 0 && OscServer.PortToServer.Count > 0)
             {
-                Debug.Log("adding osc server");
                 m_Server = OscServer.PortToServer.First().Value;
                 m_Server.AddMonitorCallback(Monitor);
                 m_PreviousServerCount = OscServer.PortToServer.Count;
+                m_ServerLabel = $"Messages being received on port {m_Server.Port}";
                 m_ShowNoServerWarning = false;
             }
             else if (m_PreviousServerCount > 0 && OscServer.PortToServer.Count == 0)
             {
-                Debug.Log("removing osc server");
                 m_Server?.RemoveMonitorCallback(Monitor);
                 m_Server = null;
+                m_ServerLabel = null;
                 m_ShowNoServerWarning = true;
                 m_PreviousServerCount = OscServer.PortToServer.Count;
             }
@@ -110,10 +110,13 @@ namespace OscCore
             if(m_NeedsRepaint) Repaint();
         }
 
+        string m_ServerLabel = "";
+
         public void OnGUI()
         {
-            if (m_ShowNoServerWarning)
-                EditorGUILayout.HelpBox("No OSC Servers are currently active, so no messages can be received", MessageType.Info);
+            const string noServerWarning = "No OSC Servers are currently active, so no messages can be received";
+            var label = m_ShowNoServerWarning ? noServerWarning : m_ServerLabel;
+            EditorGUILayout.HelpBox(label, MessageType.Info);
 
             lock (m_LogMessages)
             {
