@@ -356,8 +356,8 @@ MonoBehaviour:
   OnMessageReceived:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 159882386}
-        m_MethodName: set_layer
+      - m_Target: {fileID: 159882387}
+        m_MethodName: set_shadowCustomResolution
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
