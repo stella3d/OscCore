@@ -7,7 +7,7 @@ Releases are checked for compatability with the latest release of these versions
 - **2018.4.x** (LTS)
 - **2019.x** (Official release)
 
-Builds are only tested on **Windows** & **MacOS** right now, but it should work on any platform where you can use `System.Net.Sockets` & pointers.
+Builds are tested on recent versions of Windows, MacOS, Android, and iOS. It should work on any platform where you can use `System.Net.Sockets`.
 
 #### Why Another OSC Library ?
 
@@ -35,9 +35,14 @@ Proper support for the [Unity package manager](https://docs.unity3d.com/Packages
 
 For a completely set up example, please see the scene `Message Receiving Example`, "Osc Input" object.
 
-Add a `OscReceiver` component to a GameObject somewhere. 
+Or, to test if message receiving is working at runtime, you can build the `Runtime Receiver Debug` scene to a player.
 
-Then add a message handler components  `Osc Float Message Handler` to that object or any of its children, specify an [OSC address](http://opensoundcontrol.org/spec-1_0) to receive at, and hook up the [UnityEvent](https://docs.unity3d.com/Manual/UnityEvents.html) you see in the handler.  There are different components for each type of message, all found under `Add Component -> OSC -> Input`.  Message handler components exist for the most common types.
+
+To start, add a `OscReceiver` component to a GameObject somewhere. 
+
+Then add a message handler components to that object or any of its children. There are different components for each type of message, all found under `Add Component -> OSC -> Input`.  Message handler components exist for the most common types.
+
+After adding the component, specify an [OSC address](http://opensoundcontrol.org/spec-1_0) to receive at, and hook up the [UnityEvent](https://docs.unity3d.com/Manual/UnityEvents.html) you see in the handler to what you want to do.  
 
 Here's what a receiver and a message handler for a float message look like set up.
 ![OSC Receiver Component](https://raw.githubusercontent.com/stella3d/osccore-doc-images/master/oscreceiver_withfloathandler.png)
@@ -154,6 +159,7 @@ double ReadUncheckedDoubleMessage(OscMessageValues values)
 IF you just want to inspect message, you can add a monitor callback to be able to inspect every incoming message.
 
 A monitor callback is an `Action<BlobString, OscMessageValues>`, where the blob string is the address.  You can look at the [Monitor Window](https://github.com/stella3d/OscCore/blob/master/Editor/MonitorWindow.cs) code for an example.
+
 
 ## Sending Messages
 
