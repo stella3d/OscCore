@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -10,6 +9,9 @@ using Debug = UnityEngine.Debug;
 
 namespace OscCore
 {
+    /// <summary>
+    /// Represents the tags and values associated with a received OSC message
+    /// </summary>
     public sealed unsafe partial class OscMessageValues
     {
         // the buffer where we read messages from - usually provided + filled by a socket reader
@@ -57,7 +59,7 @@ namespace OscCore
             SwapBuffer32UintPtr = (uint*) swap32Ptr;
             SwapBufferColor32Ptr = (Color32*) (byte*) swap32Ptr;
             
-            SwapBuffer64Ptr = PtrUtil.Pin<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
+            SwapBuffer64Ptr = Utils.PinPtr<byte, double>(m_SwapBuffer64, out m_Swap64Handle);
         }
 
         ~OscMessageValues()

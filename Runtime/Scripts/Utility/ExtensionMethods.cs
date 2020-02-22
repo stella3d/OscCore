@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace OscCore
 {
-    public static class ExtensionMethods
+    static class ExtensionMethods
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Align4(this int self)
@@ -11,9 +11,16 @@ namespace OscCore
             return (self + 3) & ~3;
         }
 
-        public static void SafeFree(this GCHandle handle)
+        internal static void SafeFree(this GCHandle handle)
         {
             if(handle.IsAllocated) handle.Free();
+        }
+        
+        internal static int ClampPort(this int port)
+        {
+            if (port < 1024) port = 1024;
+            if (port >= 65535) port = 65535;
+            return port;
         }
     }
 }

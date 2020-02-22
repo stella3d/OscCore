@@ -1,16 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using OscCore;
+using BlobHandles;
 using Unity.IL2CPP.CompilerServices;
 
-namespace BlobHandles
+namespace OscCore
 {
+    /// <summary>Maps from OSC address to the delegates associated with it</summary>
     internal sealed unsafe class OscAddressMethods: IDisposable
     {
         const int defaultSize = 16;
         
+        /// <summary>
+        /// Map from the unmanaged representation of an OSC address to the delegates associated with it
+        /// </summary>
         public readonly Dictionary<BlobHandle, OscActionPair> HandleToValue;
+        
+        /// <summary>
+        /// Map from the source string of an OSC address to the unmanaged representation
+        /// </summary>
         internal readonly Dictionary<string, BlobString> SourceToBlob;
 
         public OscAddressMethods(int initialCapacity = defaultSize)
@@ -67,7 +75,7 @@ namespace BlobHandles
 
         /// <summary>Removes the callback at the specified address</summary>
         /// <param name="address">The address to remove</param>
-        /// <param name="callback">The callback to remove</param>
+        /// <param name="callbacks">The callback pair to remove</param>
         /// <returns>true if the string was found and removed, false otherwise</returns>
         [Il2CppSetOption(Option.NullChecks, false)]
         public bool Remove(string address, OscActionPair callbacks)
@@ -88,13 +96,25 @@ namespace BlobHandles
             HandleToValue[blobStr.Handle] -= callbacks;
             return true;
         }
+        
+        /// <summary>Removes the OSC address from the delegate map</summary>
+        /// <param name="address">The address to remove</param>
+        /// <returns>True if the address was found and removed, false otherwise</returns>
+        public bool RemoveAddress(string address)
+        {
+            if (!SourceToBlob.TryGetValue(address, out var blobStr)) 
+                return false;
+            
+            SourceToBlob.Remove(address);
+            HandleToValue.Remove(blobStr.Handle);
+            blobStr.Dispose();
+            return true;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [Il2CppSetOption(Option.NullChecks, false)]
-        public unsafe bool TryGetValueFromBytes(byte* ptr, int byteCount, out OscActionPair value)
+        public bool TryGetValueFromBytes(byte* ptr, int byteCount, out OscActionPair value)
         {
-            var debugBlobStr = new BlobString(ptr, byteCount);
-            debugBlobStr.Dispose();
             return HandleToValue.TryGetValue(new BlobHandle(ptr, byteCount), out value);
         }
 

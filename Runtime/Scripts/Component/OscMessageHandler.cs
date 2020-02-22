@@ -1,26 +1,36 @@
 ﻿using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Serialization;
 
 namespace OscCore
 {
-    public abstract class OscMessageHandler<T> : MonoBehaviour
+    [ExecuteInEditMode]
+    public abstract class MessageHandlerBase : MonoBehaviour
     {
-        public OscReceiver Receiver;
+        [Tooltip("The receiver to handle messages from")]
+        [FormerlySerializedAs("Receiver")]
+        [SerializeField] 
+        protected OscReceiver m_Receiver;
+        public OscReceiver Receiver => m_Receiver;
     
-        public string Address;
-    
-        protected T m_Value;
+        [Tooltip("The OSC address to associate with this event.  Must start with /")]
+        [FormerlySerializedAs("Address")]
+        [SerializeField] 
+        protected string m_Address = "/";
+        public string Address => m_Address;
+        
         protected OscActionPair m_ActionPair;
-        protected bool m_Registered;    
+        protected bool m_Registered;
         
         void OnEnable()
         {
+            if (m_Receiver == null)
+                m_Receiver = GetComponentInParent<OscReceiver>();
+            
             if (m_Registered || string.IsNullOrEmpty(Address))
                 return;
-        
-            if (Receiver == null)
-                Receiver = GetComponentInParent<OscReceiver>();
 
-            if (Receiver != null && Receiver.Server != null)
+            if (m_Receiver != null && m_Receiver.Server != null)
             {
                 m_ActionPair = new OscActionPair(ValueRead, InvokeEvent);
                 Receiver.Server.TryAddMethodPair(Address, m_ActionPair);
@@ -31,8 +41,13 @@ namespace OscCore
         void OnDisable()
         {
             m_Registered = false;
-            if (Receiver != null)
-                Receiver.Server.RemoveMethodPair(Address, m_ActionPair);
+            if (m_Receiver != null)
+                m_Receiver.Server?.RemoveMethodPair(Address, m_ActionPair);
+        }
+        
+        void OnValidate()
+        {
+            Utils.ValidateAddress(ref m_Address);
         }
 
         protected abstract void InvokeEvent();
@@ -42,5 +57,21 @@ namespace OscCore
         // Empty update method here so the component gets an enable checkbox
         protected virtual void Update() { }
     }
+    
+    [ExecuteInEditMode]
+    public abstract class OscMessageHandler<T, TUnityEvent> : MessageHandlerBase
+        where TUnityEvent : UnityEvent<T>
+    {
+        [FormerlySerializedAs("Handler")]
+        public TUnityEvent OnMessageReceived;
+        
+        protected T m_Value;
+        
+        protected override void InvokeEvent()
+        {
+            OnMessageReceived.Invoke(m_Value);
+        }
+    }
+
 }
 

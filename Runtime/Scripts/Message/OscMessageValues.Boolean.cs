@@ -5,8 +5,7 @@ namespace OscCore
     public sealed partial class OscMessageValues
     {
         /// <summary>
-        /// Read a non-standard
-        /// Checks the element type before reading & returns default if it's not interpretable as a color.
+        /// Checks the element type before reading & returns default if it's not interpretable as a boolean.
         /// </summary>
         /// <param name="index">The element index</param>
         /// <returns>The value of the element</returns>
@@ -20,6 +19,7 @@ namespace OscCore
             {
                 case TypeTag.True: return true;
                 case TypeTag.False: return false;
+                case TypeTag.Int32: return ReadIntElementUnchecked(index) > 0;
                 default: return default;
             }
         }

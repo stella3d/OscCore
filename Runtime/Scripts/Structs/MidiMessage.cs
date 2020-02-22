@@ -3,11 +3,10 @@ using System.Runtime.InteropServices;
 
 namespace OscCore
 {
-    // significant performance gains come from explicitly laying this out with the int vs sequential layout !
     [StructLayout(LayoutKind.Explicit)]
     public struct MidiMessage : IEquatable<MidiMessage>
     {
-        [FieldOffset(0)] readonly int ps12;
+        [FieldOffset(0)] readonly int data;
         
         [FieldOffset(0)] public readonly byte PortId;
         [FieldOffset(1)] public readonly byte Status;
@@ -16,7 +15,7 @@ namespace OscCore
 
         public MidiMessage(byte[] bytes, int offset)
         {
-            ps12 = 0;
+            data = 0;
             PortId = bytes[offset];
             Status = bytes[offset + 1];
             Data1 = bytes[offset + 2];
@@ -25,7 +24,7 @@ namespace OscCore
         
         public MidiMessage(byte portId, byte status, byte data1, byte data2)
         {
-            ps12 = 0;
+            data = 0;
             PortId = portId;
             Status = status;
             Data1 = data1;

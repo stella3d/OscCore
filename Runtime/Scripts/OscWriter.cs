@@ -27,7 +27,8 @@ namespace OscCore
         readonly GCHandle m_Color32SwapHandle;
 
         int m_Length;
-
+        
+        /// <summary>The number of bytes currently written to the buffer</summary>
         public int Length => m_Length;
         
         public OscWriter(int capacity = 4096)
@@ -35,12 +36,12 @@ namespace OscCore
             Buffer = new byte[capacity];
 
             // Even though Unity's GC does not move objects around, pin them to be safe.
-            m_BufferPtr = PtrUtil.Pin<byte, byte>(Buffer, out m_BufferHandle);
+            m_BufferPtr = Utils.PinPtr<byte, byte>(Buffer, out m_BufferHandle);
             m_BufferMidiPtr = (MidiMessage*) m_BufferPtr;
 
-            m_FloatSwapPtr = PtrUtil.Pin<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
-            m_DoubleSwapPtr = PtrUtil.Pin<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
-            m_Color32SwapPtr = PtrUtil.Pin<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
+            m_FloatSwapPtr = Utils.PinPtr<float, byte>(m_FloatSwap, out m_FloatSwapHandle);
+            m_DoubleSwapPtr = Utils.PinPtr<double, byte>(m_DoubleSwap, out m_DoubleSwapHandle);
+            m_Color32SwapPtr = Utils.PinPtr<Color32, byte>(m_Color32Swap, out m_Color32SwapHandle);
         }
 
         ~OscWriter() { Dispose(); }
@@ -51,20 +52,20 @@ namespace OscCore
         /// <summary>Write a 32-bit integer element</summary>
         public void Write(int data)
         {
-            m_BufferPtr[m_Length++] = (byte) (data >> 24);
-            m_BufferPtr[m_Length++] = (byte) (data >> 16);
-            m_BufferPtr[m_Length++] = (byte) (data >>  8);
-            m_BufferPtr[m_Length++] = (byte) (data);
+            Buffer[m_Length++] = (byte) (data >> 24);
+            Buffer[m_Length++] = (byte) (data >> 16);
+            Buffer[m_Length++] = (byte) (data >>  8);
+            Buffer[m_Length++] = (byte) (data);
         }
         
         /// <summary>Write a 32-bit floating point element</summary>
         public void Write(float data)
         {
             m_FloatSwap[0] = data;
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[3];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[2];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[1];
-            m_BufferPtr[m_Length++] = m_FloatSwapPtr[0];
+            Buffer[m_Length++] = m_FloatSwapPtr[3];
+            Buffer[m_Length++] = m_FloatSwapPtr[2];
+            Buffer[m_Length++] = m_FloatSwapPtr[1];
+            Buffer[m_Length++] = m_FloatSwapPtr[0];
         }
         
         /// <summary>Write a 2D vector as two float elements</summary>
@@ -86,7 +87,7 @@ namespace OscCore
         public void Write(string data)
         {
             foreach (var chr in data)
-                m_BufferPtr[m_Length++] = (byte) chr;
+                Buffer[m_Length++] = (byte) chr;
 
             var alignedLength = (data.Length + 3) & ~3;
             // if our length was already aligned to 4 bytes, that means we don't have a string terminator yet,
@@ -95,7 +96,7 @@ namespace OscCore
                 alignedLength += 4;
             
             for (int i = data.Length; i < alignedLength; i++)
-                m_BufferPtr[m_Length++] = 0;
+                Buffer[m_Length++] = 0;
         }
 
         /// <summary>Write an ASCII string element. The string MUST be ASCII-encoded!</summary>
@@ -110,7 +111,7 @@ namespace OscCore
                 alignedLength += 4;
             
             for (int i = data.Length; i < alignedLength; i++)
-                m_BufferPtr[m_Length++] = 0;
+                Buffer[m_Length++] = 0;
         }
         
         /// <summary>Write a blob element</summary>
@@ -130,55 +131,55 @@ namespace OscCore
             var remainder = ((length + 3) & ~3) - length;
             for (int i = 0; i < remainder; i++)
             {
-                m_BufferPtr[m_Length++] = 0;
+                Buffer[m_Length++] = 0;
             }
         }
         
         /// <summary>Write a 64-bit integer element</summary>
         public void Write(long data)
         {
-            var bPtr = m_BufferPtr;
-            bPtr[m_Length++] = (byte) (data >> 56);
-            bPtr[m_Length++] = (byte) (data >> 48);
-            bPtr[m_Length++] = (byte) (data >> 40);
-            bPtr[m_Length++] = (byte) (data >> 32);
-            bPtr[m_Length++] = (byte) (data >> 24);
-            bPtr[m_Length++] = (byte) (data >> 16);
-            bPtr[m_Length++] = (byte) (data >>  8);
-            bPtr[m_Length++] = (byte) (data);
+            var buffer = Buffer;
+            buffer[m_Length++] = (byte) (data >> 56);
+            buffer[m_Length++] = (byte) (data >> 48);
+            buffer[m_Length++] = (byte) (data >> 40);
+            buffer[m_Length++] = (byte) (data >> 32);
+            buffer[m_Length++] = (byte) (data >> 24);
+            buffer[m_Length++] = (byte) (data >> 16);
+            buffer[m_Length++] = (byte) (data >>  8);
+            buffer[m_Length++] = (byte) (data);
         }
         
         /// <summary>Write a 64-bit floating point element</summary>
         public void Write(double data)
         {
-            var bPtr = m_BufferPtr;
+            var buffer = Buffer;
             m_DoubleSwap[0] = data;
             var dsPtr = m_DoubleSwapPtr;
-            bPtr[m_Length++] = dsPtr[7];
-            bPtr[m_Length++] = dsPtr[6];
-            bPtr[m_Length++] = dsPtr[5];
-            bPtr[m_Length++] = dsPtr[4];
-            bPtr[m_Length++] = dsPtr[3];
-            bPtr[m_Length++] = dsPtr[2];
-            bPtr[m_Length++] = dsPtr[1];
-            bPtr[m_Length++] = dsPtr[0];
+            buffer[m_Length++] = dsPtr[7];
+            buffer[m_Length++] = dsPtr[6];
+            buffer[m_Length++] = dsPtr[5];
+            buffer[m_Length++] = dsPtr[4];
+            buffer[m_Length++] = dsPtr[3];
+            buffer[m_Length++] = dsPtr[2];
+            buffer[m_Length++] = dsPtr[1];
+            buffer[m_Length++] = dsPtr[0];
         }
         
         /// <summary>Write a 32-bit RGBA color element</summary>
         public void Write(Color32 data)
         {
             m_Color32Swap[0] = data;
-            m_BufferPtr[m_Length++] = m_Color32SwapPtr[3];
-            m_BufferPtr[m_Length++] = m_Color32SwapPtr[2];
-            m_BufferPtr[m_Length++] = m_Color32SwapPtr[1];
-            m_BufferPtr[m_Length++] = m_Color32SwapPtr[0];
+            Buffer[m_Length++] = m_Color32SwapPtr[3];
+            Buffer[m_Length++] = m_Color32SwapPtr[2];
+            Buffer[m_Length++] = m_Color32SwapPtr[1];
+            Buffer[m_Length++] = m_Color32SwapPtr[0];
         }
         
         /// <summary>Write a MIDI message element</summary>
         public void Write(MidiMessage data)
         {
             var midiWritePtr = (MidiMessage*) (m_BufferPtr + m_Length);
-            midiWritePtr[0] = data;
+            *midiWritePtr = data;
             m_Length += 4;
         }
 
@@ -193,7 +194,7 @@ namespace OscCore
         public void Write(char data)
         {
             // char is written in the last byte of the 4-byte block;
-            m_BufferPtr[m_Length + 3] = (byte) data;
+            Buffer[m_Length + 3] = (byte) data;
             m_Length += 4;
         }
         
@@ -201,8 +202,8 @@ namespace OscCore
         public void WriteBundlePrefix()
         {
             const int size = 8;
-            // memory copy tested reliably faster than block copy for bytes under ~64 
-            System.Buffer.MemoryCopy(Constant.BundlePrefixPtr, m_BufferPtr + m_Length, size, size);
+            // TODO replace with dereferencing the long  version ?
+            System.Buffer.BlockCopy(Constant.BundlePrefixBytes, 0, Buffer, m_Length, size);
             m_Length += size;
         }
                 
@@ -210,12 +211,12 @@ namespace OscCore
         /// Combines Reset(), Write(address), and Write(tags) in a single function to reduce call overhead
         /// </summary>
         /// <param name="address">The OSC address to send to</param>
-        /// <param name="tags">4 bytes that represent type tags</param>
+        /// <param name="tags">4 bytes that represent up to 3 type tags</param>
         public void WriteAddressAndTags(string address, uint tags)
         {
             m_Length = 0;
             foreach (var chr in address)
-                m_BufferPtr[m_Length++] = (byte) chr;
+                Buffer[m_Length++] = (byte) chr;
 
             var alignedLength = (address.Length + 3) & ~3;
             // if our length was already aligned to 4 bytes, that means we don't have a string terminator yet,
@@ -224,7 +225,7 @@ namespace OscCore
                 alignedLength += 4;
             
             for (int i = address.Length; i < alignedLength; i++)
-                m_BufferPtr[m_Length++] = 0;
+                Buffer[m_Length++] = 0;
             
             // write the 4 bytes for the type tags
             ((uint*)(m_BufferPtr + m_Length))[0] = tags;

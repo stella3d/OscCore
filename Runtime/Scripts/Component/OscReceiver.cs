@@ -1,42 +1,80 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace OscCore
 {
     /// <summary>Wraps an OscServer in a Unity Component</summary>
-    [ExecuteAlways]
+    [AddComponentMenu("OSC/OSC Receiver", int.MinValue)]
+    [ExecuteInEditMode]
     public class OscReceiver : MonoBehaviour
     {
-        [Tooltip("The port to listen for incoming OSC messages on")]
+        [Tooltip("The local port to listen for incoming messages on")]
         [SerializeField] int m_Port = 9000;
 
-        bool m_Started;
-        OscServer m_Server;
+        /// <summary>
+        /// The local port to listen to incoming messages on.
+        /// Setting this will destroy any existing server and create a new one on the new port
+        /// </summary>
+        public int Port
+        {
+            get => m_Port;
+            set => SetPort(value);
+        }
 
-        /// <summary>The underlying server that handles message receiving.  </summary>
-        public OscServer Server => m_Server;
-     
+        /// <summary>True if this receiver is bound to its port and listening, false otherwise</summary>
+        public bool Running { get; private set; }
+
+        /// <summary>The underlying server that handles message receiving.</summary>
+        public OscServer Server { get; private set; }
+
         void OnEnable()
         {
             // OnEnable gets called twice when you enter play mode, but we just want one server instance
-            if (m_Started) return;
-            m_Server = OscServer.GetOrCreate(m_Port);
-            m_Started = true;
+            if (Running) return;
+            Server = OscServer.GetOrCreate(m_Port);
+            Running = true;
+        }
+
+        void OnValidate()
+        {
+            m_Port = m_Port.ClampPort();
         }
 
         void Update()
         { 
-            m_Server?.Update();
+            Server?.Update();
         }
 
-        void OnDestroy()
+        void OnDisable()
         {
-            m_Server?.Dispose();
+            Server?.Dispose();
         }
 
         void OnApplicationQuit()
         {
-            m_Server?.Dispose();
+            Server?.Dispose();
+        }
+
+        void SetPort(int newPort)
+        {
+            var clamped = newPort.ClampPort();
+            if (clamped != newPort) return;
+
+            var oldValue = m_Port;
+            var oldServer = Server;
+            try
+            {
+                Server = OscServer.GetOrCreate(newPort);
+                m_Port = newPort;
+                oldServer?.Dispose();
+            }
+            // if creating a new server throws for any reason, make sure to keep old settings
+            catch (Exception e)
+            {
+                Debug.LogException(e, this);
+                m_Port = oldValue;
+                Server = oldServer;
+            }
         }
     }
 }
-
