@@ -28,9 +28,9 @@ To test if message receiving is working at runtime in general, you can build the
 
 For a completely set up example, please see the scene `Message Receiving Example`, "Osc Input" object.
 
-To start, add a `OscReceiver` component to a GameObject somewhere. 
+To start, add a `OscReceiver` component to a GameObject somewhere.  This component handles listening for all messages on a single port.
 
-Then add a message handler components to that object or any of its children. There are different components for each type of message, all found under `Add Component -> OSC -> Input`.  Message handler components exist for the most common types.
+Then add a message handler component to that object or any of its children. There are different components for each type of message, all found under `Add Component -> OSC -> Input`.  Message handler components exist for the most common types.
 
 After adding the component, specify an [OSC address](http://opensoundcontrol.org/spec-1_0) to receive at, and hook up the [UnityEvent](https://docs.unity3d.com/Manual/UnityEvents.html) you see in the handler to what you want to do.  
 
