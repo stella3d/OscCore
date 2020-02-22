@@ -45,7 +45,7 @@ namespace OscCore
             Server?.Update();
         }
 
-        void OnDestroy()
+        void OnDisable()
         {
             Server?.Dispose();
         }
