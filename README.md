@@ -7,36 +7,26 @@ Releases are checked for compatability with the latest release of these versions
 - **2018.4.x** (LTS)
 - **2019.x** (Official release)
 
-Builds are tested on recent versions of Windows, MacOS, Android, and iOS. It should work on any platform where you can use `System.Net.Sockets`.
-
-#### Why Another OSC Library ?
-
-There are at least 4 other OSC implementations for Unity:
-- [OscJack](https://github.com/keijiro/OscJack), which i was using before
-- [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
-
-OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
-
-OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
-
-One of the existing libraries may satisfy your needs if you don't need to care much about garbage allocation / performance!
+Builds are tested on recent versions of Windows, MacOS, Android, and iOS, using both Mono and IL2CPP runtimes. 
+It should work on any platform where you can use `System.Net.Sockets`, but it's not tested.
 
 ## Installation
 
 Download & import the .unitypackage from the [Releases](https://github.com/stella3d/OscCore/releases) page.
 
-Proper support for the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) will come once I also have packages setup for the dependencies.  
+I may put this on the [Unity package manager](https://docs.unity3d.com/Packages/com.unity.package-manager-ui@1.8/manual/index.html) eventually, but i haven't yet.
 
 # Usage
 
 ## Receiving messages
 
+### Debug Scene
+
+To test if message receiving is working at runtime in general, you can build the `Runtime Receiver Debug` scene to a player, and it will show you the device's local IP along with a log of received messages..
+
 ### Using Components
 
 For a completely set up example, please see the scene `Message Receiving Example`, "Osc Input" object.
-
-Or, to test if message receiving is working at runtime, you can build the `Runtime Receiver Debug` scene to a player.
-
 
 To start, add a `OscReceiver` component to a GameObject somewhere. 
 
@@ -267,3 +257,15 @@ Incoming message's addresses are matched directly against their unmanaged ascii 
 This has two benefits 
 - no memory is allocated when a message is received
 - takes less CPU time to parse a message
+
+#### Why Another OSC Library ?
+
+There are at least 4 other OSC implementations for Unity:
+- [OscJack](https://github.com/keijiro/OscJack), which i was using before
+- [ExtOSC](https://github.com/Iam1337/extOSC), [UnityOSC](https://github.com/jorgegarcia/UnityOSC), & [OscSimpl](https://assetstore.unity.com/packages/tools/input-management/osc-simpl-53710)
+
+OscCore was created largely because all of these other libraries _allocate memory for each received message_, which will cause lots of garbage collections when used with a large amount of messages.  For more on this see [performance details](#performance-details).
+
+OscCore aims foremost to be **small** & **fast**, so that other systems can be built on top of it. 
+
+One of the existing libraries may satisfy your needs if you don't need to care much about garbage allocation / performance!
