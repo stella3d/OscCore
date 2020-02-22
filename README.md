@@ -8,6 +8,7 @@ Releases are checked for compatability with the latest release of these versions
 - **2019.x** (Official release)
 
 Builds are tested on recent versions of Windows, MacOS, Android, and iOS, using both Mono and IL2CPP runtimes. 
+
 It should work on any platform where you can use `System.Net.Sockets`, but it's not tested.
 
 ## Installation
