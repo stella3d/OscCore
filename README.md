@@ -80,7 +80,7 @@ class SingleCallbackExample
 
 You can register a pair of methods to an address by calling `oscServer.TryAddMethodPair`.
 
-An `OscActionPair` consists of two methods, with the main thread one being optional.
+These pairs consist of two methods, with the main thread one being optional.
 
 1) Runs on background thread, immediate execution, just like single methods
 2) Runs on main thread, queued on the next frame
