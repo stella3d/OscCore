@@ -165,8 +165,11 @@ namespace OscCore
             switch (m_SendVector3Elements)
             {
                 case Vector3ElementFilter.XYZ:
-                    if(!m_PreviousVec3Value.Equals(vec))
+                    if (!m_PreviousVec3Value.Equals(vec))
+                    {
+                        m_PreviousVec3Value = vec;
                         m_Sender.Client.Send(m_Address, vec);
+                    }
                     break;
                 case Vector3ElementFilter.X:
                     if (!m_PreviousSingleValue.Equals(vec.x))
@@ -207,8 +210,11 @@ namespace OscCore
                     break;
                 case Vector3ElementFilter.YZ:
                     var yz = new Vector2(vec.y, vec.z);
-                    if(!m_PreviousVec2Value.Equals(yz))
+                    if (!m_PreviousVec2Value.Equals(yz))
+                    {
+                        m_PreviousVec2Value = yz;
                         m_Sender.Client.Send(m_Address, yz);
+                    }
                     break;
             }
         }
