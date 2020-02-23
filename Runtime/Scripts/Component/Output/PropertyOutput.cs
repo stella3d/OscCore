@@ -201,7 +201,7 @@ namespace OscCore
                     }
                     break;
                 case Vector3ElementFilter.XZ:
-                    var xz = new Vector2(vec.x, vec.y);
+                    var xz = new Vector2(vec.x, vec.z);
                     if (!m_PreviousVec2Value.Equals(xz))
                     {
                         m_PreviousVec2Value = xz;
