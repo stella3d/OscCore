@@ -42,6 +42,7 @@ namespace OscCore
         int m_ComponentIndex;
 
         PropertyInfo[] m_Properties;
+        MemberInfo[] m_PropertiesAndFields;
         string[] m_PropertyNames;
         int m_PropertyIndex;
         
@@ -97,7 +98,7 @@ namespace OscCore
             
             m_ComponentIndex = Array.IndexOf(m_CachedComponentNames, sourceCompRef.GetType().Name);
             if(m_ComponentIndex >= 0)
-                GetComponentProperties();
+                GetComponentFieldsAndProperties();
 
             if (sourceCompRef != null)
             {
@@ -159,7 +160,7 @@ namespace OscCore
                 m_ComponentIndex = newIndex;
                 var compName = m_CachedComponentNames[newIndex];
                 if (compName != m_PreviousComponentName)
-                    GetComponentProperties();
+                    GetComponentFieldsAndProperties();
 
                 m_PropertyIndex = -1;
                 m_PreviousComponentName = compName;
@@ -182,10 +183,23 @@ namespace OscCore
                 m_PropertyIndex = newIndex;
                 m_PropertyNameProp.stringValue = m_PropertyNames[m_PropertyIndex];
 
-                var info = m_Properties[m_PropertyIndex];
-                var type = info.PropertyType;
-                m_PropertyTypeNameProp.stringValue = type.Name;
-                m_Target.Property = info;
+                var info = m_PropertiesAndFields[m_PropertyIndex];
+
+                Type type;
+                var asProp = info as PropertyInfo;
+                if (asProp != null)
+                {
+                    type = asProp.PropertyType;
+                    m_Target.Property = asProp;
+                }
+                else
+                {
+                    var asField = info as FieldInfo;
+                    m_Target.Field = asField;
+                    type = asField?.FieldType;
+                }
+
+                m_PropertyTypeNameProp.stringValue = type?.Name;
 
                 m_DrawVector3Filter = type == typeof(Vector3);
                 m_DrawVector2Filter = type == typeof(Vector2);
@@ -284,6 +298,34 @@ namespace OscCore
             m_PropertyNames = m_Properties.Select(m => m.Name).ToArray();
         }
 
+        void GetComponentFieldsAndProperties()
+        {
+            var comp = m_CachedComponents[m_ComponentIndex];
+
+            var type = comp.GetType();
+            var properties = type.GetProperties()
+                .Where(p => k_SupportedTypes.Contains(p.PropertyType.FullName)).ToArray();
+            
+            var fields = type.GetFields()
+                .Where(f => k_SupportedTypes.Contains(f.FieldType.FullName)).ToArray();
+            
+            m_PropertiesAndFields = new MemberInfo[properties.Length + fields.Length];
+
+            int i;
+            for (i = 0; i < properties.Length; i++)
+            {
+                m_PropertiesAndFields[i] = properties[i];
+            }
+
+            var fieldsStart = i;
+            for (; i < m_PropertiesAndFields.Length; i++)
+            {
+                m_PropertiesAndFields[i] = fields[i - fieldsStart];
+            }
+            
+            m_PropertyNames = m_PropertiesAndFields.Select(m => m.Name).ToArray();
+        }
+        
         void CleanComponents()
         {
             m_CachedComponents = null;

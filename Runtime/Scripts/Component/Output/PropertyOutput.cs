@@ -19,6 +19,7 @@ namespace OscCore
         [SerializeField] GameObject m_Object;
         [SerializeField] Component m_SourceComponent;
         
+        [SerializeField] bool m_MemberIsProperty;
         [SerializeField] string m_PropertyName;
         [SerializeField] string m_PropertyTypeName;
         
@@ -37,6 +38,10 @@ namespace OscCore
         Vector3 m_PreviousVec3Value;
 
         bool m_HasSender;
+
+        MemberInfo m_MemberInfo;
+        PropertyInfo m_Property;
+        FieldInfo m_Field;
         
         /// <summary>
         /// The OscCore component that handles serializing and sending messages. Cannot be null
@@ -56,11 +61,41 @@ namespace OscCore
             get => m_SourceComponent;
             set => m_SourceComponent = value == null ? m_SourceComponent : value;
         }
+        
+        /// <summary>The member to send the value of</summary>
+        public MemberInfo Member => m_MemberInfo;
 
         /// <summary>
-        /// The property to send the value of.  Must be a property found on the current SourceComponent
+        /// The property to send the value of.  Must be a property found on the current SourceComponent.
+        /// Will be null if the member being sent is a Field.
         /// </summary>
-        public PropertyInfo Property { get; set; }
+        public PropertyInfo Property
+        {
+            get => m_Property;
+            set
+            {
+                m_MemberInfo = value;
+                m_Property = value;
+                m_Field = null;
+                m_MemberIsProperty = true;
+            }
+        }
+
+        /// <summary>
+        /// The Field to send the value of.  Must be a public field found on the current SourceComponent.
+        /// Will be null if the member being sent is a Property.
+        /// </summary>
+        public FieldInfo Field
+        {
+            get => m_Field;
+            set
+            {
+                m_MemberInfo = value;
+                m_Field = value;
+                m_Property = null;
+                m_MemberIsProperty = false;
+            }
+        }
 
         void OnEnable()
         {
@@ -78,10 +113,10 @@ namespace OscCore
 
         void Update()
         {
-            if (Property == null || !m_HasSender || m_Sender.Client == null) 
+            if (m_MemberInfo == null || !m_HasSender || m_Sender.Client == null) 
                 return;
-            
-            var value = Property.GetValue(m_SourceComponent);
+
+            var value = m_MemberIsProperty ? m_Property.GetValue(m_SourceComponent) : m_Field.GetValue(m_SourceComponent);
             if (value == null)
                 return;
             
@@ -242,7 +277,11 @@ namespace OscCore
                 return;
             
             var type = m_SourceComponent.GetType();
-            Property = type.GetProperty(m_PropertyName);
+
+            if(m_MemberIsProperty)
+                Property = type.GetProperty(m_PropertyName);
+            else
+                Field = type.GetField(m_PropertyName);
         }
     }
 }
