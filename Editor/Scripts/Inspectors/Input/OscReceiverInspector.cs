@@ -16,6 +16,7 @@ namespace OscCore
         SerializedProperty m_PortProp;
         
         bool m_ShowAddressFoldout;
+        bool m_PreviouslyRunning;
         
         void OnEnable()
         {
@@ -28,21 +29,28 @@ namespace OscCore
         public override void OnInspectorGUI()
         {
             var running = m_Target != null && m_Target.Running;
+            if (running != m_PreviouslyRunning)
+                SortAddresses();
+            
+            m_PreviouslyRunning = running;
             
             EditorGUI.BeginDisabledGroup(running && Application.IsPlaying(this));
             EditorGUILayout.PropertyField(m_PortProp);
             EditorGUI.EndDisabledGroup();
 
-            var count = CountHandlers();
-            var prefix = m_ShowAddressFoldout ? "Hide" : "Show";
-            m_ShowAddressFoldout = EditorGUILayout.Foldout(m_ShowAddressFoldout, $"{prefix} {count} Listening Addresses", true);
-            
-            if (m_ShowAddressFoldout)
+            using (new EditorGUI.DisabledScope(!running))
             {
-                foreach (var addr in k_SortedAddresses)
-                    EditorGUILayout.LabelField(addr, EditorStyles.miniBoldLabel);
+                var count = CountHandlers();
+                var prefix = m_ShowAddressFoldout ? "Hide" : "Show";
+                m_ShowAddressFoldout = EditorGUILayout.Foldout(m_ShowAddressFoldout, $"{prefix} {count} Listening Addresses", true);
+            
+                if (m_ShowAddressFoldout)
+                {
+                    foreach (var addr in k_SortedAddresses)
+                        EditorGUILayout.LabelField(addr, EditorStyles.miniBoldLabel);
+                }
             }
-
+           
             serializedObject.ApplyModifiedProperties();
             
             if (EditorHelp.Show)

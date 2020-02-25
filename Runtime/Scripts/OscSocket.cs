@@ -41,16 +41,6 @@ namespace OscCore
             m_Started = true;
         }
         
-        public void Pause()
-        {
-            m_Disposed = true;
-        }
-        
-        public void Resume()
-        {
-            m_Disposed = false;
-        }
-        
         void Serve()
         {
 #if UNITY_EDITOR

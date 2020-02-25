@@ -29,8 +29,16 @@ namespace OscCore
 
         void OnEnable()
         {
-            // OnEnable gets called twice when you enter play mode, but we just want one server instance
-            if (Running) return;
+            OnStart();
+        }
+
+        void Awake()
+        {
+            OnStart();
+        }
+
+        void OnStart()
+        {
             Server = OscServer.GetOrCreate(m_Port);
             Running = true;
         }
@@ -45,14 +53,10 @@ namespace OscCore
             Server?.Update();
         }
 
-        void OnDisable()
+        void OnDestroy()
         {
             Server?.Dispose();
-        }
-
-        void OnApplicationQuit()
-        {
-            Server?.Dispose();
+            Server = null;
         }
 
         void SetPort(int newPort)
