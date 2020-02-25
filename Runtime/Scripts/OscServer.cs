@@ -34,6 +34,8 @@ namespace OscCore
         
         readonly List<OscActionPair> m_PatternMatchedMethods = new List<OscActionPair>();
         
+        internal bool Running { get; set; }
+
         /// <summary>
         /// Map from port number to the server that handles incoming messages for it
         /// </summary>
@@ -67,12 +69,17 @@ namespace OscCore
         public void Start()
         {
             // make sure redundant calls don't do anything after the first
-            if (m_Started) return;
+            if (m_Started)
+            {
+                Running = true;
+                return;
+            }
             
             m_Socket.Start();
             
             m_Disposed = false;
             m_Started = true;
+            Running = true;
         }
 
         /// <summary>
@@ -363,34 +370,25 @@ namespace OscCore
         
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        void Dispose(bool disposing)
-        {
+            PortToServer.Remove(Port);
+            
             if (m_Disposed) return;
             m_Disposed = true;
 
-            PortToServer.Remove(Port);
-
             if(m_BufferHandle.IsAllocated) m_BufferHandle.Free();
-            if (disposing)
-            {
-                AddressSpace.AddressToMethod.Dispose();
-                AddressSpace = null;
-                m_Socket.Dispose();
-            }
+            AddressSpace.AddressToMethod.Dispose();
+            AddressSpace = null;
+            m_Socket.Dispose();
         }
 
         ~OscServer()
         {
-            Dispose(true);
+            Dispose();
         }
 
         public int CountHandlers()
         {
-            return AddressSpace.AddressToMethod.SourceToBlob.Count;
+            return AddressSpace?.AddressToMethod.SourceToBlob.Count ?? 0;
         }
     }
 }

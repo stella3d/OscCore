@@ -22,12 +22,17 @@ namespace OscCore
         bool m_UseAlt;
         List<string> m_ActiveQueueBuffer;
 
+        string m_ServerLabel = "";
+        
         bool m_NeedsRepaint;
         bool m_ShowNoServerWarning;
         int m_PreviousServerCount;
+
+        bool m_PreviouslyPlaying;
         
         void OnEnable()
         {
+            m_PreviousServerCount = 0;
             m_ActiveQueueBuffer = m_ToQueue;
             if (OscServer.PortToServer.Count == 0)
                 m_ShowNoServerWarning = true;
@@ -38,33 +43,57 @@ namespace OscCore
         void OnDisable()
         {
             m_Server?.RemoveMonitorCallback(Monitor);
+            m_PreviousServerCount = 0;
         }
 
         void HandleServerChanges()
         {
-            if (m_PreviousServerCount == 0 && OscServer.PortToServer.Count > 0)
+            if (OscServer.PortToServer.Count > m_PreviousServerCount)
             {
                 m_Server = OscServer.PortToServer.First().Value;
                 m_Server.AddMonitorCallback(Monitor);
-                m_PreviousServerCount = OscServer.PortToServer.Count;
                 m_ServerLabel = $"Messages being received on port {m_Server.Port}";
                 m_ShowNoServerWarning = false;
+
+                if (!Application.isPlaying)
+                    EditorApplication.update += Update;
             }
-            else if (m_PreviousServerCount > 0 && OscServer.PortToServer.Count == 0)
+            else if (OscServer.PortToServer.Count < m_PreviousServerCount)
             {
                 m_Server?.RemoveMonitorCallback(Monitor);
                 m_Server = null;
                 m_ServerLabel = null;
                 m_ShowNoServerWarning = true;
                 m_PreviousServerCount = OscServer.PortToServer.Count;
+                
+                if (!Application.isPlaying)
+                    EditorApplication.update -= Update;
             }
+            
+            m_PreviousServerCount = OscServer.PortToServer.Count;
+        }
+
+        void HandleModeChange()
+        {
+            if (EditorApplication.isPlaying != m_PreviouslyPlaying)
+            {
+                m_PreviousServerCount = 0;
+                lock (m_LogMessages)
+                {
+                    m_LogMessages.Clear();
+                    m_ToQueueAlt.Clear();
+                    m_ToQueue.Clear();
+                }
+            }
+
+            m_PreviouslyPlaying = EditorApplication.isPlaying;
         }
 
         void Update()
         {
-            // only run every 10 frames to reduce flickering
-            if (Time.frameCount % 10 != 0) return;
+            if (Time.frameCount % 2 != 0) return;
             
+            HandleModeChange();
             HandleServerChanges();
 
             lock (m_LogMessages)
@@ -110,7 +139,6 @@ namespace OscCore
             if(m_NeedsRepaint) Repaint();
         }
 
-        string m_ServerLabel = "";
 
         public void OnGUI()
         {
@@ -160,6 +188,7 @@ namespace OscCore
         [MenuItem("Window/OscCore/Monitor")]
         static void InitWindow()
         {
+            
             ((MonitorWindow) GetWindow(typeof(MonitorWindow)))?.Show();
         }
     }
