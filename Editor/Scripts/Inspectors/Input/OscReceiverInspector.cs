@@ -16,6 +16,7 @@ namespace OscCore
         SerializedProperty m_PortProp;
         
         bool m_ShowAddressFoldout;
+        bool m_PreviouslyRunning;
         
         void OnEnable()
         {
@@ -24,8 +25,6 @@ namespace OscCore
             
             SortAddresses();
         }
-
-        bool m_PreviouslyRunning;
 
         public override void OnInspectorGUI()
         {
