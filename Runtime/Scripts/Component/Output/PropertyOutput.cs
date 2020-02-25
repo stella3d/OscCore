@@ -62,9 +62,6 @@ namespace OscCore
             set => m_SourceComponent = value == null ? m_SourceComponent : value;
         }
         
-        /// <summary>The member to send the value of</summary>
-        public MemberInfo Member => m_MemberInfo;
-
         /// <summary>
         /// The property to send the value of.  Must be a property found on the current SourceComponent.
         /// Will be null if the member being sent is a Field.
