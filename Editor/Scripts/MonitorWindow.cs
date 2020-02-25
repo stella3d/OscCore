@@ -139,7 +139,6 @@ namespace OscCore
             if(m_NeedsRepaint) Repaint();
         }
 
-
         public void OnGUI()
         {
             const string noServerWarning = "No OSC Servers are currently active, so no messages can be received";
@@ -188,7 +187,6 @@ namespace OscCore
         [MenuItem("Window/OscCore/Monitor")]
         static void InitWindow()
         {
-            
             ((MonitorWindow) GetWindow(typeof(MonitorWindow)))?.Show();
         }
     }
