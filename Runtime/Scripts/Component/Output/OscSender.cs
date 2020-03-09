@@ -43,6 +43,12 @@ namespace OscCore
             if(Client == null)
                 Client = new OscClient(m_IpAddress, m_Port);
         }
+
+        public void ReInit()
+        {
+            Client = null;
+            Setup();
+        }
     }
 }
 
