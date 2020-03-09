@@ -7,7 +7,7 @@ namespace OscCore
     public class OscSender : MonoBehaviour
     {
         [Tooltip("The IP address to send to")]
-        [SerializeField] string m_IpAddress = "127.0.0.1";
+        [SerializeField] public string m_IpAddress = "127.0.0.1";
         
         [Tooltip("The port on the remote IP to send to")]
         [SerializeField] int m_Port = 7000;
