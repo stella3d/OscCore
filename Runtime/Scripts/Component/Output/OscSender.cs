@@ -19,7 +19,7 @@ namespace OscCore
             set {
                     string[] ipString = value.Split('.');
 
-                    if(ipString.Length === 4){
+                    if(ipString.Length == 4){
                         m_IpAddress = value;
                         ReInit();
                     }
@@ -33,6 +33,7 @@ namespace OscCore
             set { 
                     m_Port = value;
                     ReInit();
+ 
                 }
         }
         
