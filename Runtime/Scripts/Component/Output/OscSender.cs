@@ -16,7 +16,14 @@ namespace OscCore
         public string IpAddress
         {
             get { return m_IpAddress; }
-            set { m_IpAddress = value; }
+            set {
+                    string[] ipString = value.Split('.');
+
+                    if(ipString.Length === 4){
+                        m_IpAddress = value;
+                        ReInit();
+                    }
+                }
         }
 
         /// <summary>The port on the remote IP to send to</summary>
