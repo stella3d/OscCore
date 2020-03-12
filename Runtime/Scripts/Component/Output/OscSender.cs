@@ -52,6 +52,9 @@ namespace OscCore
                 Client = new OscClient(m_IpAddress, m_Port);
         }
 
+        /// <summary>
+        /// Reinitializes the client. Use this if the IP or port change and the client needs to restart.
+        /// </summary>
         public void ReInit()
         {
             Client = null;
