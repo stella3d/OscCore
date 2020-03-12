@@ -30,7 +30,10 @@ namespace OscCore
         public int Port
         {
             get { return m_Port; }
-            set { m_Port = value; }
+            set { 
+                    m_Port = value;
+                    ReInit();
+                }
         }
         
         /// <summary>
