@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Net;
 
 namespace OscCore
 {
@@ -17,11 +18,11 @@ namespace OscCore
         {
             get { return m_IpAddress; }
             set {
-                    string[] ipString = value.Split('.');
+                    bool valid = IPAddress.TryParse(value, out var ip);
 
-                    if(ipString.Length == 4){
+                    if(valid != false){
                         m_IpAddress = value;
-                        ReInit();
+                        ReInitialize();
                     }
                 }
         }
@@ -32,8 +33,7 @@ namespace OscCore
             get { return m_Port; }
             set { 
                     m_Port = value;
-                    ReInit();
- 
+                    ReInitialize();
                 }
         }
         
@@ -63,10 +63,7 @@ namespace OscCore
                 Client = new OscClient(m_IpAddress, m_Port);
         }
 
-        /// <summary>
-        /// Reinitializes the client. Use this if the IP or port change and the client needs to restart.
-        /// </summary>
-        public void ReInit()
+        void ReInitialize()
         {
             Client = null;
             Setup();
