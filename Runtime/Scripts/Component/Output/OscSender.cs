@@ -18,9 +18,7 @@ namespace OscCore
         {
             get { return m_IpAddress; }
             set {
-                    bool valid = IPAddress.TryParse(value, out var ip);
-
-                    if(valid != false){
+                    if(IPAddress.TryParse(value, out var ip)){
                         m_IpAddress = value;
                         ReInitialize();
                     }
