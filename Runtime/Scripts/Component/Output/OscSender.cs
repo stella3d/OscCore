@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Net;
 
 namespace OscCore
 {
@@ -13,10 +14,26 @@ namespace OscCore
         [SerializeField] int m_Port = 7000;
 
         /// <summary>The IP address to send to</summary>
-        public string IpAddress => m_IpAddress;
-        
+        public string IpAddress
+        {
+            get { return m_IpAddress; }
+            set {
+                    if(IPAddress.TryParse(value, out var ip)){
+                        m_IpAddress = value;
+                        ReInitialize();
+                    }
+                }
+        }
+
         /// <summary>The port on the remote IP to send to</summary>
-        public int Port => m_Port;
+        public int Port
+        {
+            get { return m_Port; }
+            set { 
+                    m_Port = value;
+                    ReInitialize();
+                }
+        }
         
         /// <summary>
         /// Handles serializing and sending messages.  Use methods on this to send messages to the endpoint.
@@ -42,6 +59,12 @@ namespace OscCore
         {
             if(Client == null)
                 Client = new OscClient(m_IpAddress, m_Port);
+        }
+
+        void ReInitialize()
+        {
+            Client = null;
+            Setup();
         }
     }
 }
