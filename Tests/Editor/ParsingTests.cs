@@ -37,7 +37,8 @@ namespace OscCore.Tests
         [TestCaseSource(typeof(TagsTestData), nameof(TagsTestData.StandardTagParseCases))]
         public void SimpleTagParsing(TypeTagParseTestCase test)
         {
-            var tagCount = m_Parser.ParseTags(test.Bytes, test.Start);
+            var tagSize = m_Parser.ParseTags(test.Bytes, test.Start);
+            var tagCount = tagSize - 1; // remove ','
             
             Assert.AreEqual(test.Expected.Length, tagCount);
             var tags = m_Parser.MessageValues.Tags;
