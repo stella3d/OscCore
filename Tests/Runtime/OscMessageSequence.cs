@@ -13,18 +13,13 @@ namespace OscCore.Tests
     {
         public TimedMessage[] Messages;
 
-        public OscMessageSequence (string name, TimedMessage[] messages)
-        {
-            this.name = name != null ? name : "New OSC Sequence";
-            this.Messages = messages;
-        }
-
+/*
         public static OscMessageSequence FromJson(string json)
         {
             var parsed = JsonUtility.FromJson<MiniMessageSequence>(json);
             return new OscMessageSequence(parsed.name, parsed.messages.Select(m => m.ToFriendly()).ToArray());
         }
-
+*/
         public string ToJson(bool pretty = false) => JsonUtility.ToJson(this, pretty);
     }
 
@@ -38,6 +33,11 @@ namespace OscCore.Tests
         {
             Time = time;
             Message = message;
+        }
+
+        public override string ToString()
+        {
+            return $"time: {Time} , message: {Message}";
         }
     }
 

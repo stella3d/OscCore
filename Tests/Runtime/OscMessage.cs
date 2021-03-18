@@ -28,7 +28,7 @@ namespace OscCore.Tests
 
         public override string ToString()
         {
-            return $"{Address}  {TypeTags}  {Encoding.ASCII.GetString(Data)}";
+            return $"{Address}    {TypeTags}    {Encoding.ASCII.GetString(Data)}";
         }
     }
 }

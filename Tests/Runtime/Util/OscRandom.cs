@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using Random = UnityEngine.Random;
 using SystemRandom = System.Random;
 
@@ -54,7 +55,10 @@ namespace OscCore.Tests
                 }
             }
 
-            return new OscMessageSequence(null, messages);
+            var seq = (OscMessageSequence) ScriptableObject.CreateInstance(typeof(OscMessageSequence));
+            seq.name = "New OSC Sequence";
+            seq.Messages = messages;
+            return seq;
         }
 
         static float TimeStep()
@@ -104,8 +108,11 @@ namespace OscCore.Tests
         public static string GetAddress(int maxPartLength = 10)
         {
             k_AddressBuilder.Length = 0;
-            const int charStart = 65; 
-            const int charEnd = 122; 
+            // want to exclude some special chars in the middle
+            const int cStart1 = 65; 
+            const int cEnd1 = 90;
+            const int cStart2 = 97; 
+            const int cEnd2 = 122; 
 
             var partCount = Random.Range(1, 5);
             for(var i = 0; i < partCount; i++)
@@ -113,7 +120,11 @@ namespace OscCore.Tests
                 k_AddressBuilder.Append('/');
                 var pLen = Random.Range(2, maxPartLength);
                 for (int c = 0; c < pLen; c++)
-                    k_AddressBuilder.Append((char)(Random.Range(charStart, charEnd) % 255));
+                {
+                    var rnd1 = Random.Range(-0.5f, 1f);
+                    var nextChar = rnd1 < 0f ? Random.Range(cStart1, cEnd1) : Random.Range(cStart2, cEnd2); 
+                    k_AddressBuilder.Append((char)nextChar);
+                }
             }
 
             return k_AddressBuilder.ToString();
