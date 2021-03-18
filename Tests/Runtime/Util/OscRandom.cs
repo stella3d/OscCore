@@ -16,7 +16,6 @@ namespace OscCore.Tests
 
         internal static SystemRandom s_SystemRand = new SystemRandom();
 
-
         public static OscMessage GetSingleElementMessage(bool useNonstandardTypes = false)
         {
             var addr = GetAddress();
@@ -26,10 +25,49 @@ namespace OscCore.Tests
             return new OscMessage(addr, tagStr, data); 
         }
 
-        public static void GenerateBundle()
+        public static OscMessageSequence GetSequence(int length, bool multiElementMessages = false, 
+            bool nonStandardTypes = false, bool bundled = false)
         {
-            
+            var msgTime = 0f;
+            TimedMessage[] messages;
+            if(bundled) 
+            {
+                messages = null;    // TODO - implement
+            }
+            else 
+            {
+                messages = new TimedMessage[length];
+                for(var i = 0; i < length; i++)
+                {
+                    if(multiElementMessages)
+                    {
+                        messages = null;    // TODO - implement
+                        break;
+                    }
+                    else
+                    {
+                        var msg = OscRandom.GetSingleElementMessage(nonStandardTypes);
+                        messages[i] = new TimedMessage(msgTime, msg); 
+                    }
+
+                    msgTime += TimeStep();
+                }
+            }
+
+            return new OscMessageSequence(null, messages);
         }
+
+        static float TimeStep()
+        {
+            const float minStep = 0f;
+            const float maxStep = 0.2f;
+            var step = Random.Range(minStep, maxStep);
+            return step < 0.001f ? 0f : step;
+        }
+
+        public static void GenerateBundle() { }
+
+        static readonly byte[] k_EmptyBytes = new byte[0];
 
         internal static byte[] GetElementData(TypeTag tag)
         {
@@ -54,7 +92,11 @@ namespace OscCore.Tests
                     s_SystemRand.NextBytes(data);
                     data[alignedStrLen - 1] = 0;         // add str terminator
                     break;
+                default:
+                    data = k_EmptyBytes;
+                    break;
             }
+            return data;
         }
 
         static readonly StringBuilder k_AddressBuilder = new StringBuilder();
@@ -62,16 +104,16 @@ namespace OscCore.Tests
         public static string GetAddress(int maxPartLength = 10)
         {
             k_AddressBuilder.Length = 0;
-            const int charStart = 65; // from which ascii character code the generation should start
-            const int charEnd = 122; // to which ascii character code the generation should end
+            const int charStart = 65; 
+            const int charEnd = 122; 
 
             var partCount = Random.Range(1, 5);
             for(var i = 0; i < partCount; i++)
             {
                 k_AddressBuilder.Append('/');
                 var pLen = Random.Range(2, maxPartLength);
-                for (int i = 0; i < characterCount; i++)
-                    builder.Append((char)(Random.Range(charStart, charEnd + 1) % 255));
+                for (int c = 0; c < pLen; c++)
+                    k_AddressBuilder.Append((char)(Random.Range(charStart, charEnd) % 255));
             }
 
             return k_AddressBuilder.ToString();

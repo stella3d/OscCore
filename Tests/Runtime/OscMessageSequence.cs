@@ -11,19 +11,18 @@ namespace OscCore.Tests
     [CreateAssetMenu(fileName="NewOscSequence", menuName="OSC/Message Sequence", order=100)]
     public class OscMessageSequence : ScriptableObject
     {
-        public string Name;
+        public TimedMessage[] Messages;
 
-        public List<TimedMessage> Messages = new List<TimedMessage>();
+        public OscMessageSequence (string name, TimedMessage[] messages)
+        {
+            this.name = name != null ? name : "New OSC Sequence";
+            this.Messages = messages;
+        }
 
         public static OscMessageSequence FromJson(string json)
         {
             var parsed = JsonUtility.FromJson<MiniMessageSequence>(json);
-
-            return new OscMessageSequence()
-            {
-                Name = parsed.name,
-                Messages = parsed.messages.Select(m => m.ToFriendly()).ToList()
-            };
+            return new OscMessageSequence(parsed.name, parsed.messages.Select(m => m.ToFriendly()).ToArray());
         }
 
         public string ToJson(bool pretty = false) => JsonUtility.ToJson(this, pretty);
@@ -34,6 +33,12 @@ namespace OscCore.Tests
     {
         public float Time;
         public OscMessage Message;
+
+        public TimedMessage(float time, OscMessage message)
+        {
+            Time = time;
+            Message = message;
+        }
     }
 
     [Serializable]
@@ -44,7 +49,7 @@ namespace OscCore.Tests
 
         public MiniMessageSequence (OscMessageSequence seq)
         {
-            this.name = seq.Name;
+            this.name = seq.name;
             this.messages = seq.Messages.Select(m => new MiniTimedMessage(m)).ToArray();
         }
     }
@@ -59,11 +64,7 @@ namespace OscCore.Tests
 
         public TimedMessage ToFriendly()
         {
-            return new TimedMessage()
-            {
-                Time = t,
-                Message = new OscMessage(addr, tags, Encoding.ASCII.GetBytes(data))
-            };
+            return new TimedMessage(t, new OscMessage(addr, tags, Encoding.ASCII.GetBytes(data)));
         }
 
         public MiniTimedMessage (TimedMessage tm)

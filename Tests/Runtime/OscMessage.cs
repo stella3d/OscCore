@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,6 +24,11 @@ namespace OscCore.Tests
             Address = address;
             TypeTags = tags;
             Data = data;
+        }
+
+        public override string ToString()
+        {
+            return $"{Address}  {TypeTags}  {Encoding.ASCII.GetString(Data)}";
         }
     }
 }
