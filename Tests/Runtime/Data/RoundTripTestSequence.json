@@ -1,0 +1,11 @@
+{
+    "name": "Round Trip Write/Read Test Sequence",
+    "messages": [
+        {
+            "t": 1,
+            "addr": "/first",
+            "tags": ",i",
+            "data": "1"
+        }
+    ]
+}
