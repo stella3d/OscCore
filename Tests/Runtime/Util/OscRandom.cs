@@ -59,7 +59,7 @@ namespace OscCore.Tests
 
         static readonly StringBuilder k_AddressBuilder = new StringBuilder();
 
-        public string GetAddress(int maxPartLength = 10)
+        public static string GetAddress(int maxPartLength = 10)
         {
             k_AddressBuilder.Length = 0;
             const int charStart = 65; // from which ascii character code the generation should start
