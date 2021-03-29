@@ -18,7 +18,7 @@ namespace OscCore.Tests
         {
             if(Sequence == null) 
             {
-                this.enabled = false;
+                enabled = false;
                 return;
             }
 
@@ -31,7 +31,7 @@ namespace OscCore.Tests
             if(t >= m_NextMessage.Time)
             {
                 var msg = m_NextMessage.Message;
-                Sender.Client.Send(msg.Address, msg.TypeTags, msg.Data);
+                //Sender.Client.Send(msg.Address, msg.TypeTags, msg.Data);
             }
         }
     }
