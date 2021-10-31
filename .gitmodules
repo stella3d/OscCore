@@ -1,9 +1,0 @@
-[submodule "BlobHandles"]
-	path = Dependencies/BlobHandles
-	url = git@github.com:stella3d/BlobHandles.git
-[submodule "MiniNTP"]
-	path = MiniNTP
-	url = git@github.com:stella3d/MiniNTP.git
-[submodule "NtpTimestamp"]
-	path = Dependencies/NtpTimestamp
-	url = git@github.com:stella3d/NtpTimestamp.git
