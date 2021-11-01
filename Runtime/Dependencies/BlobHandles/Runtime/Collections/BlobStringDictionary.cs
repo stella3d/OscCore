@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Unity.IL2CPP.CompilerServices;
+using Unity.IL2CPP.CompilerServices.BlobHandles;
 
 namespace BlobHandles
 {

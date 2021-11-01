@@ -1,6 +1,6 @@
 using System;
 
-namespace Unity.IL2CPP.CompilerServices
+namespace Unity.IL2CPP.CompilerServices.BlobHandles
 {
     /// <summary>
     /// The code generation options available for IL to C++ conversion.
