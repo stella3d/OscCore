@@ -5,9 +5,19 @@ namespace OscCore.Tests
 {
     public static class TestUtil
     {
+        static Stopwatch stopWatch = new Stopwatch();
+
+        public static TimeSpan TimeExec(Action func)
+        {
+            stopWatch.Restart();
+            func();
+            stopWatch.Stop();
+            return stopWatch.Elapsed;
+        }
+
         static readonly byte[] k_Swap32 = new byte[4];
         static readonly byte[] k_Swap64 = new byte[8];
-        
+
         public static int ReverseBytes(this int self)
         {
             k_Swap32[0] = (byte) (self >> 24);
@@ -16,7 +26,7 @@ namespace OscCore.Tests
             k_Swap32[3] = (byte) (self);
             return BitConverter.ToInt32(k_Swap32, 0);
         }
-        
+
         public static float ReverseBytes(this float self)
         {
             var fBytes = BitConverter.GetBytes(self);
@@ -26,7 +36,7 @@ namespace OscCore.Tests
             k_Swap32[3] = fBytes[0];
             return BitConverter.ToSingle(k_Swap32, 0);
         }
-        
+
         public static double ReverseBytes(this double self)
         {
             var dBytes = BitConverter.GetBytes(self);
@@ -40,7 +50,7 @@ namespace OscCore.Tests
             k_Swap64[7] = dBytes[0];
             return BitConverter.ToDouble(k_Swap64, 0);
         }
-        
+
         public static byte[] ReversedCopy(byte[] source)
         {
             var copy = new byte[source.Length];
@@ -48,7 +58,7 @@ namespace OscCore.Tests
             Array.Reverse(copy);
             return copy;
         }
-        
+
         public static byte[] RandomFloatBytes(int byteCount = 2048)
         {
             var bytes = new byte[byteCount];
@@ -64,7 +74,7 @@ namespace OscCore.Tests
 
             return bytes;
         }
-        
+
         public static byte[] RandomIntBytes(int byteCount = 2048)
         {
             var bytes = new byte[byteCount];
@@ -78,7 +88,7 @@ namespace OscCore.Tests
 
             return bytes;
         }
-        
+
         public static byte[] RandomColor32Bytes(int byteCount = 2048)
         {
             var bytes = new byte[byteCount];
@@ -92,7 +102,7 @@ namespace OscCore.Tests
 
             return bytes;
         }
-        
+
         public static byte[] RandomMidiBytes(int byteCount = 2048)
         {
             var bytes = new byte[byteCount];
@@ -110,7 +120,7 @@ namespace OscCore.Tests
 
             return bytes;
         }
-        
+
         public static byte[] RandomTimestampBytes(int count = 2048)
         {
             var bytes = new byte[count];
@@ -120,7 +130,7 @@ namespace OscCore.Tests
                 var sBytes = BitConverter.GetBytes(seconds);
                 for (int j = 0; j < sBytes.Length; j++)
                     bytes[i + j] = sBytes[j];
-                
+
                 var fractions = Random.Range(0, 10000000);
                 var fBytes = BitConverter.GetBytes(fractions);
 
