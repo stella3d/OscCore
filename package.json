@@ -1,0 +1,21 @@
+{
+	"name" : "com.stella3d.osccore",
+	"version" : "1.1.2",
+	"displayName" : "Open Sound Control Core",
+	"description" : "An Open Sound Control (OSC) protocol driver",
+	"unity" : "2019.4",
+	"unityRelease" : "",
+	"keywords" : [ "OSC" ],
+	"author" : {
+		"name" : "Stella Cannefax",
+		"email" : "stella@unity3d.com",
+		"url" : "https://github.com/stella3d/OscCore"
+	},
+	"samples" : [
+		{
+			"displayName" : "Basic Examples",
+			"description" : "Message Receive and Property Sender Examples",
+			"path" : "Samples~"
+		}
+	]
+}

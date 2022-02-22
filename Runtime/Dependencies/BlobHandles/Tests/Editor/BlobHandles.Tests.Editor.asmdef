@@ -1,0 +1,20 @@
+{
+    "name": "BlobHandles.Tests.Editor",
+    "references": [
+        "BlobHandles.Runtime",
+        "BlobHandles.Tests.Runtime"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": []
+}
