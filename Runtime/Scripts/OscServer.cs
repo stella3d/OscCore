@@ -204,12 +204,17 @@ namespace OscCore
         /// <summary>Must be called on the main thread every frame to handle queued events</summary>
         public void Update()
         {
-            for (int i = 0; i < m_MainThreadCount; i++)
+            try
             {
-                m_MainThreadQueue[i]();
+                for (int i = 0; i < m_MainThreadCount; i++)
+                {
+                    m_MainThreadQueue[i]();
+                }
             }
-            
-            m_MainThreadCount = 0;
+            finally    // Chances are, if we run into an exception, we'll be looping forever
+            {
+                m_MainThreadCount = 0;
+            }
         }
 
         /// <summary>
