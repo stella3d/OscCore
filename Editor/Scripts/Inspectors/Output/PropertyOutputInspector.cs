@@ -40,6 +40,7 @@ namespace OscCore
         SerializedProperty m_AddressProp;
         SerializedProperty m_SenderProp;
         SerializedProperty m_ObjectProp;
+        SerializedProperty m_MemberIsPropertyProp;
         SerializedProperty m_PropertyNameProp;
         SerializedProperty m_PropertyTypeNameProp;
         SerializedProperty m_SourceComponentProp;
@@ -71,6 +72,7 @@ namespace OscCore
             m_SenderProp = serializedObject.FindProperty("m_Sender");
             m_ObjectProp = serializedObject.FindProperty("m_Object");
             m_SourceComponentProp = serializedObject.FindProperty("m_SourceComponent");
+            m_MemberIsPropertyProp = serializedObject.FindProperty("m_MemberIsProperty");
             m_PropertyNameProp = serializedObject.FindProperty("m_PropertyName");
             m_PropertyTypeNameProp = serializedObject.FindProperty("m_PropertyTypeName");
             m_SendVector2ElementsProp = serializedObject.FindProperty("m_SendVector2Elements");
@@ -173,6 +175,7 @@ namespace OscCore
 
                 m_PropertyIndex = -1;
                 m_PreviousComponentName = compName;
+                m_MemberIsPropertyProp.boolValue = false;
                 m_PropertyNameProp.stringValue = null;
                 m_PropertyTypeNameProp.stringValue = null;
                 m_SourceComponentProp.objectReferenceValue = m_CachedComponents[newIndex];
@@ -200,12 +203,14 @@ namespace OscCore
                 {
                     type = asProp.PropertyType;
                     m_Target.Property = asProp;
+                    m_MemberIsPropertyProp.boolValue = true;
                 }
                 else
                 {
                     var asField = info as FieldInfo;
                     m_Target.Field = asField;
                     type = asField?.FieldType;
+                    m_MemberIsPropertyProp.boolValue = false;
                 }
 
                 m_PropertyTypeNameProp.stringValue = type?.Name;
