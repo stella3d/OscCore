@@ -25,8 +25,9 @@ namespace OscCore
         GCHandle m_BufferHandle;
         byte* m_BufferPtr;
         
-        Action[] m_MainThreadQueue = new Action[16];
+       	Action[] m_MainThreadQueue = new Action[mainThreadQueueSize];
         int m_MainThreadCount;
+        private const int mainThreadQueueSize = 16;
 
         readonly Dictionary<int, string> m_ByteLengthToStringBuffer = new Dictionary<int, string>();
         
@@ -110,6 +111,13 @@ namespace OscCore
                 return PortToServer.Remove(port);
             }
             return false;
+        }
+
+		/// <summary> Clear the MainThreadQueue of an OSC Server</summary>
+		public void ClearQueue()
+        {
+            m_MainThreadCount = 0;
+            m_MainThreadQueue = new Action[mainThreadQueueSize];
         }
         
         /// <summary>
