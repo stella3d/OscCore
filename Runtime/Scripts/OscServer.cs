@@ -87,12 +87,12 @@ namespace OscCore
         /// </summary>
         /// <param name="port">The port to listen for incoming message on</param>
         /// <returns></returns>
-        public static OscServer GetOrCreate(int port)
+        public static OscServer GetOrCreate(int port, int bufferSize = 4096)
         {
             OscServer server;
             if (!PortToServer.TryGetValue(port, out server))
             {
-                server = new OscServer(port);
+                server = new OscServer(port, bufferSize);
                 PortToServer[port] = server;
             }
             return server;
