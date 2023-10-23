@@ -16,9 +16,9 @@ namespace OscCore
         /// <summary>Where this client is sending messages to</summary>
         public IPEndPoint Destination { get; }
 
-        public OscClient(string ipAddress, int port)
+        public OscClient(string ipAddress, int port, int bufferCapacity = 4096)
         {
-            m_Writer = new OscWriter();
+            m_Writer = new OscWriter(bufferCapacity);
             
             m_Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             if (ipAddress == "255.255.255.255")
